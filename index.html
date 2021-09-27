@@ -1,0 +1,71 @@
+<html>
+        <head>
+                <meta charset="utf-8"/>
+                <link rel="stylesheet" href="style.css">
+        </head>
+        <body>
+                <canvas id="gameArea"></canvas>
+                <div class="instructions">
+                        <div class="empty"></div>
+                        <div class="empty"></div>
+                        <div class="empty"></div>
+                        <div class="left">
+                                Move:
+                        </div>
+                        <div class="keyboard">
+                                <div class="top">
+                                        <span id="key-w" class="key">w</span>
+                                </div>
+                                <div class="bottom">
+                                        <span id="key-a" class="key">a</span>
+                                        <span id="key-s" class="key">s</span>
+                                        <span id="key-d" class="key">d</span>
+                                </div>
+                        </div>
+                </div>
+                <button id="debug-button" onclick="toggleDebugging()">
+                        Debugging: Off
+                </button>
+
+                <!-- include js files -->
+
+                <!-- cameras -->
+                <script src="classes/cameras/camera.js"></script>
+                <script src="classes/cameras/controllable_camera.js"></script>
+                <script src="classes/cameras/following_camera.js"></script>
+
+                <!-- renderers -->
+                <script src="classes/renderers/renderer.js"></script>
+                <script src="classes/renderers/box_renderer.js"></script>
+                <script src="classes/renderers/circle_renderer.js"></script>
+                <script src="classes/renderers/image_renderer.js"></script>
+
+                <!-- colliders -->
+                <script src="classes/colliders/collider.js"></script>
+                <script src="classes/colliders/box_collider.js"></script>
+                <script src="classes/colliders/circle_collider.js"></script>
+                <script src="classes/colliders/capsule_collider.js"></script>
+                
+                <!-- game objects -->
+                <script src="classes/game objects/game_object.js"></script>
+                <script src="classes/game objects/draggable_object.js"></script>
+                <script src="classes/game objects/interactable_object.js"></script>
+                <script src="classes/game objects/ground_object.js"></script>
+                <script src="classes/game objects/player.js"></script>
+
+                <!-- presets -->
+                <script src="classes/game objects/presets/obstacle_presets.js"></script>
+                <script src="classes/game objects/presets/draggable_presets.js"></script>
+                <script src="classes/game objects/presets/nature_presets.js"></script>
+                <script src="classes/game objects/presets/structure_presets.js"></script>
+                <script src="classes/game objects/presets/interactable_presets.js"></script>
+
+                <!-- others -->
+                <script src="classes/rigidbody.js"></script>
+                <script src="classes/animation.js"></script>
+                <script src="classes/game.js"></script>
+                <script src="classes/scene_list.js"></script>
+                <script src="lib.js"></script>
+                <script src="index.js"></script>
+        </body>
+</html>
