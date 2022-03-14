@@ -9,98 +9,68 @@ body {
         user-select: none;
 }
 
-.keyboard {
-        font-size: 32px;
-        line-height: 65px;
-}
-
-.keyboard .key {
-        padding: 5px 10px;
-        border: 2px solid #666666;
-        border-radius: 7.5px;
-        box-shadow: 0px 10px 0px #444444;
-}
-
-.keyboard .key.active {
-        color: #aaaaaa;
-        border: 2px solid #aaaaaa;
-        box-shadow: 0px 10px 0px #777777;
-}
-
-#debug-button {
-        background-color: transparent;
-        box-shadow: 0px 5px 0px #550000;
-        border: 2px solid #880000;
-        color: #880000;
-        padding: 2px 5px;
-        border-radius: 5px;
-        transition: 0.2s;
-        cursor: pointer;
-}
-
-#debug-button:hover {
-        color: #aa0000;
-        border: 2px solid #aa0000;
-        box-shadow: 0px 5px 0px #880000;
-}
-
-#debug-button.active {
-        color: #008800;
-        border: 2px solid #008800;
-        box-shadow: 0px 5px 0px #005500;
-}
-
-#debug-button.active:hover {
-        color: #00aa00;
-        border: 2px solid #00aa00;
-        box-shadow: 0px 5px 0px #008800;
-}
-
+/* Game area */
 #gameArea {
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
+        display: block;
+        margin: 100px auto 0px;
         border: 3px groove #666666;
         border-radius: 5px;
+}
+
+.no-cursor {
         cursor: none;
 }
 
-.instructions {
-        margin-top: calc(100% - 720px - 260px) !important;
-        display: flex;
-        flex-wrap: wrap;
+/* menu bar */
+#menuBar {
+        position: absolute;
+        bottom: 0px;
+        left: 0px;
         width: 100%;
-        max-width: 1280px;
-        margin: 0px auto;
-        text-align: center;
 }
-.instructions .empty {
-        flex: 0 0 12.5%;
-        max-width: 12.5%;
-}
-
-.instructions .left {
-        flex: 0 0 12.5%;
-        max-width: 12.5%;
-        align-self: center;
-        font-size: 32px;
-        line-height: 65px;
-}
-
-.instructions .keyboard {
-        flex: 0 0 12.5%;
-        max-width: 12.5%;
+#menuBar .tabbar {
         display: flex;
-        flex-wrap: wrap;
+        flex-direction: row;
+        border-bottom: 1px solid #666666;
+        margin-bottom: 5px;
 }
 
-.instructions .keyboard .top {
-        flex: 0 0 100%;
-        max-width: 100%;
+#menuBar .tabbar .tab {
+        flex: 0 0 auto;
+        padding: 5px 10px;
+        border: 1px solid #666666;
+        border-bottom: none;
+        border-radius: 5px 5px 0px 0px;
+        margin-left: 5px;
+        cursor: pointer;
 }
 
-.instructions .keyboard .bottom {
-        flex: 0 0 100%;
-        max-width: 100%;
+#menuBar .tabbar .tab.active {
+        background-color: #666666;
+        color: #000000;
+}
+
+#menuBar .tab-content {
+        height: 200px;
+        padding: 0px 10px 10px;
+        overflow-y: scroll;
+}
+
+#menuBar .tab-content:not(.open) {
+        display: none;
+}
+
+#console .console-log {
+        color: #ffffff;
+        margin-bottom: 5px;
+}
+
+#console .console-warning {
+        color: #aaaa33;
+        margin-bottom: 5px;
+}
+
+#console .console-error {
+        color: #aa3333;
+        margin-bottom: 5px;
 }

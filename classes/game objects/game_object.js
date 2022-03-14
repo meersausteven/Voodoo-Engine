@@ -1,37 +1,45 @@
 
 class GameObject {
-        constructor(game, x, y, width, height, rotationAngle) {
-                this.type = 'Game Object';
-                this.name = 'new GameObject';
+        type = "Game Object";
+        name = "New GameObject";
+        pos = new Vector2();
+        rotationAngle = 0;
+        components = [];
 
-                // game this object belongs to
-                this.game = game;
-                
-                // positioning
-                this.pos = {
-                        x: x,
-                        y: y
-                };
-                this.width = width;
-                this.height = height;
+        constructor(x = 0, y = 0, rotationAngle = 0) {
+                this.pos = new Vector2(x, y);
                 this.rotationAngle = rotationAngle;
 
-                // camera 
-                this.camera = null;
+                this.components = [];
+        }
 
-                // collider
-                this.collider = [];
+        start() {
+                let i = 0;
+                let l = this.components.length;
 
-                // rigidbody
-                this.rigidbody = null;
-
-                // renderer
-                this.renderer = null;
-                this.image = null;
-                this.animation = null;
+                while (i < l) {
+                        this.components[i].start();
+                        
+                        ++i;
+                }
         }
 
         update() {
+                // update all components of this gameObject
+                let i = 0;
+                let l = this.components.length;
+
+                while (i < l) {
+                        this.components[i].update();
+                        
+                        ++i;
+                }
+
+                if (this.scene.project.settings.showObjectGizmos) {
+                        this.showGizmo();
+                }
+                /*
+                // @todo: mvoe this stuff to its component
                 if (this.collider.length > 0) {
                         let j = 0;
                         let c = this.collider.length;
@@ -81,11 +89,28 @@ class GameObject {
                 if (this.animation != null) {
                         this.animation.update();
                 }
+                */
+        }
+
+        fixedUpdate() {
+                let i = 0;
+                let l = this.components.length;
+
+                while (i < l) {
+                        this.components[i].fixedUpdate();
+                        
+                        ++i;
+                }
         }
 
         lateUpdate() {
-                if (this.camera != null) {
-                        this.camera.lateUpdate();
+                let i = 0;
+                let l = this.components.length;
+
+                while (i < l) {
+                        this.components[i].lateUpdate();
+                        
+                        ++i;
                 }
         }
 
@@ -93,19 +118,50 @@ class GameObject {
                 return;
         }
         
-        showBounds(context, camera) {
+        addComponent(component) {
+                if ((typeof component == "object") && (component instanceof Component)) {
+                        component.gameObject = this;
+                        this.components.push(component);
+
+                        return true;
+                }
+
+                return false;
+        }
+
+        showGizmo() {
+                let context = this.scene.project.canvasContext;
+
                 context.save();
                 // position
-                context.translate(this.pos.x - camera.pos.x, this.pos.y - camera.pos.y);
+                context.translate(this.pos.x - this.scene.mainCamera.pos.x, this.pos.y - this.scene.mainCamera.pos.y);
                 context.rotate(this.rotationAngle);
-                // true position
-                context.lineWidth = 3;
-                context.strokeStyle = '#336633';
-                context.strokeRect(-2, -2, 4, 4);
-                // draw width and height
-                context.lineWidth = 1;
-                context.strokeStyle = '#224422';
-                context.strokeRect(-this.width / 2, -this.height, this.width, this.height);
+                // @todo: add gizmo for positioning and rotating in edit mode
+                // up arrow
+                context.lineWidth = 2;
+                context.strokeStyle = "#00ff00";
+                context.beginPath();
+                
+                context.moveTo(0, 0);
+                context.lineTo(0, -50);
+                context.moveTo(0, -52);
+                context.lineTo(-6, -40);
+                context.moveTo(0, -52);
+                context.lineTo(6, -40);
+
+                context.stroke();
+                // right arrow
+                context.strokeStyle = "#0000ff";
+                context.beginPath();
+                
+                context.moveTo(0, 0);
+                context.lineTo(50, 0);
+                context.moveTo(52, 0);
+                context.lineTo(40, 6);
+                context.moveTo(52, 0);
+                context.lineTo(40, -6);
+
+                context.stroke();
 
                 context.restore();
         }

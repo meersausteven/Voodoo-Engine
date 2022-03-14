@@ -22,48 +22,7 @@ var currentKeyInput = [];
 /* Methods */
 /////////////
 
-// optical stuff
-
-// light up the keys on the on-scircle.radiuseen keyboard
-function updateKeyboard(keyCode) {
-        if ( (keyCode == "KeyW") || (keyCode == "ArrowUp") ) {
-                document.getElementById("key-w").classList.toggle("active");
-        }
-
-        if ( (keyCode == "KeyA") || (keyCode == "ArrowLeft") ) {
-                document.getElementById("key-a").classList.toggle("active");
-        }
-        
-        if ( (keyCode == "KeyS") || (keyCode == "ArrowDown") ) {
-                document.getElementById("key-s").classList.toggle("active");
-        }
-        
-        if ( (keyCode == "KeyD") || (keyCode == "ArrowRight") ) {
-                document.getElementById("key-d").classList.toggle("active");
-        }
-}
-
-// enable / disable debug mode by pressing a button
-function toggleDebugging() {
-        let button = document.getElementById("debug-button");
-        
-        if ( button.classList.contains("active") ) {
-                button.innerHTML = "Debugging: Off";
-        } else {
-                button.innerHTML = "Debugging: On";
-        }
-
-        button.classList.toggle("active");
-
-        if (game.debugging == true) {
-                game.debugging = false;
-        } else {
-                game.debugging = true;
-        }
-}
-
-// necessary stuff
-
+/* @todo: MOVE THIS SOMEWHERE ELSE; ONLY NEEDED INSIDE A PROJECT AS AN ASSET
 // simple movement in 8 directions (wasd / arrows)
 function simple8DirMovement(obj) {
         let directionX = 0;
@@ -129,7 +88,8 @@ function simple8DirMovement(obj) {
 
         return returning;
 }
-
+*/
+// @todo: MOVE THIS TO COLLIDER COMPONENT
 // check if a circle and a square are overlapping
 // takes in a circles x, y and radius and a box colliders' x, y, width and height
 function circleBoxOverlapping(circle, box, checkPos = null, checkingType = null) {
@@ -183,6 +143,7 @@ function circleBoxOverlapping(circle, box, checkPos = null, checkingType = null)
         return false;
 }
 
+// @todo: MOVE THIS TO COLLIDER COMPONENT
 // check if two squares are overlapping
 // takes in the two squares' x and y from their sides
 function boxesOverlapping(box1, box2, checkPos = null) {
@@ -213,6 +174,7 @@ function boxesOverlapping(box1, box2, checkPos = null) {
         return false;
 }
 
+// @todo: MOVE THIS TO COLLIDER COMPONENT
 // check if two cirlces are overlapping
 // takes in the two circles' x, y and radius
 function circlesOverlapping(circle1, circle2, checkPos = null) {
@@ -296,4 +258,30 @@ Array.prototype.remove = function() {
 // removes empty indexes
 Array.prototype.clear = function() {
         return true;
+}
+
+//////////////////
+/* Editor stuff */
+//////////////////
+
+function tabClick(element) {
+        let target = element.dataset.target;
+        let wasOpen = !!element.classList.contains('active');
+
+        // remove classes from all tabs
+        let tabs = element.parentElement.querySelectorAll('.tab');
+        for (let i = 0; i < tabs.length; i++) {
+                tabs[i].classList.remove('active');
+        }
+        
+        let tabContents = document.querySelectorAll('#menuBar .tab-content');
+        for (let i = 0; i < tabContents.length; i++) {
+                tabContents[i].classList.remove('open');
+        }
+
+        // toggle class for own tab
+        if (!wasOpen) {
+                element.classList.toggle('active');
+                document.querySelector(target).classList.add('open');
+        }
 }
