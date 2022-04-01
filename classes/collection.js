@@ -10,7 +10,7 @@ class Vector2 {
         constructor(x = 0, y = 0) {
                 this.x = x;
                 this.y = y;
-                this.magnitude = Math.sqrt((this.x * this.x) + (this.y * this.y));
+                this.magnitude = this.calculateMagnitude();
         }
 
         // add a value or vector to this vector
@@ -77,6 +77,13 @@ class Vector2 {
                 }
         }
 
+        // calculate and set this vector's magnitude
+        calculateMagnitude() {
+                this.magnitude = Math.sqrt((this.x * this.x) + (this.y * this.y));
+
+                return this.magnitude;
+        }
+
         // return this vector with a length of 1
         normalized() {
                 return new Vector2(
@@ -93,6 +100,21 @@ class Vector2 {
         // get direction of this vector as an angle
         getDirectionAsAngle() {
                 return this.getDirectionAsRadians() * (180 / Math.PI);
+        }
+
+        rotate(degrees) {
+                let radians = -degrees * (Math.PI/180);
+                let rotated = new Vector2();
+
+                rotated.x = this.x * Math.cos(radians) - this.y * Math.sin(radians);
+                rotated.y = this.x * Math.sin(radians) + this.y * Math.cos(radians);
+
+                this.x = rotated.x;
+                this.y = rotated.y;
+
+                this.calculateMagnitude();
+
+                return this;
         }
 }
 
@@ -126,5 +148,112 @@ class Debugger {
 
         #add(html) {
                 this.consoleContent.innerHTML += html;
+        }
+}
+
+// Polygon Construction Classes
+
+// Circle
+class PolygonCircle {
+        radius;
+        numOfPoints;
+        points;
+
+        constructor(radius, numOfPoints) {
+                this.radius = radius;
+                this.numOfPoints = numOfPoints;
+
+                this.points = this.calculatePoints();
+        }
+
+        calculatePoints() {
+                let points = [];
+
+                for (let i = 0; i < this.numOfPoints; i++) {
+                        let point = new Vector2(0, this.radius);
+
+                        point.rotate(i * (360 / this.numOfPoints));
+
+                        points.push(point);
+                }
+
+                return points;
+        }
+}
+
+// Capsule
+class PolygonCapsule {
+        radius;
+        numOfCirclePoints;
+        distance;
+        direction;
+        points;
+
+        constructor(radius, numOfCirclePoints, distance, direction = "horizontal") {
+                this.radius = radius;
+                this.numOfCirclePoints = numOfCirclePoints;
+                this.distance = distance;
+                this.direction = direction;
+
+                this.points = this.calculatePoints();
+        }
+
+        calculatePoints() {
+                let points = [];
+
+                let circleOneStartAngle = 0;
+                let circleOneOffset = new Vector2();
+                let circleTwoStartAngle = 0;
+                let circleTwoOffset = new Vector2();
+
+                if (this.direction == "horizontal") {
+                        // circleOne = left circle
+                        // circleTwo = right circle
+                        circleOneStartAngle = 180;
+                        circleOneOffset = new Vector2(
+                                this.distance / -2,
+                                0
+                        );
+                        circleTwoStartAngle = 0;
+                        circleTwoOffset = new Vector2(
+                                this.distance / 2,
+                                0
+                        );
+                } else if (this.direction == "vertical") {
+                        // circleOne = top circle
+                        // circleTwo = bottom circle
+                        circleOneStartAngle = 90;
+                        circleOneOffset = new Vector2(
+                                0,
+                                this.distance / -2
+                        );
+                        circleTwoStartAngle = 270;
+                        circleTwoOffset = new Vector2(
+                                0,
+                                this.distance / 2
+                        );
+                }
+                
+                // first half of circle
+                for (let i = 0; i <= this.numOfCirclePoints / 2; i++) {
+                        let point = new Vector2(0, this.radius);
+
+                        point.rotate(circleOneStartAngle + (i * (360 / this.numOfCirclePoints)));
+
+                        point.add(circleOneOffset);
+                        points.push(point);
+                }
+
+                // second half of circle
+                for (let i = 0; i <= this.numOfCirclePoints / 2; i++) {
+                        let point = new Vector2(0, this.radius);
+
+                        point.rotate(circleTwoStartAngle + (i * (360 / this.numOfCirclePoints)));
+
+                        point.add(circleTwoOffset);
+                        points.push(point);
+                }
+
+                return points;
         }
 }

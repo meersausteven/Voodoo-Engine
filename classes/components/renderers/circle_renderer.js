@@ -21,7 +21,8 @@ class CircleRenderer extends Renderer {
                 this.radius = radius;
         }
         
-        /*      
+        /*
+
         mouseOverCheck(x, y) {
                 // calculate coords on canvas by taking in the coords of its gameObject
                 let worldPos = new Vector2(

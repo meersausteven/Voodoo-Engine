@@ -129,13 +129,9 @@ class Project {
 
                 currentKeyInput.push(e.code);
                 currentKeyInput.clear();
-
-                updateKeyboard(e.code);
         }
 
         onKeyUp(e) {
                 currentKeyInput.remove(e.code);
-
-                updateKeyboard(e.code);
         }
 }
