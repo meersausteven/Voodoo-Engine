@@ -15,9 +15,6 @@ var time = {
         deltaTime: null
 };
 
-// globally available array with currently pressed/held down keys
-var currentKeyInput = [];
-
 /////////////
 /* Methods */
 /////////////
@@ -209,24 +206,20 @@ function sortByYPos(a, b) {
 }
 
 // checks if a given value is between two other values
+// takes in a value to check and start and end values
 // returns true if true
-function valueBetween(value, start, end) {
-        if ( (value > start) && (value < end) ) {
+Math.valueBetween = function(value, start, end) {
+        if ((value > start) &&
+            (value < end))
+        {
                 return true;
         }
 
         return false;
-}
-
-// calculate length of vector inside a circle with radius 1
-function getRadialLength(angle) {
-        let radial = angle * (Math.PI / 180);
-
-        return radial;
-}
+};
 
 // add clamp function to Math object
-// clamps if a given value is between a min and a max value
+// clamps a given value between a min and a max value
 // returns the clamped value
 Math.clamp = function(value, min, max) {
         if (value < min) {
@@ -236,9 +229,66 @@ Math.clamp = function(value, min, max) {
         }
 
         return value;
-}
+};
 
-// add remove funtion to array prototype
+// add degreesToRadians function to Math object
+// takes in an angle in degrees and returns that angle as radians
+Math.degreesToRadians = function(degrees) {
+        let radians = degrees * (this.PI / 180);
+
+        return radians
+};
+
+Math.dot = function(a, b) {
+        let dot;
+
+        dot = x * x + y * y;
+
+        return dot;
+};
+/*
+Math.lerp = function(a, b, t) {
+        let lerp;
+
+        lerp = (1 - t) * a + t * b;
+
+        return lerp
+};
+
+Math.fade = function(t) {
+        let fade;
+
+        fade = t * t * t * (t * (t * 6 - 15) + 10);
+
+        return fade;
+};
+*/
+// create an array with random static noise values between 0 and 1
+// takes in width and height of the noise (texture)
+// returns array with length of width * height
+Math.staticNoise = function(width, height) {
+        let noise = [];
+        
+        let i = 0;
+        let l = width * height;
+        while (i < l) {
+                noise[i] = this.random();
+
+                ++i;
+        }
+
+        return noise;
+};
+
+// create an array with random perlin noise values between 0 and 1
+// takes in width and height of the noise (texture)
+// returns array with length of width * height
+Math.perlinNoise = function(width, height) {
+        // @todo: add perlin noise function
+
+};
+
+// add remove function to array prototype
 // removes item from array with given value
 Array.prototype.remove = function() {
         var what, a = arguments, L = a.length, ax;
@@ -258,30 +308,4 @@ Array.prototype.remove = function() {
 // removes empty indexes
 Array.prototype.clear = function() {
         return true;
-}
-
-//////////////////
-/* Editor stuff */
-//////////////////
-
-function tabClick(element) {
-        let target = element.dataset.target;
-        let wasOpen = !!element.classList.contains('active');
-
-        // remove classes from all tabs
-        let tabs = element.parentElement.querySelectorAll('.tab');
-        for (let i = 0; i < tabs.length; i++) {
-                tabs[i].classList.remove('active');
-        }
-        
-        let tabContents = document.querySelectorAll('#menuBar .tab-content');
-        for (let i = 0; i < tabContents.length; i++) {
-                tabContents[i].classList.remove('open');
-        }
-
-        // toggle class for own tab
-        if (!wasOpen) {
-                element.classList.toggle('active');
-                document.querySelector(target).classList.add('open');
-        }
 }

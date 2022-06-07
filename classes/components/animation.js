@@ -1,56 +1,51 @@
 
 class Animation extends Component {
         type = "Animation";
-        imageRenderer = null;
-        animationName = null;
-        numberOfFrames = 1;
-        timePerFrame = 100;
-        looping = true;
         
         constructor(imageRenderer, animationName, numberOfFrames = 1, timePerFrame = 100, looping = true) {
                 // imageRenderer: an image renderer as GameObject.renderer
-                // animationName: directory named after the animation /images (contains all frames named after position in animation starting with 0)
-                // numberOfFrames: number of images/frames in the animation directory
-                // timePerFrame: time each frame in the animation will be shown in ms
-                // looping: should the animation repeat after finishing
+                // string animationName: directory named after the animation /images (contains all frames named after position in animation starting with 0)
+                // int numberOfFrames: number of images/frames in the animation directory
+                // int timePerFrame: time each frame in the animation will be shown in ms
+                // bool looping: should the animation repeat after finishing
                 
-                this.imageRenderer = imageRenderer;
-                this.animationName = animationName;
-                this.numberOfFrames = numberOfFrames;
-                this.timePerFrame = timePerFrame / 1000;
-                this.looping = looping;
+                this.attributes['imageRenderer'] = imageRenderer;
+                this.attributes['animationName'] = new AttributeText('Animation Name', animationName);
+                this.attributes['numberOfFrames'] = new AttributeNumber('Number of Frames', numberOfFrames);
+                this.attributes['timePerFrame'] = new AttributeNumber('Time per Frame', timePerFrame / 1000);
+                this.attributes['looping'] = new AttributeBoolean('Looping', looping);
 
-                this.currentFrame = 0;
-                this.currentFrameTime = 0;
-                this.animationSources = [];
+                this.attributes['currentFrame'] = 0;
+                this.attributes['currentFrameTime'] = 0;
+                this.attributes['animationSources'] = [];
 
                 for (let i = 0; i < this.numberOfFrames; i++) {
-                        this.animationSources.push("animations/" + this.animationName + "/" + i + ".png");
+                        this.attributes['animationSources'].push("animations/" + this.attributes['animationName'].value + "/" + i + ".png");
                 }
 
-                this.imagePath = this.animationSources[this.currentFrame];
+                this.attributes['imagePath'].value = this.attributes['animationSources'][this.attributes['currentFrame']];
                 
-                this.imageRenderer.imagePath = this.imagePath;
-                this.imageRenderer.updateSource();
+                this.attributes['imageRenderer'].imagePath = this.attributes['imagePath'].value;
+                this.attributes['imageRenderer'].updateSource();
         }
         
         update() {
-                if (this.numberOfFrames > 1) {
-                        if (this.currentFrameTime >= this.timePerFrame) {
-                                this.currentFrame++;
-                                this.currentFrameTime = 0;
+                if (this.attributes['numberOfFrames'].value > 1) {
+                        if (this.attributes['currentFrameTime'] >= this.attributes['timePerFrame'].value) {
+                                this.attributes['currentFrame']++;
+                                this.attributes['currentFrameTime'] = 0;
 
-                                if ( (this.looping == true) && (this.currentFrame >= this.animationSources.length) ) {
-                                        this.currentFrame = 0;
+                                if ( (this.attributes['looping'].value == true) && (this.attributes['currentFrame'] >= this.attributes['animationSources'].length) ) {
+                                        this.attributes['currentFrame'] = 0;
                                 }
                         } else {
-                                this.currentFrameTime += time.deltaTime;
+                                this.attributes['currentFrameTime'] += time.deltaTime;
                         }
 
-                        this.imagePath = this.animationSources[this.currentFrame];
+                        this.attributes['imagePath'].value = this.attributes['animationSources'][this.attributes['currentFrame']];
                         
-                        this.imageRenderer.imagePath = this.imagePath;
-                        this.imageRenderer.updateSource();
+                        this.attributes['imageRenderer'].imagePath = this.attributes['imagePath'].value;
+                        this.attributes['imageRenderer'].updateSource();
                 }
         }
 }

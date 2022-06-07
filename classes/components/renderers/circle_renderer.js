@@ -1,65 +1,44 @@
 
 class CircleRenderer extends Renderer {
-        type = "Renderer/Circle Renderer";
-        color = null;
-        borderWidth = 1;
-        borderColor = null;
-        radius = 0;
+        type = "Circle Renderer";
         
-        constructor(color, borderWidth, borderColor, radius = 0, offset = new Vector2()) {
-                // color: fill color
-                // borderWidth: width of border
-                // borderColor: color of border
-                // radius: radius of the circle
-                // offset: offset relative to this gameObject's position
+        constructor(fillColor, borderWidth, borderColor, radius = 0, offset = new Vector2()) {
+                // color fillColor: fill color
+                // int borderWidth: width of border
+                // color borderColor: color of border
+                // int radius: radius of the circle
+                // Vector2 offset: offset relative to this gameObject's position
 
                 super(offset);
 
-                this.color = color;
-                this.borderWidth = borderWidth;
-                this.borderColor = borderColor;
-                this.radius = radius;
+                this.attributes['fillColor'] = new AttributeColor('Fill Color', fillColor);
+                this.attributes['borderWidth'] = new AttributeNumber('Border Width', borderWidth);
+                this.attributes['borderColor'] = new AttributeColor('Border Color', borderColor);
+                this.attributes['radius'] = new AttributeNumber('Radius', radius);
         }
-        
-        /*
 
-        mouseOverCheck(x, y) {
-                // calculate coords on canvas by taking in the coords of its gameObject
-                let worldPos = new Vector2(
-                        this.gameObject.pos.x + this.offset.x - this.gameObject.scene.mainCamera.pos.x,
-                        this.gameObject.pos.y + this.offset.y - this.gameObject.scene.mainCamera.pos.y
-                );
-
-                let distPoints = (x - worldPos.x) * (x - worldPos.x) + (y - worldPos.y) * (y - worldPos.y);
-                let r = this.radius;
-                r *= r;
-
-                if (distPoints < r) {
-                        return true;
+        render(camera) {
+                if ((camera === null) ||
+                    (typeof camera === 'undefined') ||
+                    !(camera instanceof Camera)) {
+                        return false;
                 }
 
-                return false;
-        }
-        */
+                camera.canvasContext.save();
+                camera.canvasContext.translate(this.gameObject.transform.attributes['position'].value.x + this.attributes['offset'].value.x - camera.gameObject.transform.attributes['position'].value.x, this.gameObject.transform.attributes['position'].value.y + this.attributes['offset'].value.y - camera.gameObject.transform.attributes['position'].value.y);
+                camera.canvasContext.rotate(Math.degreesToRadians(this.gameObject.transform.attributes['rotation'].value + camera.gameObject.transform.attributes['rotation'].value));
 
-        update() {
-                let context = this.gameObject.scene.project.canvasContext;
-
-                context.save();
-                context.translate(this.gameObject.pos.x + this.offset.x - this.gameObject.scene.mainCamera.pos.x, this.gameObject.pos.y + this.offset.y - this.gameObject.scene.mainCamera.pos.y);
-                context.rotate(this.gameObject.rotationAngle);
-
-                context.beginPath();
-                context.arc(0, 0, this.radius, 0, 2 * Math.PI);
+                camera.canvasContext.beginPath();
+                camera.canvasContext.arc(0, 0, this.attributes['radius'].value, 0, 2 * Math.PI);
                 // border
-                context.lineWidth = this.borderWidth;
-                context.strokeStyle = this.borderColor;
-                context.stroke();
+                camera.canvasContext.lineWidth = this.attributes['borderWidth'].value;
+                camera.canvasContext.strokeStyle = this.attributes['borderColor'].value;
+                camera.canvasContext.stroke();
                 // fill
-                context.fillStyle = this.color;
-                context.fill();
+                camera.canvasContext.fillStyle = this.attributes['fillColor'].value;
+                camera.canvasContext.fill();
 
-                context.restore();
+                camera.canvasContext.restore();
         }
 
 }

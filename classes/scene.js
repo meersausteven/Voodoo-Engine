@@ -1,124 +1,80 @@
 
 class Scene {
-        project = null;
-        mainCamera = new MainCamera();
+        project;
+        activeCamera;
         gameObjects = [];
         settings = {
                 sortingLayers: [],
 
         };
 
-        processFrame() {
-                // clear canvas
-                this.project.canvasContext.clearRect(0, 0, this.project.canvas.width, this.project.canvas.height);
+        constructor() {
+                this.addGameObject(new CameraObject());
+                this.activeCamera = this.#getCamera();
+        }
+
+        start() {
+                //start all game objects
+                let i = 0;
+                let l = this.gameObjects.length;
+
+                while (i < l) {
+                        if (this.gameObjects[i].attributes['enabled'].value === true) {
+                                this.gameObjects[i].start();
+                        }
+
+                        ++i;
+                }
+        }
+
+        processUpdateFrame() {
+                if ((this.project === null) ||
+                    (typeof this.project == 'undefined'))
+                {
+                        return false;
+                }
 
                 // process all gameObjects
                 let i = 0;
                 let l = this.gameObjects.length;
 
                 while (i < l) {
-                        this.gameObjects[i].update();
-                        this.gameObjects[i].lateUpdate();
-
-                        ++i;
-                }
-
-                // taken from main.js Game class
-                
-                /*
-                // process all ground objects
-                let i = 0;
-                let l = this.groundObjects.length;
-                
-                while (i < l) {
-                        let groundObject = this.groundObjects[i];
-                        groundObject.game = this;
-
-                        if (groundObject.renderer != null) {
-                                groundObject.renderer.render(canvasContext, this.activeCamera);
-                        }
-
-                        // debug - show bounds of components
-                        if (this.debugging == true) {
-                                groundObject.showBounds(canvasContext, this.activeCamera);
+                        if (this.gameObjects[i].attributes['enabled'].value === true) {
+                                this.gameObjects[i].update();
+                                this.gameObjects[i].lateUpdate();
                         }
 
                         ++i;
                 }
 
-                // process all game objects
-                i = 0;
-                l = this.gameObjects.length;
+                // get active camera view
+                this.project.canvasContext.clearRect(0, 0, this.project.canvas.width, this.project.canvas.height);
 
-                while (i < l) {
-                        let gameObject = this.gameObjects[i];
-                        gameObject.game = this;
+                this.project.canvasContext.drawImage(this.activeCamera.canvas, 0, 0);
 
-                        // first process movement of all gameobjects
-                        gameObject.update();
-                        gameObject.lateUpdate();
-
-                        this.gameObjects.sort(sortByYPos);
-
-                        // position active camera after all gameobjects have been processed
-                        if ( (gameObject.camera != null) && (this.activeCamera != gameObject.camera) ) {
-                                // only one gameobject at a time is allowed to have a camera
-                                this.activeCamera = gameObject.camera;
-                        } else {
-                                this.activeCamera.lateUpdate();
-                        }
-
-                        // render all gameobjects after all postioning is done
-                        if (gameObject.renderer != null) {
-                                gameObject.renderer.render(canvasContext, this.activeCamera);
-                        }
-
-                        // debug - show bounds of components
-                        if (this.debugging == true) {
-                                gameObject.showBounds(canvasContext, this.activeCamera);
-                                
-                                if (gameObject.collider.length > 0) {
-                                        let j = 0;
-                                        let c = gameObject.collider.length;
-
-                                        while (j < c) {
-                                                gameObject.collider[j].showBounds(canvasContext);
-                                                
-                                                ++j;
-                                        }
-                                }
-
-                                if (gameObject.renderer != null) {
-                                        gameObject.renderer.showBounds(canvasContext, this.activeCamera);
-                                }
-                        }
-
-                        ++i;
-                }
-                
-                // debug - show default area of the canvas (without camera translation)
-                if (this.debugging == true) {
-                        canvasContext.save();
-
-                        canvasContext.translate(0 - this.activeCamera.pos.x, 0 - this.activeCamera.pos.y);
-                        canvasContext.lineWidth = 2;
-                        canvasContext.strokeStyle = "#aaff00";
-                        canvasContext.strokeRect(0, 0, this.canvas.width, this.canvas.height);
-                        
-                        canvasContext.restore();
-                }
-                */
+                return true;
         }
 
         processFixedUpdateFrame() {
-                // DON'T USE THIS TO RENDER OBJECTS - RENDERING SHOULD STAY IN THE PROCESSFRAME FUNCTION
+                // process all gameObjects
+                let i = 0;
+                let l = this.gameObjects.length;
+
+                while (i < l) {
+                        if (this.gameObjects[i].attributes['enabled'].value === true) {
+                                this.gameObjects[i].fixedUpdate();
+                        }
+
+                        ++i;
+                }
         }
 
         addGameObject(object) {
-                if ((typeof object == "object") && (object instanceof GameObject)) {
+                if (object instanceof GameObject) {
                         object.scene = this;
-                        object.start();
                         this.gameObjects.push(object);
+
+                        dispatchEvent(new Event('game_object_list_changed'));
 
                         return true;
                 }
@@ -126,13 +82,75 @@ class Scene {
                 return false;
         }
 
-        // mouse down event
-        onMouseDown(mouseDown) {
+        removeGameobject(index) {
+                if ((typeof index == "number") &&
+                    ((this.gameObjects[index] !== null) &&
+                    (typeof this.gameObject[index] != "undefined")) ) {
+                        this.gameObject[index] = null;
 
+                        dispatchEvent(new Event('game_object_list_changed'));
+
+                        return true;
+                }
+
+                return false;
         }
-        
-        // mouse up event
-        onMouseUp() {
+
+        #getCamera() {
+                let i = 0;
+                let l = this.gameObjects.length;
+
+                while (i < l) {
+                        if (this.gameObjects[i] instanceof CameraObject) {
+                                let j = 0;
+                                let c = this.gameObjects[i].components.length;
+
+                                while (j < c) {
+                                        if (this.gameObjects[i].components[j] instanceof Camera) {
+                                                return this.gameObjects[i].components[j];
+                                        }
+
+                                        j++;
+                                }
+                        }
+
+                        ++i;
+                }
+
+                return null;
+        }
+
+        prepareForJsonExport() {
+                let dummy = {};
+
+                // scene settings
+                dummy.settings = {};
+                for (let key in this.settings) {
+                        if ((key === 'remove') ||
+                            (key === 'clear'))
+                        {
+                                continue;
+                        }
+
+                        dummy.settings[key] = this.settings[key];
+                }
+
+                // scene active camera
+                dummy.activeCamera = [];
+                dummy.activeCamera[0] = {};
+                dummy.activeCamera[0].name 
+
+                // scene game objects
+                dummy.gameObjects = [];
+
+                let i = 0;
+                let l = this.gameObjects.length;
+                while (i < l) {
+                        dummy.gameObjects[i] = this.gameObjects[i].prepareForJsonExport();
+
+                        ++i;
+                }
                 
+                return dummy;
         }
 }

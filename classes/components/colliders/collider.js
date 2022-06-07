@@ -1,29 +1,30 @@
 
 class Collider extends Component {
         type = "Collider";
-        isTrigger = false;
-        insideTrigger = [];
-        offset = new Vector2();
-        worldPos = new Vector2();
 
-        constructor(isTrigger, offset) {
+        constructor(isTrigger = false, offset = new Vector2()) {
                 super();
                 
-                this.isTrigger = isTrigger;
-                this.insideTrigger = [];
-                this.offset = offset;
+                this.attributes['displayBounds'] = new AttributeBoolean('Display Bounds', false);
+                this.attributes['isTrigger'] = new AttributeBoolean('Is Trigger', isTrigger);
+                this.attributes['inverted'] = new AttributeBoolean('Inverted', false);
+                this.attributes['offset'] = new AttributeVector2('Offset', offset);
 
-                this.worldPos = new Vector2(
-                        this.gameObject.pos.x + this.offset.x - this.gameObject.scene.mainCamera.pos.x,
-                        this.gameObject.pos.y + this.offset.y - this.gameObject.scene.mainCamera.pos.y
-                );
+                this.attributes['worldPos'] = new Vector2();
         }
 
         update() {
-                this.worldPos = new Vector2(
-                        this.gameObject.pos.x + this.offset.x - this.gameObject.scene.mainCamera.pos.x,
-                        this.gameObject.pos.y + this.offset.y - this.gameObject.scene.mainCamera.pos.y
+                this.attributes['worldPos'] = new Vector2(
+                        this.gameObject.transform.attributes['position'].value.x + this.attributes['offset'].value.x - this.gameObject.scene.activeCamera.gameObject.transform.attributes['position'].value.x,
+                        this.gameObject.transform.attributes['position'].value.y + this.attributes['offset'].value.y - this.gameObject.scene.activeCamera.gameObject.transform.attributes['position'].value.y
                 );
+                
+                if (this.attributes['displayBounds'].value === true) {
+                        this.displayBounds();
+                }
         }
         
+        displayBounds() {
+                return;
+        }
 }

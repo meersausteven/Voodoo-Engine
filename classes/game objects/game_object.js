@@ -1,19 +1,23 @@
 
 class GameObject {
         type = "Game Object";
-        name = "New GameObject";
-        pos = new Vector2();
-        rotationAngle = 0;
         components = [];
+        transform;
+        attributes = {};
 
-        constructor(x = 0, y = 0, rotationAngle = 0) {
-                this.pos = new Vector2(x, y);
-                this.rotationAngle = rotationAngle;
+        constructor(x = 0, y = 0, rotation = 0) {
+                // every game object is created with a transform component
+                let transform = new Transform(new Vector2(x, y), rotation);
+                this.addComponent(transform);
 
-                this.components = [];
+                this.transform = this.getTransform();
+
+                this.attributes['name'] = new AttributeText('Name', "New GameObject");
+                this.attributes['enabled'] = new AttributeBoolean('Enabled', true);
         }
 
         start() {
+                // start all components
                 let i = 0;
                 let l = this.components.length;
 
@@ -25,101 +29,49 @@ class GameObject {
         }
 
         update() {
-                // update all components of this gameObject
+                // update is called every frame
                 let i = 0;
                 let l = this.components.length;
 
                 while (i < l) {
-                        this.components[i].update();
+                        if (this.components[i].attributes['enabled'].value === true) {
+                                this.components[i].update();
+                        }
                         
                         ++i;
                 }
-
-                if (this.scene.project.settings.showObjectGizmos) {
-                        this.showGizmo();
-                }
-                /*
-                // @todo: mvoe this stuff to its component
-                if (this.collider.length > 0) {
-                        let j = 0;
-                        let c = this.collider.length;
-
-                        while (j < c) {
-                                this.collider[j].parent = this;
-                                this.collider[j].camera = this.game.activeCamera;
-                                this.collider[j].update();
-                                
-                                ++j;
-                        }
-
-                        if (this.rigidbody != null) {
-                                this.rigidbody.update();
-
-                                let i = 0;                             // looping through all gameobjects in the current game
-                                let l = this.game.gameObjects.length;  // game.gameobjects length
-                                
-                                while (i < l) {
-                                        let gameObject = this.game.gameObjects[i];
-                                        
-                                        if ((gameObject != this) && (gameObject.collider.length > 0)) {
-                                                // loop through all colliders of all other game objects
-        
-                                                let t = 0;                      // looping through this.collider
-                                                let tc = this.collider.length;  // this.collider length
-        
-                                                while (t < tc) {
-                                                        if (this.collider[t].isTrigger != true) {
-                                                                ++t;
-                                                                continue;
-                                                        }
-
-                                                        if (this.collider[t].checkTriggerZone(gameObject.collider)) {
-                                                                gameObject.collider.onAction(this.parent, "trigger");
-                                                        }
-        
-                                                        ++t;
-                                                }
-                                        }
-        
-                                        ++i;
-                                }
-                        }
-                }
-
-                if (this.animation != null) {
-                        this.animation.update();
-                }
-                */
         }
 
         fixedUpdate() {
+                // fixed update is called in a certain interval (default: 10ms)
                 let i = 0;
                 let l = this.components.length;
 
                 while (i < l) {
-                        this.components[i].fixedUpdate();
+                        if (this.components[i].attributes['enabled'].value === true) {
+                                this.components[i].fixedUpdate();
+                        }
                         
                         ++i;
                 }
         }
 
         lateUpdate() {
+                // late update is called after update()
                 let i = 0;
                 let l = this.components.length;
 
                 while (i < l) {
-                        this.components[i].lateUpdate();
+                        if (this.components[i].attributes['enabled'].value === true) {
+                                this.components[i].lateUpdate();
+                        }
                         
                         ++i;
                 }
         }
-
-        onAction(actor, actionType) {
-                return;
-        }
         
         addComponent(component) {
-                if ((typeof component == "object") && (component instanceof Component)) {
+                if (component instanceof Component) {
                         component.gameObject = this;
                         this.components.push(component);
 
@@ -129,40 +81,191 @@ class GameObject {
                 return false;
         }
 
-        showGizmo() {
-                let context = this.scene.project.canvasContext;
+        removeComponent(index) {
+                if ((typeof index == "number") &&
+                    (this.components[index] !== null) &&
+                    (typeof this.components[index] != "undefined"))
+                {
+                        this.components[index] = null;
 
-                context.save();
-                // position
-                context.translate(this.pos.x - this.scene.mainCamera.pos.x, this.pos.y - this.scene.mainCamera.pos.y);
-                context.rotate(this.rotationAngle);
-                // @todo: add gizmo for positioning and rotating in edit mode
-                // up arrow
-                context.lineWidth = 2;
-                context.strokeStyle = "#00ff00";
-                context.beginPath();
-                
-                context.moveTo(0, 0);
-                context.lineTo(0, -50);
-                context.moveTo(0, -52);
-                context.lineTo(-6, -40);
-                context.moveTo(0, -52);
-                context.lineTo(6, -40);
+                        return true;
+                }
 
-                context.stroke();
-                // right arrow
-                context.strokeStyle = "#0000ff";
-                context.beginPath();
-                
-                context.moveTo(0, 0);
-                context.lineTo(50, 0);
-                context.moveTo(52, 0);
-                context.lineTo(40, 6);
-                context.moveTo(52, 0);
-                context.lineTo(40, -6);
+                return false;
+        }
+        
+        getTransform() {
+                let i = 0;
+                let l = this.components.length;
 
-                context.stroke();
+                while (i < l) {
+                        if (this.components[i] instanceof Transform) {
+                                return this.components[i];
+                        }
 
-                context.restore();
+                        ++i;
+                }
+
+                return null;
+        }
+
+        prepareForJsonExport() {
+                let dummy = {};
+
+                // game object attributes
+                dummy.attributes = {};
+
+                for (let key in this.attributes) {
+                        if ((key === 'remove') ||
+                                (key === 'clear'))
+                        {
+                                continue;
+                        }
+
+                        dummy.attributes[key] = {};
+
+                        dummy.attributes[key].type = this.attributes[key].type;
+                        dummy.attributes[key].name = this.attributes[key].name;
+                        dummy.attributes[key].value = this.attributes[key].value;
+                }
+
+                // game object components
+                dummy.components = [];
+
+                let i = 0;
+                let l = this.components.length;
+                while (i < l) {
+                        dummy.components[i] = this.components[i].prepareForJsonExport();
+
+                        ++i;
+                }
+
+                return dummy;
+        }
+
+        createCard() {
+                let wrapper = document.createElement('div');
+                wrapper.classList.add('game_object');
+                wrapper.addEventListener('click', function(e) {
+                        let thisElement = e.target.closest('.game_object');
+
+                        if (!thisElement.classList.contains('selected')) {
+                                let selected = thisElement.parentElement.querySelector('.selected');
+                                if ((selected !== null) &&
+                                    (selected !== thisElement)) {
+                                        selected.classList.remove('selected');
+                                        this.clearInfoCard();
+                                }
+
+                                this.createInfoCard();
+                                thisElement.classList.add('selected');
+                        } else {
+                                thisElement.classList.remove('selected');
+                                this.clearInfoCard();
+                        }
+                }.bind(this));
+
+                let title = document.createElement('div');
+                title.classList.add('title');
+                title.innerHTML = this.attributes['name'].value;
+                this.nameNode = title;
+
+                wrapper.appendChild(title);
+
+                let listNode = document.querySelector(this.scene.project.settings.gameObjectListWrapper);
+                listNode.appendChild(wrapper);
+        }
+
+        createInfoCard() {
+                let i = 0;
+                let l = this.components.length;
+
+                // create info card
+                let card = document.createElement('div');
+                card.classList.add('card');
+
+                let title = document.createElement('div');
+                title.classList.add('card_title');
+                title.appendChild(this.createInfoTitle());
+
+                let content = document.createElement('div');
+                content.classList.add('card_content');
+
+                // add component cards to card content
+                while (i < l) {
+                        content.appendChild(this.components[i].createCard());
+
+                        ++i;
+                }
+
+                // add new component select to card content
+                let select = document.createElement('select');
+                select.classList.add('new_component');
+
+                let defaultOption = document.createElement('option');
+                defaultOption.innerHTML = "Add new Component";
+                defaultOption.value = 0;
+
+                select.appendChild(defaultOption);
+
+                let j = 0;
+                let ac = this.scene.project.availableComponents.length;
+
+                while (j < ac) {
+                        let option = document.createElement('option');
+                        option.innerHTML = this.scene.project.availableComponents[j];
+                        option.value = this.scene.project.availableComponents[j];
+
+                        select.appendChild(option);
+
+                        ++j;
+                }
+
+                content.appendChild(select);
+
+                card.appendChild(title);
+                card.appendChild(content);
+
+                let listNode = document.querySelector(this.scene.project.settings.componentListWrapper);
+                listNode.appendChild(card);
+        }
+
+        clearInfoCard() {
+                let listNode = document.querySelector(this.scene.project.settings.componentListWrapper);
+                let i = 0;
+                let l = listNode.children.length;
+
+                while (i < l) {
+                        listNode.lastElementChild.remove();
+                        
+                        ++i;
+                }
+        }
+
+        createInfoTitle() {
+                let content = document.createElement('div');
+                content.classList.add('content');
+
+                for (let key in this.attributes) {
+                        if (this.attributes[key] instanceof AttributeText) {
+                                let widget = this.attributes[key].createWidget();
+
+                                if (key === 'name') {
+                                        widget.querySelector('input').addEventListener('value_changed', function(e) {
+                                                this.#updateName();
+                                        }.bind(this));                
+                                }
+
+                                content.appendChild(widget);
+                        }
+                }
+
+                return content;
+        }
+
+        #updateName() {
+                this.nameNode.innerHTML = this.attributes['name'].value;
+
+                return true;
         }
 }

@@ -1,21 +1,22 @@
 
 class PolygonCapsuleRenderer extends PolygonRenderer {
-        type = "Renderer/Polygon Capsule Renderer";
-        polygonCapsule;
-        color;
-        borderWidth;
-        borderColor;
+        type = "Polygon Capsule Renderer";
         
-        constructor(polygonCapsule, color, borderWidth, borderColor, offset = new Vector2()) {
-                super(polygonCapsule.points, color, borderWidth, borderColor, offset);
+        constructor(polygonCapsule = new PolygonCapsule(30, 12, 40), fillColor = '#ff0000', borderWidth = 2, borderColor = '#ffffff', offset = new Vector2()) {
+                // PolygonCapsule polygonCapsule: polygon circle
+                // color fillColor: fill color
+                // int borderWidth: width of border
+                // color borderColor: color of border
 
-                this.polygonCapsule = polygonCapsule;
-                this.color = color;
-                this.borderWidth = borderWidth;
-                this.borderColor = borderColor;
+                super(polygonCapsule.points, fillColor, borderWidth, borderColor, offset);
+
+                this.attributes['polygonCapsule'] = polygonCapsule;
+                this.attributes['fillColor'] = new AttributeColor('Fill Color', fillColor);
+                this.attributes['borderWidth'] = new AttributeNumber('Border Width', borderWidth);
+                this.attributes['borderColor'] = new AttributeColor('Border Color', borderColor);
         }
 
-        update() {
-                super.update();
+        render(camera) {
+                super.render(camera);
         }
 }

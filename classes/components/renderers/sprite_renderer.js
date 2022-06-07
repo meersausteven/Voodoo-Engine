@@ -1,63 +1,47 @@
 
 class SpriteRenderer extends Renderer {
-        type = "Renderer/Sprite Renderer";
-        width = 0;
-        height = 0;
-        image = null;
-        filePath = null;
+        type = "Sprite Renderer";
 
         constructor(width, height, filePath = null, offset = new Vector2()) {
-                // width: width of the sprite
-                // height: height of the sprite
-                // filePath: path to the image file relative to the path in project setting 'spriteFilesPath'
-                // offset: offset relative to this gameObject's position
+                // int width: width of the sprite
+                // int height: height of the sprite
+                // file filePath: path to the image file relative to the path in project setting 'filePathSprites'
+                // Vector2 offset: offset relative to this gameObject's position
 
                 super(offset);
 
-                this.width = width;
-                this.height = height;
-                this.image = new Image(this.width, this.height);
-                this.filePath = filePath;
+                this.attributes['width'] = new AttributeNumber('Width', width);
+                this.attributes['height'] = new AttributeNumber('Height', height);
+                this.attributes['image'] = new Image(this.attributes['width'].value, this.attributes['height'].value);
+                this.attributes['filePath'] = new AttributeText('File Path', filePath);
         }
 
         start() {
                 // run this function after this component was added to the gameObject
-                if (this.filePath != null) {
-                        this.image.src = this.gameObject.scene.project.settings.spriteFilesPath + this.filePath;
+                if (this.attributes['filePath'].value != null) {
+                        this.attributes['image'].src = this.gameObject.scene.project.settings.filePathSprites + this.attributes['filePath'].value;
                 }
         }
-        /*
-        mouseOverCheck(x, y) {
-                // calculate coords on canvas by taking in the coords of its gameObject
-                let worldPos = new Vector2(
-                        this.gameObject.pos.x + this.offset.x - this.gameObject.scene.mainCamera.pos.x,
-                        this.gameObject.pos.y + this.offset.y - this.gameObject.scene.mainCamera.pos.y
-                );
 
-                if ( valueBetween(x, worldPos.x - (this.width / 2), worldPos.x + (this.width / 2)) &&
-                     valueBetween(y, worldPos.y - this.height, worldPos.y) ) {
-                        return true;
+        render(camera) {
+                if ((camera === null) ||
+                    (typeof camera === 'undefined') ||
+                    !(camera instanceof Camera)) {
+                        return false;
                 }
-                
-                return false;
-        }
-        */
 
-        update() {
-                if (this.filePath != null) {
-                        let context = this.gameObject.scene.project.canvasContext;
+                if (this.attributes['filePath'].value != null) {
+                        camera.canvasContext.save();
 
-                        context.save();
+                        camera.canvasContext.translate(this.gameObject.transform.attributes['position'].value.x + this.attributes['offset'].value.x - camera.gameObject.transform.attributes['position'].value.x, this.gameObject.transform.attributes['position'].value.y + this.attributes['offset'].value.y - camera.gameObject.transform.attributes['position'].value.y);
+                        camera.canvasContext.rotate(Math.degreesToRadians(this.gameObject.transform.attributes['rotation'].value + camera.gameObject.transform.attributes['rotation'].value));
+                        camera.canvasContext.drawImage(this.attributes['image'], -this.attributes['width'].value / 2, -this.attributes['height'].value / 2, this.attributes['width'].value, this.attributes['height'].value);
 
-                        context.translate(this.gameObject.pos.x + this.offset.x - this.gameObject.scene.mainCamera.pos.x, this.gameObject.pos.y + this.offset.y - this.gameObject.scene.mainCamera.pos.y);
-                        context.rotate(this.gameObject.rotationAngle);
-                        context.drawImage(this.image, -this.width / 2, -this.height / 2, this.width, this.height);
-
-                        context.restore();
+                        camera.canvasContext.restore();
                 }
         }
 
         updateSource() {
-                this.image.src = this.gameObject.scene.project.settings.spriteFilesPath + this.filePath;
+                this.attributes['image'].src = this.gameObject.scene.project.settings.filePathSprites + this.attributes['filePath'].value;
         }
 }

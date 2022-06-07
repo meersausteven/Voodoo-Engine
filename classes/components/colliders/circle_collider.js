@@ -1,23 +1,21 @@
 
 class CircleCollider extends Collider {
-        type = "Collider/Circle Collider";
-        radius = 0;
+        type = "Circle Collider";
 
         constructor(radius, isTrigger = false, offset = new Vector2()) {
-                // gameObject: the gameObject this component belongs to
-                // radius: radius of the circle
-                // offsetX: offset on the x axis (starting from center of gameObject)
-                // offsetY: offset on the y axis (starting from bottom of gameObject)
+                // GameObject gameObject: the gameObject this component belongs to
+                // int radius: radius of the circle
+                // Vector2 offset: offset from the center of this.gameObject
 
                 super(isTrigger, offset);
 
-                this.radius = radius;
+                this.attributes['radius'] = new AttributeNumber('Radius', radius);
         }
         
         checkPointInside(x, y) {
                 // calculate coords on canvas by taking in the coords of its gameObject
-                let distPoints = (x - this.worldPos.x) * (x - this.worldPos.x) + (y - this.worldPos.y) * (y - this.worldPos.y);
-                let r = this.radius;
+                let distPoints = (x - this.attributes['worldPos'].x) * (x - this.attributes['worldPos'].x) + (y - this.attributes['worldPos'].y) * (y - this.attributes['worldPos'].y);
+                let r = this.attributes['radius'].value;
                 r *= r;
 
                 if (distPoints < r) {
@@ -32,8 +30,8 @@ class CircleCollider extends Collider {
                 // if null use the gameObject's position
                 if (checkPos != null) {
                         checkPos = new Vector2(
-                                checkPos.x + this.offset.x - this.gameObject.scene.mainCamera.pos.x,
-                                checkPos.y + this.offset.y - this.gameObject.scene.mainCamera.pos.y
+                                checkPos.x + this.attributes['offset'].value.x - this.gameObject.scene.activeCamera.pos.x,
+                                checkPos.y + this.attributes['offset'].value.y - this.gameObject.scene.activeCamera.pos.y
                         );
                 }
         
@@ -47,28 +45,22 @@ class CircleCollider extends Collider {
                 }
         }
 
-        showBounds() {
+        displayBounds() {
                 let context = this.gameObject.scene.project.canvasContext;
-                
+        
                 context.save();
+                context.translate(this.attributes['worldPos'].x, this.attributes['worldPos'].y);
 
-                context.translate(this.worldPos.x, this.worldPos.y);
-                context.rotate(this.gameObject.rotationAngle);
-                // draw center
-                if (this.isTrigger == false) {
-                        // orange for colliders
-                        context.fillStyle = '#994400';
-                        context.strokeStyle = '#ffaa55';
-                } else {
-                        // blue for triggers
-                        context.fillStyle = '#5555dd';
-                        context.strokeStyle = '#8888ff';
-                }
-                context.fillRect(-2, -2, 4, 4);
-                // draw outline
                 context.beginPath();
-                context.arc(0, 0, this.radius, 0, 2 * Math.PI);
-                context.lineWidth = 1;
+                context.arc(0, 0, this.attributes['radius'].value, 0, 2 * Math.PI);
+                
+                context.lineWidth = 2;
+                context.strokeStyle = '#11ff22';
+                context.stroke();
+
+                context.lineWidth = 5;
+                context.setLineDash([4, (this.attributes['radius'].value * 2 * Math.PI) / 4 - 4]);
+                context.strokeStyle = '#11ff22';
                 context.stroke();
 
                 context.restore();

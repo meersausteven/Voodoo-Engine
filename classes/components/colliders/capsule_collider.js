@@ -1,75 +1,73 @@
 
 class CapsuleCollider extends Collider {
-        type = "Collider/Capsule Collider";
-        radius = 0;
-        distance = 0;
-        direction = null;
+        type = "Capsule Collider";
 
         constructor(radius, distance, isTrigger = false, offset = new Vector2(), direction = "horizontal") {
-                // gameObject: the gameObject this component belongs to
-                // camera active game camera
-                // radius: radius of the circles on the ends
-                // distance: distance between the circles' centers
-                // direction: direction of the capsule ("horizontal" or "vertical")
-                // offset: offset starting from bottom center of the gameObject
+                // GameObject gameObject: the gameObject this component belongs to
+                // int radius: radius of the circles on the ends
+                // int distance: distance between the circles' centers
+                // string direction: direction of the capsule ("horizontal" or "vertical")
+                // Vector2 offset: offset from bottom center of this gameObject
                 super(isTrigger, offset);
 
-                this.radius = radius;
-                this.distance = distance;
-                this.direction = direction;
+                this.attributes['radius'] = new AttributeNumber('Radius', radius);
+                this.attributes['distance'] = new AttributeNumber('Distance', distance);
+                this.attributes['direction'] = new AttributeText('Direction', direction);
+        }
 
+        start() {
                 // arrange the colliders making up the capsule depending on the direction it's going
                 let boxWidth, boxHeight = 0;
                 let boxOff, firstCircleOff, secondCircleOff = new Vector2();
                 
-                if (this.direction == "horizontal") {
-                        boxWidth = this.distance;
-                        boxHeight = this.radius * 2;
+                if (this.attributes['direction'].value == "horizontal") {
+                        boxWidth = this.attributes['distance'].value;
+                        boxHeight = this.attributes['radius'].value * 2;
                         boxOff = new Vector2(
-                                this.offset.x,
-                                this.offset.y
+                                this.attributes['offset'].value.x,
+                                this.attributes['offset'].value.y
                         );
                         // left circle
                         firstCircleOff = new Vector2(
-                                this.offset.x - (boxWidth / 2),
-                                this.offset.y - this.radius
+                                this.attributes['offset'].value.x - (boxWidth / 2),
+                                this.attributes['offset'].value.y - this.attributes['radius'].value
                         );
                         // right circle
                         secondCircleOff = new Vector2(
-                                this.offset.x + (boxWidth / 2),
-                                this.offset.y - this.radius
+                                this.attributes['offset'].value.x + (boxWidth / 2),
+                                this.attributes['offset'].value.y - this.attributes['radius'].value
                         );
                 } else {
-                        boxWidth = this.radius * 2;
-                        boxHeight = this.distance;
+                        boxWidth = this.attributes['radius'].value * 2;
+                        boxHeight = this.attributes['distance'].value;
                         boxOff = new Vector2(
-                                this.offset.x,
-                                this.offset.y
+                                this.attributes['offset'].value.x,
+                                this.attributes['offset'].value.y
                         );
                         // top circle
                         firstCircleOff = new Vector2(
-                                this.offset.x,
-                                this.offset.y - boxHeight - this.radius
+                                this.attributes['offset'].value.x,
+                                this.attributes['offset'].value.y - boxHeight - this.attributes['radius'].value
                         );
                         // bottom circle
                         secondCircleOff = new Vector2(
-                                this.offset.x,
-                                this.offset.y + this.radius
+                                this.attributes['offset'].value.x,
+                                this.attributes['offset'].value.y + this.attributes['radius'].value
                         );
                 }
-                
+
                 // build a capsule using two circle- and one box-collider
-                this.gameObject.collider.push(
-                        new CircleCollider(this.radius, this.isTrigger, firstCircleOff.x, firstCircleOff.y)
+                this.gameObject.addComponent(
+                        new CircleCollider(this.attributes['radius'].value, this.attributes['isTrigger'].value, firstCircleOff.x, firstCircleOff.y)
                 );
-                this.gameObject.collider.push(       
-                        new BoxCollider(boxWidth, boxHeight, this.isTrigger, boxOff.x, boxOff.y)
+                this.gameObject.addComponent(       
+                        new BoxCollider(boxWidth, boxHeight, this.attributes['isTrigger'].value, boxOff.x, boxOff.y)
                 ); 
-                this.gameObject.collider.push(
-                        new CircleCollider(this.radius, this.isTrigger, secondCircleOff.x, secondCircleOff.y)
+                this.gameObject.addComponent(
+                        new CircleCollider(this.attributes['radius'].value, this.attributes['isTrigger'].value, secondCircleOff.x, secondCircleOff.y)
                 );
                 
                 // remove this fake collider from this parents colliders
-                this.gameObject.collider = this.gameObject.collider.filter(el => el.type !== this.type);
+                this.gameObject.components = this.gameObject.components.filter(el => el.type !== this.type);
         }
 }

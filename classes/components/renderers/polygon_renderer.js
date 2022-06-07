@@ -1,46 +1,46 @@
 
 class PolygonRenderer extends Renderer {
-        type = "Renderer/Polygon Renderer";
-        points = [];
-        color;
-        borderWidth;
-        borderColor;
+        type = "Polygon Renderer";
         
-        constructor(points, color, borderWidth, borderColor, offset = new Vector2()) {
-                // points: array of points that make up the polygon
-                // color: fill color
-                // borderWidth: width of border
-                // borderColor: color of border
-                // offset: offset relative to this gameObject's position
+        constructor(points, fillColor, borderWidth, borderColor, offset = new Vector2()) {
+                // array points: array of points that make up the polygon
+                // color fillColor: fill color
+                // int borderWidth: width of border
+                // color borderColor: color of border
+                // Vector2 offset: offset relative to this gameObject's position
                 
                 super(offset);
 
-                this.points = points;
-                this.color = color;
-                this.borderWidth = borderWidth;
-                this.borderColor = borderColor;
+                this.attributes['points'] = points;
+                this.attributes['fillColor'] = new AttributeColor('Fill Color', fillColor);
+                this.attributes['borderWidth'] = new AttributeNumber('Border Width', borderWidth);
+                this.attributes['borderColor'] = new AttributeColor('Border Color', borderColor);
         }
 
-        update() {
-                let context = this.gameObject.scene.project.canvasContext;
-
-                context.save();
-                context.translate(this.gameObject.pos.x + this.offset.x - this.gameObject.scene.mainCamera.pos.x, this.gameObject.pos.y + this.offset.y - this.gameObject.scene.mainCamera.pos.y);
-                context.rotate(this.gameObject.rotationAngle);
+        render(camera) {
+                if ((camera === null) ||
+                    (typeof camera === 'undefined') ||
+                    !(camera instanceof Camera)) {
+                        return false;
+                }
+                
+                camera.canvasContext.save();
+                camera.canvasContext.translate(this.gameObject.transform.attributes['position'].value.x + this.attributes['offset'].value.x - camera.gameObject.transform.attributes['position'].value.x, this.gameObject.transform.attributes['position'].value.y + this.attributes['offset'].value.y - camera.gameObject.transform.attributes['position'].value.y);
+                camera.canvasContext.rotate(Math.degreesToRadians(this.gameObject.transform.attributes['rotation'].value + camera.gameObject.transform.attributes['rotation'].value));
                 
                 // border
-                context.lineWidth = this.borderWidth;
-                context.strokeStyle = this.borderColor;
-                context.beginPath();
-                for (let i = 0; i < this.points.length; i++) {
-                        context.lineTo(this.points[i].x, this.points[i].y);
+                camera.canvasContext.lineWidth = this.attributes['borderWidth'].value;
+                camera.canvasContext.strokeStyle = this.attributes['borderColor'].value;
+                camera.canvasContext.beginPath();
+                for (let i = 0; i < this.attributes['points'].length; i++) {
+                        camera.canvasContext.lineTo(this.attributes['points'][i].x, this.attributes['points'][i].y);
                 }
-                context.lineTo(this.points[0].x, this.points[0].y);
-                context.stroke();
+                camera.canvasContext.lineTo(this.attributes['points'][0].x, this.attributes['points'][0].y);
+                camera.canvasContext.stroke();
                 // fill
-                context.fillStyle = this.color;
-                context.fill();
+                camera.canvasContext.fillStyle = this.attributes['fillColor'].value;
+                camera.canvasContext.fill();
 
-                context.restore();
+                camera.canvasContext.restore();
         }
 }

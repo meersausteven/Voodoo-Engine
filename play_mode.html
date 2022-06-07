@@ -1,9 +1,10 @@
+<!DOCTYPE html>
 <html>
         <head>
                 <meta charset="utf-8"/>
                 <link rel="stylesheet" href="style.css">
         </head>
-        <body>
+        <body class="play_mode">
                 <canvas id="gameArea"></canvas>
                 
                 <div id="menuBar">
@@ -11,18 +12,20 @@
                                 <div class="tab" onclick="tabClick(this)" data-target="#console">
                                         Console
                                 </div>
-                                <div class="tab" onclick="tabClick(this)" data-target="#projectSettings">
-                                        Project Settings
-                                </div>
                         </div>
                         <div id="console" class="tab-content"></div>
-                        <div id="projectSettings" class="tab-content"></div>
                 </div>
                                 
                 <!-- root classes -->
-                <script src="classes/collection.js"></script>
                 <script src="classes/scene.js"></script>
                 <script src="classes/project.js"></script>
+                
+                <!-- collection classes -->
+                <script src="classes/collection/vector2.js"></script>
+                <script src="classes/collection/debugger.js"></script>
+                <script src="classes/collection/polygon/polygon.js"></script>
+                <script src="classes/collection/polygon/polygon_circle.js"></script>
+                <script src="classes/collection/polygon/polygon_capsule.js"></script>
 
                 <!-- components -->
                         <!-- other -->
@@ -51,6 +54,6 @@
 
                 <!-- other -->
                 <script src="lib.js"></script>
-                <script src="play.js"></script>
+                <script src="play_mode.js"></script>
         </body>
 </html>
