@@ -9,13 +9,16 @@ class Project {
         // scenes
         sceneList = [];
         activeScene;
+
+        // renderer
+        renderer;
         
         // settings
         settings = {
                 // canvas
                 canvasSelector: '#gameArea',
-                canvasHeight: 720,
                 canvasWidth: 1280,
+                canvasHeight: 720,
                 canvasBackgroundColor: '#000000',
                 canvasHideCursor: false,
                 // fixed update interval in ms
@@ -72,6 +75,9 @@ class Project {
                 if (this.sceneList.length == 0) {
                         this.addScene(new Scene());
                 }
+
+                // add renderer
+                this.renderer = new Renderer();
                 
                 // prepare canvas
                 this.canvas = document.querySelector(this.settings.canvasSelector);
@@ -155,6 +161,21 @@ class Project {
                 if (scene instanceof Scene) {
                         scene.project = this;
                         this.sceneList.push(scene);
+
+                        return true;
+                }
+
+                return false;
+        }
+
+        removeScene(index) {
+                if ((typeof index == "number") &&
+                    ((this.sceneList[index] !== null) &&
+                    (typeof this.sceneList[index] != "undefined"))
+                ) {
+                        this.sceneList[index] = null;
+
+                        dispatchEvent(new Event('scene_list_changed'));
 
                         return true;
                 }

@@ -4,48 +4,26 @@ class Camera extends Component {
 
         canvas;
         cavnasContext;
-        currentFrame;
+        frameImage;
 
-        constructor() {
+        constructor(width, height) {
                 super();
 
-                this.canvas = document.createElement('canvas');
-        }
+                this.attributes['viewWidth'] = new AttributeNumber('view width', width);
+                this.attributes['viewHeight'] = new AttributeNumber('view height', height);
 
-        start() {
-                this.canvas.width = this.gameObject.scene.project.settings.canvasWidth;
-                this.canvas.height = this.gameObject.scene.project.settings.canvasHeight;
+                this.canvas = document.createElement('canvas');
+                this.canvas.width = this.attributes['viewWidth'].value;
+                this.canvas.height = this.attributes['viewHeight'].value;
                 this.canvasContext = this.canvas.getContext("2d");
         }
 
         update() {
                 // clear canvas
-                this.canvasContext.clearRect(0, 0, this.gameObject.scene.project.canvas.width, this.gameObject.scene.project.canvas.height);
+                this.canvasContext.clearRect(0, 0, this.attributes['viewWidth'].value, this.attributes['viewHeight'].value);
 
-                let i = 0;
-                let gol = this.gameObject.scene.gameObjects.length;
-                // go through all sibling gameObjects
-                while (i < gol) {
-                        let go = this.gameObject.scene.gameObjects[i];
+                this.gameObject.scene.project.renderer.renderToCameraView(this);
 
-                        if (go.attributes['enabled'].value === true) {
-                                let j = 0;
-                                let cl = go.components.length;
-                                // process all components
-                                while (j < cl) {
-                                        let c = go.components[j];
-
-                                        if (c.attributes['enabled'].value === true) {
-                                                c.render(this);
-                                        }
-
-                                        ++j;
-                                }
-                        }
-
-                        ++i;
-                }
-
-                this.currentFrame = this.canvas;
+                this.frameImage = this.canvas;
         }
 }

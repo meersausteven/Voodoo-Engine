@@ -9,8 +9,8 @@ class Scene {
         };
 
         constructor() {
+                // add default camera object
                 this.addGameObject(new CameraObject());
-                this.activeCamera = this.#getCamera();
         }
 
         start() {
@@ -25,6 +25,9 @@ class Scene {
 
                         ++i;
                 }
+
+                // get default camera component
+                this.activeCamera = this.#getCamera();
         }
 
         processUpdateFrame() {
@@ -85,8 +88,9 @@ class Scene {
         removeGameobject(index) {
                 if ((typeof index == "number") &&
                     ((this.gameObjects[index] !== null) &&
-                    (typeof this.gameObject[index] != "undefined")) ) {
-                        this.gameObject[index] = null;
+                    (typeof this.gameObjects[index] != "undefined"))
+                ) {
+                        this.gameObjects[index] = null;
 
                         dispatchEvent(new Event('game_object_list_changed'));
 

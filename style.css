@@ -117,15 +117,15 @@ body {
 /* container */
 
 .container {
-        flex: 0 0 auto;
+        flex: 1 1 auto;
+        display: flex;
+        flex-direction: column;
         padding: 0px 5px;
-        max-height: 100%;
         box-sizing: border-box;
         overflow: hidden;
 }
 
 .container + .container {
-        margin-top: 20px;
         border-top: 2px solid #666666;
 }
 
@@ -137,12 +137,12 @@ body {
 }
 
 .container .container_content {
+        flex: 1 1 auto;
         display: flex;
         flex-direction: column;
         padding: 10px 0px;
         overflow-y: auto;
         box-sizing: border-box;
-        max-height: calc(100% - 33px);
 }
 
 .container .container_content .game_object {
@@ -206,10 +206,26 @@ body {
         transform: rotate(90deg);
 }
 
+
+.container .container_content .add_gameObject,
+.container .container_content .add_component {
+        width: 100%;
+        background-color: transparent;
+        border: 1px solid #666666;
+        border-radius: 5px;
+        padding: 5px 10px;
+        margin-top: auto;
+        font-size: 14px;
+        line-height: 16px;
+        color: #666666;
+        cursor: pointer;
+}
+
 /* card */
 .card {
         display: flex;
         flex-direction: column;
+        height: 100%;
 }
 
 .card .card_title {
@@ -221,6 +237,7 @@ body {
 .card .card_title .content {
         display: flex;
         flex-direction: column;
+        flex: 1 1 auto;
 }
 
 .card .card_title .content .attribute {
@@ -230,6 +247,12 @@ body {
 
 .card .card_title .content .attribute + .attribute {
         margin-top: 5px;
+}
+
+.card .card_content {
+        flex: 1 1 auto;
+        display: flex;
+        flex-direction: column;
 }
 
 /* attributes */

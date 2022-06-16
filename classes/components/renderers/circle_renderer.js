@@ -1,5 +1,5 @@
 
-class CircleRenderer extends Renderer {
+class CircleRenderer extends ComponentRenderer {
         type = "Circle Renderer";
         
         constructor(fillColor, borderWidth, borderColor, radius = 0, offset = new Vector2()) {
@@ -26,7 +26,7 @@ class CircleRenderer extends Renderer {
 
                 camera.canvasContext.save();
                 camera.canvasContext.translate(this.gameObject.transform.attributes['position'].value.x + this.attributes['offset'].value.x - camera.gameObject.transform.attributes['position'].value.x, this.gameObject.transform.attributes['position'].value.y + this.attributes['offset'].value.y - camera.gameObject.transform.attributes['position'].value.y);
-                camera.canvasContext.rotate(Math.degreesToRadians(this.gameObject.transform.attributes['rotation'].value + camera.gameObject.transform.attributes['rotation'].value));
+                camera.canvasContext.rotate(Math.degreesToRadians(this.gameObject.transform.attributes['rotation'].value));
 
                 camera.canvasContext.beginPath();
                 camera.canvasContext.arc(0, 0, this.attributes['radius'].value, 0, 2 * Math.PI);

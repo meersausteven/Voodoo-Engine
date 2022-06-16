@@ -15,8 +15,8 @@ class Collider extends Component {
 
         update() {
                 this.attributes['worldPos'] = new Vector2(
-                        this.gameObject.transform.attributes['position'].value.x + this.attributes['offset'].value.x - this.gameObject.scene.activeCamera.gameObject.transform.attributes['position'].value.x,
-                        this.gameObject.transform.attributes['position'].value.y + this.attributes['offset'].value.y - this.gameObject.scene.activeCamera.gameObject.transform.attributes['position'].value.y
+                        this.gameObject.transform.attributes['position'].value.x + this.attributes['offset'].value.x,
+                        this.gameObject.transform.attributes['position'].value.y + this.attributes['offset'].value.y
                 );
                 
                 if (this.attributes['displayBounds'].value === true) {

@@ -32,7 +32,7 @@ class AttributeNumber extends AttributeText {
                                 newValue = Math.clamp(newValue, this.range.min, this.range.max);
                         }
 
-                        this.change(newValue);
+                        this.change(Number(newValue));
                 }
         }
 

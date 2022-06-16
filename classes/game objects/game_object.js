@@ -200,7 +200,7 @@ class GameObject {
 
                 // add new component select to card content
                 let select = document.createElement('select');
-                select.classList.add('new_component');
+                select.classList.add('add_component');
 
                 let defaultOption = document.createElement('option');
                 defaultOption.innerHTML = "Add new Component";
@@ -220,6 +220,17 @@ class GameObject {
 
                         ++j;
                 }
+                select.addEventListener('change', function(e) {
+                        let selectedOption = e.target.children[e.target.selectedIndex].value;
+                        if (selectedOption !== 0) {
+                                let newComponent = eval(`new ${selectedOption}()`);
+
+                                this.addComponent(newComponent);
+                        }
+                        
+                        this.clearInfoCard();
+                        this.createInfoCard();
+                }.bind(this));
 
                 content.appendChild(select);
 

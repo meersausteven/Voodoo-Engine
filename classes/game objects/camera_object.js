@@ -6,7 +6,9 @@ class CameraObject extends GameObject {
                 super(x, y, rotation);
 
                 this.attributes['name'].value = "New Camera";
+        }
 
-                this.addComponent(new Camera());
+        start() {
+                this.addComponent(new Camera(this.scene.project.settings['canvasWidth'], this.scene.project.settings['canvasHeight']));
         }
 }
