@@ -2,7 +2,7 @@
 class SpriteRenderer extends ComponentRenderer {
         type = "Sprite Renderer";
 
-        constructor(width, height, filePath = null, offset = new Vector2()) {
+        constructor(width = 50, height = 50, filePath = "/default.png", offset = new Vector2()) {
                 // int width: width of the sprite
                 // int height: height of the sprite
                 // file filePath: path to the image file relative to the path in project setting 'filePathSprites'
@@ -13,13 +13,16 @@ class SpriteRenderer extends ComponentRenderer {
                 this.attributes['width'] = new AttributeNumber('Width', width);
                 this.attributes['height'] = new AttributeNumber('Height', height);
                 this.attributes['image'] = new Image(this.attributes['width'].value, this.attributes['height'].value);
-                this.attributes['filePath'] = new AttributeText('File Path', filePath);
+                this.attributes['filePath'] = new AttributeImage('File Path', filePath);
         }
 
         start() {
+                console.log("Test - sprite renderer");
+                this.attributes['filePath'].value = this.gameObject.scene.project.settings.filePathSprites + this.attributes['filePath'].value;
+                console.log(this.attributes['filePath'].value);
                 // run this function after this component was added to the gameObject
-                if (this.attributes['filePath'].value != null) {
-                        this.attributes['image'].src = this.gameObject.scene.project.settings.filePathSprites + this.attributes['filePath'].value;
+                if (this.attributes['filePath'].value !== null) {
+                        this.attributes['image'].src = this.attributes['filePath'].value;
                 }
         }
 

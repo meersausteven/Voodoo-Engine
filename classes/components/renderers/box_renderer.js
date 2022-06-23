@@ -2,7 +2,7 @@
 class BoxRenderer extends ComponentRenderer {
         type = "Box Renderer";
         
-        constructor(width, height, fillColor, borderWidth, borderColor, offset = new Vector2()) {
+        constructor(width = 50, height = 50, fillColor = '#ffffff', borderWidth = 0, borderColor = '#000000', offset = new Vector2()) {
                 // int width: width of the box
                 // int height: height of the box
                 // color fillColor: fill color

@@ -58,41 +58,4 @@ class Component {
                 
                 return dummy;
         }
-        
-        createCard() {
-                let wrapper = document.createElement('div');
-                wrapper.classList.add('component');
-                // transform components are open by default
-                if (this instanceof Transform) {
-                        wrapper.classList.add('open');
-                }
-
-                let title = document.createElement('div');
-                title.classList.add('title');
-                title.innerHTML = this.type;
-                
-                let collapse = document.createElement('div');
-                collapse.classList.add('collapse');
-                collapse.innerHTML = "&#10095;";
-
-                collapse.addEventListener('click', function() {
-                        this.closest('.component').classList.toggle('open');
-                });
-
-                title.appendChild(collapse);
-                
-                let content = document.createElement('div');
-                content.classList.add('content');
-
-                for (let key in this.attributes) {
-                        if (this.attributes[key] instanceof AttributeText) {
-                                content.appendChild(this.attributes[key].createWidget());
-                        }
-                }
-
-                wrapper.appendChild(title);
-                wrapper.appendChild(content);
-
-                return wrapper;
-        }
 }

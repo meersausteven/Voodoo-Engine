@@ -5,34 +5,7 @@
                 <link rel="stylesheet" href="style.css">
         </head>
         <body class="edit_mode">
-                <div class="navbar">
-                        <div class="dropdown navbar_item">
-                                <div class="dropdown_button" data-target="#projectSettings">
-                                        Project
-                                </div>
-                                <div id="projectSettings" class="dropdown_content">
-                                        <div class="dropdown_content_item">
-                                                Save Project
-                                        </div>
-                                        <div class="dropdown_content_item">
-                                                Load Project
-                                        </div>
-                                        <div class="dropdown_content_item">
-                                                Settings...
-                                        </div>
-                                </div>
-                        </div>
-                        <div class="dropdown navbar_item">
-                                <div class="dropdown_button" data-target="#sceneSettings">
-                                        Scene
-                                </div>
-                                <div id="sceneSettings" class="dropdown_content">
-                                        <div class="dropdown_content_item">
-                                                Settings...
-                                        </div>
-                                </div>
-                        </div>
-                </div>
+                <div id="editor-tabbar" class="navbar"></div>
                 <div id="content-wrapper">
                         <div id="left-column">
                                 <div id="game-objects-container" class="container">
@@ -84,6 +57,7 @@
                 <script src="classes/editor/attributes/attribute_boolean.js"></script>
                 <script src="classes/editor/attributes/attribute_color.js"></script>
                 <script src="classes/editor/attributes/attribute_vector2.js"></script>
+                <script src="classes/editor/attributes/attribute_image.js"></script>
 
                 <!-- components -->
                         <!-- other -->

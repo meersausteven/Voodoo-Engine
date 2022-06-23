@@ -1,6 +1,8 @@
 
 class Scene {
+        name = 'New Scene';
         project;
+        isCurrentScene;
         activeCamera;
         gameObjects = [];
         settings = {
@@ -11,6 +13,7 @@ class Scene {
         constructor() {
                 // add default camera object
                 this.addGameObject(new CameraObject());
+                this.isCurrentScene = false;
         }
 
         start() {
@@ -21,6 +24,7 @@ class Scene {
                 while (i < l) {
                         if (this.gameObjects[i].attributes['enabled'].value === true) {
                                 this.gameObjects[i].start();
+                                console.log("started " + this.gameObjects[i].attributes['name'].value);
                         }
 
                         ++i;

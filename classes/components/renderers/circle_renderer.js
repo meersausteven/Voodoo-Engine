@@ -2,7 +2,7 @@
 class CircleRenderer extends ComponentRenderer {
         type = "Circle Renderer";
         
-        constructor(fillColor, borderWidth, borderColor, radius = 0, offset = new Vector2()) {
+        constructor(fillColor = '#ffffff', borderWidth = 0, borderColor = '#000000', radius = 25, offset = new Vector2()) {
                 // color fillColor: fill color
                 // int borderWidth: width of border
                 // color borderColor: color of border

@@ -26,6 +26,7 @@ class Project {
                 // rendering
                 renderByYPosition: false,
                 // editor dom elements for game objects and their components
+                sceneListWrapper: '#scenes-container .container_content',
                 gameObjectListWrapper: '#game-objects-container .container_content',
                 componentListWrapper: '#components-container .container_content',
                 // file paths
@@ -184,13 +185,39 @@ class Project {
         }
 
         loadScene(index) {
-                if ((this.sceneList[index] !== 'undefined') &&
+                if ((typeof this.sceneList[index] !== 'undefined') &&
                     (this.sceneList[index] !== null))
                 {
+                        // unload old scene
+                        if ((typeof this.activeScene !== 'undefined') && 
+                            (this.activeScene !== null))
+                        {
+                                this.activeScene.isCurrentScene = false;
+                        }
+
+                        // load new scene
                         this.activeScene = this.sceneList[index];
+                        this.activeScene.isCurrentScene = true;
                         this.activeScene.start();
 
                         return true;
+                }
+
+                return false;
+        }
+
+        getSceneIndex(scene) {
+                if (!(scene instanceof Scene)) {
+                        let i = 0;
+                        let l = this.sceneList.length;
+
+                        while (i < l) {
+                                if (this.sceneList[i] === scene) {
+                                        return i;
+                                }
+
+                                ++i;
+                        }
                 }
 
                 return false;
