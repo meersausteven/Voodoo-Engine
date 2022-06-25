@@ -22,8 +22,6 @@ class Renderer {
 
                         return true;
                 }
-
-                return false;
         }
 
         removeComponentRenderer(index) {
@@ -37,10 +35,8 @@ class Renderer {
 
                         return true;
                 }
-
-                return false;
         }
-        
+
         renderToCameraView(camera) {
                 let i = 0;
                 let l = this.componentRenderer.length;

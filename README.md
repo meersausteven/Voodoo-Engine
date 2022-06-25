@@ -14,25 +14,35 @@ It's based on GameObjects and Components similiar to Unity3D, but is restricted 
 * Global Key-Input tracking
 
 **Current list of components:**
+* Transform:
+ * Position
+ * Rotation
+ * Every GameObject has one
+* Camera:
+ * Used for view rendering
 * Colliders:
  * Circle Collider
  * Box Collider
  * Capsule Collider (two circle and one box collider in one constructor)
- * All Colliders can be set as triggers
 * Rigidbody:
  * Velocity and friction calculation
 * Renderers:
- * Box Renderer (with color and border)
- * Circle Renderer (with color and border)
- * Sprite Renderer (renders an image)
+ * Box Renderer (simple rectangle)
+ * Circle Renderer (simple circle)
+ * Sprite Renderer (image)
 * Animation:
  * Uses a Sprite Renderer and switches the image source in a configurable time span
 
-
 **Currently working on:**
-* Polygon Collider
-* Grid System for world positioning
-* Separated editor and play mode
-* Saving projects as JSON-files
+* Adding necessary features to the editor
+* Separating project from editor
+* Move all rendering to a separate Renderer class
+
+**Planned features:**
+* Separated Axis collision system
+* Rigidbody force and impact calculation
+* Grid system for different positioning e.g. isometric games
 * Simple Particle System
-* Custom Events for Callbacks
+* Animation editor
+* Sprite editor
+* Script editor for creation and editing of own JS-files

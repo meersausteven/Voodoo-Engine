@@ -6,7 +6,7 @@ class Component {
 
         constructor() {
                 this.attributes['enabled'] = new AttributeBoolean('Enabled', true);
-                
+
                 return;
         }
 
@@ -55,7 +55,7 @@ class Component {
                         dummy.attributes[key].name = this.attributes[key].name;
                         dummy.attributes[key].value = this.attributes[key].value;
                 }
-                
+
                 return dummy;
         }
 }

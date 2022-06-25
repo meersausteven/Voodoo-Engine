@@ -11,6 +11,16 @@ class Transform extends Component {
                 this.attributes['rotation'] = new AttributeNumber('Rotation', rotation);
         }
         
+
+        start() {
+                if (this.gameObject.scene.project.editMode == true) {
+                        let context = this.gameObject.scene.project.canvasContext;
+        
+                        context.save();
+
+                        
+                }
+        }
 /*
         @todo: implement gizmos to move in scene during edit mode when gameobject is focused
         showGizmo() {

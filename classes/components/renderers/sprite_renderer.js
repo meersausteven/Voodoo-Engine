@@ -32,7 +32,7 @@ class SpriteRenderer extends ComponentRenderer {
                     !(camera instanceof Camera)) {
                         return false;
                 }
-                
+
                 if (this.attributes['filePath'].value != null) {
                         camera.canvasContext.save();
 

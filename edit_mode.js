@@ -1,6 +1,6 @@
 
 // instantiate the editor
-var editor = new Editor();
+const editor = new Editor();
 editor.start();
 
 /*

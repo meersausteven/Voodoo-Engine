@@ -1,18 +1,16 @@
 
 class Project {
-        editMode;
-
         // canvas
         canvas;
         canvasContext;
-        
+
         // scenes
         sceneList = [];
         activeScene;
 
         // renderer
         renderer;
-        
+
         // settings
         settings = {
                 // canvas
@@ -33,7 +31,7 @@ class Project {
                 filePathSprites: window.location.href + "/../assets/sprites/",
                 filePathAudio: window.location.href + "/../assets/audio/",
         };
-        
+
         // available gameObjects
         availableGameObjects = [
                 'GameObject',
@@ -68,10 +66,8 @@ class Project {
                         pos: new Vector2()
                 }
         };
-        
-        constructor(editMode = false) {
-                this.editMode = editMode;
 
+        constructor() {
                 // add new scene
                 if (this.sceneList.length == 0) {
                         this.addScene(new Scene());
@@ -79,15 +75,9 @@ class Project {
 
                 // add renderer
                 this.renderer = new Renderer();
-                
+
                 // prepare canvas
                 this.canvas = document.querySelector(this.settings.canvasSelector);
-                
-                if (this.editMode == true) {
-                        this.settings.canvasHeight = this.canvas.clientHeight;
-                        this.settings.canvasWidth = this.canvas.clientWidth;
-                }
-
                 this.canvas.width = this.settings.canvasWidth;
                 this.canvas.height = this.settings.canvasHeight;
                 this.canvasContext = this.canvas.getContext("2d");
@@ -97,9 +87,7 @@ class Project {
 
         start() {
                 // add event listeners for input
-                if (this.editMode == false) {
-                        this.addInputListeners();
-                }
+                this.addInputListeners();
 
                 // start first scene if no active scene is given
                 if ((this.activeScene === null) ||
@@ -111,18 +99,14 @@ class Project {
                 // start update cycles
                 this.fixedUpdate = setInterval(this.processFixedUpdateFrame.bind(this), this.settings.fixedUpdateInterval);
                 this.animationFrame = window.requestAnimationFrame(this.processFrame.bind(this));
-
-                return true;
         }
-        
+
         stop() {
                 this.removeInputListeners();
                 this.canvas.removeEventListener('project_settings_changed', this);
 
                 clearInterval(this.fixedUpdate);
                 window.cancelAnimationFrame(this.animationFrame);
-
-                return true;
         }
 
         processFrame(currentTime) {
@@ -130,11 +114,11 @@ class Project {
                 if (!time.startTime) {
                         time.startTime = currentTime / 1000;
                 }
-                
+
                 if (!time.lastFrame) {
                         time.lastFrame = currentTime / 1000;
                 }
-                
+
                 time.totalTime = (currentTime / 1000) - time.startTime;
                 time.deltaTime = (currentTime / 1000) - time.lastFrame;
                 time.lastFrame = currentTime / 1000;
@@ -145,7 +129,7 @@ class Project {
                 {
                         this.activeScene.processUpdateFrame();
                 }
-                
+
                 window.requestAnimationFrame(this.processFrame.bind(this));
         }
 
@@ -165,8 +149,6 @@ class Project {
 
                         return true;
                 }
-
-                return false;
         }
 
         removeScene(index) {
@@ -180,8 +162,6 @@ class Project {
 
                         return true;
                 }
-
-                return false;
         }
 
         loadScene(index) {
@@ -202,8 +182,6 @@ class Project {
 
                         return true;
                 }
-
-                return false;
         }
 
         getSceneIndex(scene) {
@@ -219,8 +197,6 @@ class Project {
                                 ++i;
                         }
                 }
-
-                return false;
         }
 
         prepareForJsonExport() {
@@ -237,7 +213,7 @@ class Project {
 
                 // project scene list
                 dummy.sceneList = [];
-                
+
                 let i = 0;
                 let l = this.sceneList.length;
                 while (i < l) {
@@ -247,7 +223,7 @@ class Project {
                 }
 
                 let json = JSON.stringify(dummy);
-                
+
                 return json;
         }
 
@@ -259,7 +235,6 @@ class Project {
                 }
 
                 console.log("ERROR: active scene not found in sceneList");
-                return false;
         }
 
         syncSettings() {
@@ -317,9 +292,8 @@ class Project {
                         case "project_settings_changed":
                                 this.syncSettings(e);
                                 break;
-                        
                         default:
-                                break;
+                                
                 }
         }
 
