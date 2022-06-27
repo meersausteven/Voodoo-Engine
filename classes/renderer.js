@@ -38,17 +38,21 @@ class Renderer {
         }
 
         renderToCameraView(camera) {
+                // clear camera's canvas from last frame
+                //camera.clear();
+
                 let i = 0;
                 let l = this.componentRenderer.length;
 
                 while (i < l) {
+                        /*
                         if (this.componentRenderer[i] instanceof PolygonRenderer) {
                                 return;
                         }
 
                         // get camera view bounds
-                        let cameraPosX = camera.gameObject.transform.attributes['position'].value.x;
-                        let cameraPosY = camera.gameObject.transform.attributes['position'].value.y;
+                        let cameraPosX = camera.worldPos.x;
+                        let cameraPosY = camera.worldPos.y;
 
                         let cameraBorderLeft = cameraPosX - camera.attributes['viewWidth'].value / 2;
                         let cameraBorderRight = cameraPosX + camera.attributes['viewWidth'].value / 2;
@@ -65,12 +69,12 @@ class Renderer {
                         let rendererBorderRight = rendererPosX + rendererWidth / 2;
                         let rendererBorderTop = rendererPosY - rendererHeight / 2;
                         let rendererBorderBottom = rendererPosY + rendererHeight / 2;
-                        /*
+                        
                         console.log("component right: " + rendererBorderRight + " - camera left: " + cameraBorderLeft);
                         console.log("component left: " + rendererBorderLeft + " - camera right: " + cameraBorderRight);
                         console.log("component bottom: " + rendererBorderBottom + " - camera top: " + cameraBorderTop);
                         console.log("component top: " + rendererBorderTop + " - camera bottom: " + cameraBorderBottom);
-                        */
+                        
 
                         // check if renderer bounds are inside camera view
                         if ((rendererBorderRight >= cameraBorderLeft) ||
@@ -80,6 +84,11 @@ class Renderer {
                         ) {
                                 this.componentRenderer[i].render(camera);
                         }
+
+                        ++i;
+                        */
+
+                        this.componentRenderer[i].render(camera);
 
                         ++i;
                 }

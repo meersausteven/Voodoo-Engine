@@ -20,19 +20,15 @@ class BoxRenderer extends ComponentRenderer {
         }
 
         render(camera) {
-                if ((camera === null) ||
-                    (typeof camera === 'undefined') ||
-                    !(camera instanceof Camera)) {
-                        return false;
-                }
-                
                 camera.canvasContext.save();
-                camera.canvasContext.translate(this.gameObject.transform.attributes['position'].value.x + this.attributes['offset'].value.x - camera.gameObject.transform.attributes['position'].value.x, this.gameObject.transform.attributes['position'].value.y + this.attributes['offset'].value.y - camera.gameObject.transform.attributes['position'].value.y);
+                camera.canvasContext.translate(this.gameObject.transform.attributes['position'].value.x + this.attributes['offset'].value.x - camera.worldPos.x, this.gameObject.transform.attributes['position'].value.y + this.attributes['offset'].value.y - camera.worldPos.y);
                 camera.canvasContext.rotate(Math.degreesToRadians(this.gameObject.transform.attributes['rotation'].value));
                 // border
-                camera.canvasContext.lineWidth = this.attributes['borderWidth'].value;
-                camera.canvasContext.strokeStyle = this.attributes['borderColor'].value;
-                camera.canvasContext.strokeRect(-this.attributes['width'].value / 2, -this.attributes['height'].value / 2, this.attributes['width'].value, this.attributes['height'].value);
+                if (this.attributes['borderWidth'].value > 0) {
+                        camera.canvasContext.lineWidth = this.attributes['borderWidth'].value;
+                        camera.canvasContext.strokeStyle = this.attributes['borderColor'].value;
+                        camera.canvasContext.strokeRect(-this.attributes['width'].value / 2, -this.attributes['height'].value / 2, this.attributes['width'].value, this.attributes['height'].value);
+                }
                 // fill
                 camera.canvasContext.fillStyle = this.attributes['fillColor'].value;
                 camera.canvasContext.fillRect(-this.attributes['width'].value / 2, -this.attributes['height'].value / 2, this.attributes['width'].value, this.attributes['height'].value);

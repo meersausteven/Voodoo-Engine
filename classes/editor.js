@@ -9,7 +9,7 @@ class Editor {
         // canvas
         canvas;
         canvasContext;
-        canvasOffset;
+        camera;
         // add new gameobject options
         availableGameObjects = [];
         // add new component options
@@ -29,10 +29,6 @@ class Editor {
         constructor() {
                 // prepare canvas
                 this.canvas = document.querySelector(this.settings.canvasSelector);
-                this.canvas.width = this.canvas.clientWidth;
-                this.canvas.height = this.canvas.clientHeight;
-                this.canvasContext = this.canvas.getContext('2d');
-                this.canvasOffset = new Vector2();
 
                 // create new project @todo: add check if save is found in storage - otherwise load new project
                 this.project = new Project();
@@ -51,14 +47,12 @@ class Editor {
                 this.canvas.addEventListener('mousemove', function(e) {
                         if (e.buttons == 1) {
                                 let mouseMovement = new Vector2(e.movementX, e.movementY);
-                                this.canvasOffset.subtract(mouseMovement);
+                                this.camera.worldPos.subtract(mouseMovement);
                         }
                 }.bind(this));
 
                 // dropdown
-                document.addEventListener('click', function(e) {
-                        this.dropdownClick(e);
-                }.bind(this));
+                document.addEventListener('click', this.dropdownClick.bind(this));
 
                 // custom events
                 window.addEventListener('scene_list_changed', this);
@@ -68,29 +62,50 @@ class Editor {
                 this.loadEditorTabbar();
                 this.createEditorElements();
 
+                // prepare canvas
+                this.canvas.width = this.canvas.clientWidth;
+                this.canvas.height = this.canvas.clientHeight;
+                this.canvasContext = this.canvas.getContext('2d');
+
+                this.camera = new Camera(this.canvas.width, this.canvas.height);
+
                 this.animationFrame = window.requestAnimationFrame(this.processFrame.bind(this));
         }
 
         processFrame() {
-                // process update frame in scene
                 if ((this.currentScene !== null) &&
                     (typeof this.currentScene !== 'undefined'))
                 {
+                        // clear canvas and camera view
+                        this.canvasContext.clearRect(0, 0, this.canvas.width, this.canvas.height);
+                        this.camera.clear();
+
                         let i = 0;
                         let l = this.currentScene.gameObjects.length;
-
+                        // loop through all gameObjects in the current scene
                         while (i < l) {
                                 if (this.currentScene.gameObjects[i].attributes['enabled'].value === true) {
-                                        this.currentScene.gameObjects[i].update();
+                                        let j = 0;
+                                        let c = this.currentScene.gameObjects[i].components.length;
+                                        // loop through all components in the current gameObject
+                                        while (j < c) {
+                                                if (this.currentScene.gameObjects[i].components[j].attributes['enabled'].value === true) {
+                                                        if (this.currentScene.gameObjects[i].components[j] instanceof ComponentRenderer) {
+                                                                // for now only render ComponentRenderer components
+                                                                this.currentScene.gameObjects[i].components[j].render(this.camera);
+                                                        }
+                                                }
+
+                                                ++j;
+                                        }
                                 }
 
                                 ++i;
                         }
 
-                        // get active camera view
-                        this.canvasContext.clearRect(0, 0, this.canvas.width, this.canvas.height);
-
-                        this.canvasContext.drawImage(this.currentScene.activeCamera, 0, 0);
+                        // get view of editor camera
+                        this.camera.update();
+                        this.canvasContext.drawImage(this.camera.canvas, 0, 0);
                 }
 
                 window.requestAnimationFrame(this.processFrame.bind(this));
