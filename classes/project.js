@@ -13,6 +13,10 @@ class Project {
 
         // settings
         settings = {
+                // name of the project
+                name: 'new Project',
+                // index of the scene in sceneList which will be loaded when the project starts
+                defaultScene: 0,
                 // canvas
                 canvasSelector: '#gameArea',
                 canvasWidth: 1280,
@@ -93,7 +97,7 @@ class Project {
                 if ((this.activeScene === null) ||
                         (typeof this.activeScene === 'undefined'))
                 {
-                        this.loadScene(0);
+                        this.loadScene(this.settings['defaultScene']);
                 }
 
                 // start update cycles
@@ -197,34 +201,6 @@ class Project {
                                 ++i;
                         }
                 }
-        }
-
-        prepareForJsonExport() {
-                let dummy = {};
-
-                // project settings
-                dummy.settings = {};
-                for (let key in this.settings) {
-                        dummy.settings[key] = this.settings[key];
-                }
-
-                // project active scene
-                dummy.activeScene = this.getActiveSceneIndex();
-
-                // project scene list
-                dummy.sceneList = [];
-
-                let i = 0;
-                let l = this.sceneList.length;
-                while (i < l) {
-                        dummy.sceneList[i] = this.sceneList[i].prepareForJsonExport();
-
-                        ++i;
-                }
-
-                let json = JSON.stringify(dummy);
-
-                return json;
         }
 
         getActiveSceneIndex() {

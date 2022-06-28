@@ -12,15 +12,9 @@ class TransformCenterBoxGizmo extends EditorComponentGizmo {
         }
 
         render(camera) {
-                if ((camera === null) ||
-                    (typeof camera === 'undefined') ||
-                    !(camera instanceof Camera)) {
-                        return false;
-                }
-
                 camera.canvasContext.save();
 
-                camera.canvasContext.translate(this.component.gameObject.transform.attributes['position'].value.x - camera.gameObject.transform.attributes['position'].value.x, this.component.gameObject.transform.attributes['position'].value.y - camera.gameObject.transform.attributes['position'].value.y);
+                camera.canvasContext.translate(this.component.gameObject.transform.attributes['position'].value.x - camera.worldPos.x, this.component.gameObject.transform.attributes['position'].value.y - camera.worldPos.y);
                 camera.canvasContext.rotate(Math.degreesToRadians(this.component.gameObject.transform.attributes['rotation'].value));
                 camera.canvasContext.drawImage(this.sprite, -this.width / 2, -this.height / 2, this.sprite.width, this.sprite.height);
 

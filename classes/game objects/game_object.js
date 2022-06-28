@@ -12,7 +12,7 @@ class GameObject {
 
                 this.transform = this.getTransform();
 
-                this.attributes['name'] = new AttributeText('Name', "New GameObject");
+                this.attributes['name'] = new AttributeHiddenText('Name', "New GameObject");
                 this.attributes['enabled'] = new AttributeBoolean('Enabled', true);
         }
 
@@ -107,39 +107,5 @@ class GameObject {
                 }
 
                 return null;
-        }
-
-        prepareForJsonExport() {
-                let dummy = {};
-
-                // game object attributes
-                dummy.attributes = {};
-
-                for (let key in this.attributes) {
-                        if ((key === 'remove') ||
-                                (key === 'clear'))
-                        {
-                                continue;
-                        }
-
-                        dummy.attributes[key] = {};
-
-                        dummy.attributes[key].type = this.attributes[key].type;
-                        dummy.attributes[key].name = this.attributes[key].name;
-                        dummy.attributes[key].value = this.attributes[key].value;
-                }
-
-                // game object components
-                dummy.components = [];
-
-                let i = 0;
-                let l = this.components.length;
-                while (i < l) {
-                        dummy.components[i] = this.components[i].prepareForJsonExport();
-
-                        ++i;
-                }
-
-                return dummy;
         }
 }

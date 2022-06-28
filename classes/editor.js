@@ -20,9 +20,7 @@ class Editor {
                 canvasSelector: '#gameArea'
         };
         // mouse controls
-        cursor = {
-                pos: new Vector2()
-        };
+        cursor;
         // update cycle for canvas
         animationFrame;
 
@@ -39,39 +37,35 @@ class Editor {
                 // choose first scene in project as current scene
                 this.currentScene = this.project.sceneList[0];
 
+                // create cursor class instance for input tracking
+                this.cursor = new Cursor();
+
                 // ADD EVENT LISTENERS
-                // mouse events for panning the editor canvas
-                this.canvas.addEventListener('mousedown', function(e) {
-                        this.cursor.pos = new Vector2(e.clientX, e.clientY);
-                }.bind(this));
-                this.canvas.addEventListener('mousemove', function(e) {
-                        if (e.buttons == 1) {
-                                let mouseMovement = new Vector2(e.movementX, e.movementY);
-                                this.camera.worldPos.subtract(mouseMovement);
-                        }
-                }.bind(this));
-
-                // dropdown
-                document.addEventListener('click', this.dropdownClick.bind(this));
-
+                this.canvas.addEventListener('mousedown', this);
+                this.canvas.addEventListener('mouseup', this);
+                this.canvas.addEventListener('mousemove', this);
+                document.addEventListener('click', this);
                 // custom events
                 window.addEventListener('scene_list_changed', this);
         }
 
         start() {
                 this.loadEditorTabbar();
-                this.createEditorElements();
+                this.generateEditorElements();
 
                 // prepare canvas
                 this.canvas.width = this.canvas.clientWidth;
                 this.canvas.height = this.canvas.clientHeight;
                 this.canvasContext = this.canvas.getContext('2d');
 
+                // create new camera and move it to the center (X:0, Y:0 at the center)
                 this.camera = new Camera(this.canvas.width, this.canvas.height);
+                this.camera.worldPos = new Vector2(-this.camera.canvas.width / 2, -this.camera.canvas.height / 2);
 
                 this.animationFrame = window.requestAnimationFrame(this.processFrame.bind(this));
         }
 
+        // @todo: this is ugly - make it more readable!
         processFrame() {
                 if ((this.currentScene !== null) &&
                     (typeof this.currentScene !== 'undefined'))
@@ -89,15 +83,29 @@ class Editor {
                                         let c = this.currentScene.gameObjects[i].components.length;
                                         // loop through all components in the current gameObject
                                         while (j < c) {
+                                                // only render component renderer components if they are enabled
                                                 if (this.currentScene.gameObjects[i].components[j].attributes['enabled'].value === true) {
+                                                        // render component renderer components
                                                         if (this.currentScene.gameObjects[i].components[j] instanceof ComponentRenderer) {
-                                                                // for now only render ComponentRenderer components
                                                                 this.currentScene.gameObjects[i].components[j].render(this.camera);
                                                         }
                                                 }
 
                                                 ++j;
                                         }
+
+                                        // @todo: add check if the gameObject is selected - otherwise don't show gizmo
+                                        // always render transform components last!
+                                        // show gizmo for transform components
+                                        // up arrow
+                                        let upArrow = new TransformUpArrowGizmo(this.currentScene.gameObjects[i].transform);
+                                        upArrow.render(this.camera);
+                                        // right arrow
+                                        let rightArrow = new TransformRightArrowGizmo(this.currentScene.gameObjects[i].transform);
+                                        rightArrow.render(this.camera);
+                                        // center box
+                                        let centerBox = new TransformCenterBoxGizmo(this.currentScene.gameObjects[i].transform);
+                                        centerBox.render(this.camera);
                                 }
 
                                 ++i;
@@ -118,7 +126,7 @@ class Editor {
         /* LOCAL STORAGE */
         // save current project to localStorage
         saveProjectToStorage() {
-                localStorage.setItem('project', this.#projectToJson());
+                localStorage.setItem('project', this.projectToJson());
         }
 
         // load a project from the localStorage
@@ -128,7 +136,7 @@ class Editor {
                 if ((json !== null) &&
                     (typeof json !== 'undefined'))
                 {
-                        this.#jsonToProject(json);
+                        this.jsonToProject(json);
                 } else {
                         console.log('No Project in storage. Try saving one first.');
                 }
@@ -136,7 +144,8 @@ class Editor {
 
         /* JSON IMPORT/EXPORT */
         // turn a passed json object into a project object
-        #jsonToProject(json) {
+        // @todo: this is ugly - split each loop into its own function for readability
+        jsonToProject(json) {
                 // @todo: add functionality
                 let dummy = JSON.parse(json);
 
@@ -215,17 +224,144 @@ class Editor {
 
                 this.project = project;
                 this.project.start();
-                this.removeEditorElements();
-                this.createEditorElements();
+                
+                this.reloadEditorElements();
         }
 
         // turn current project object into a json object
-        #projectToJson() {
-                let json;
-
-                json = this.project.prepareForJsonExport();
+        projectToJson() {
+                let dummy = this.prepareProjectForJsonExport(this.project);
+                let json = JSON.stringify(dummy);
 
                 return json;
+        }
+        
+        /* PREPARE OBJECTS FOR JSON EXPORT */
+        // prepare a project object for json export
+        prepareProjectForJsonExport(project) {
+                let dummy = {};
+
+                // project settings
+                dummy.settings = {};
+                for (let key in project.settings) {
+                        dummy.settings[key] = project.settings[key];
+                }
+
+                // project active scene
+                dummy.activeScene = project.settings['defaultScene'];
+
+                // project scene list
+                dummy.sceneList = [];
+
+                let i = 0;
+                let l = project.sceneList.length;
+                while (i < l) {
+                        dummy.sceneList[i] = this.prepareSceneForJsonExport(project.sceneList[i]);
+
+                        ++i;
+                }
+
+                let json = JSON.stringify(dummy);
+
+                return json;
+        }
+
+        // prepare a scene object for the json export
+        prepareSceneForJsonExport(scene) {
+                let dummy = {};
+
+                // scene settings
+                dummy.settings = {};
+                for (let key in scene.settings) {
+                        if ((key !== 'remove') &&
+                            (key !== 'clear'))
+                        {
+                                dummy.settings[key] = scene.settings[key];
+                        }
+                }
+
+                // scene active camera
+                dummy.activeCamera = [];
+                dummy.activeCamera[0] = {};
+                dummy.activeCamera[0].name 
+
+                // scene game objects
+                dummy.gameObjects = [];
+
+                let i = 0;
+                let l = scene.gameObjects.length;
+                while (i < l) {
+                        dummy.gameObjects[i] = this.prepareGameObjectForJsonExport(scene.gameObjects[i]);
+
+                        ++i;
+                }
+
+                return dummy;
+        }
+
+        // prepare a gameObject for the json export
+        prepareGameObjectForJsonExport(gameObject) {
+                let dummy = {};
+
+                // game object attributes
+                dummy.attributes = {};
+
+                for (let key in gameObject.attributes) {
+                        if ((key === 'remove') ||
+                                (key === 'clear'))
+                        {
+                                continue;
+                        }
+
+                        dummy.attributes[key] = {};
+
+                        dummy.attributes[key].type = gameObject.attributes[key].type;
+                        dummy.attributes[key].name = gameObject.attributes[key].name;
+                        dummy.attributes[key].value = gameObject.attributes[key].value;
+                }
+
+                // game object components
+                dummy.components = [];
+
+                let i = 0;
+                let l = gameObject.components.length;
+                while (i < l) {
+                        dummy.components[i] = this.prepareComponentForJsonExport(gameObject.components[i]);
+
+                        ++i;
+                }
+
+                return dummy;
+        }
+
+        // prepare a component for the json export
+        prepareComponentForJsonExport(component) {
+                let dummy = {};
+
+                dummy.type = component.type;
+                dummy.attributes = {};
+
+                // component attributes
+                for (let key in component.attributes) {
+                        if ((key === 'remove') ||
+                            (key === 'clear'))
+                        {
+                                continue;
+                        }
+
+                        if (!(component.attributes[key] instanceof AttributeText)) {
+                                dummy.attributes[key] = component.attributes[key];
+
+                                continue;
+                        }
+
+                        dummy.attributes[key] = {};
+
+                        dummy.attributes[key].name = component.attributes[key].name;
+                        dummy.attributes[key].value = component.attributes[key].value;
+                }
+
+                return dummy;
         }
 
         /* HTML EDITOR ELEMENTS */
@@ -252,7 +388,7 @@ class Editor {
                         let reader = new FileReader();
 
                         reader.addEventListener('load', function() {
-                                this.#jsonToProject(reader.result);
+                                this.jsonToProject(reader.result);
                         }.bind(this));
 
                         if (file) {
@@ -286,8 +422,8 @@ class Editor {
                         let link = document.createElement('a');
                         link.classList.add('button_link');
                         // create json file from current project
-                        link.setAttribute('href', 'data:text/json;charset=utf-8,' + encodeURIComponent(this.#projectToJson()));
-                        link.setAttribute('download', 'project-' + Date.now() + '.json');
+                        link.setAttribute('href', 'data:text/json;charset=utf-8,' + encodeURIComponent(this.projectToJson()));
+                        link.setAttribute('download', `${this.project.settings['name']}-${Date.now()} .json`);
                         // click link automatically
                         link.click();
 
@@ -472,8 +608,7 @@ class Editor {
                                 this.currentScene.addGameObject(newObject);
                         }
 
-                        this.removeEditorElements();
-                        this.createEditorElements();
+                        this.reloadEditorElements();
                 }.bind(this));
 
                 document.querySelector(this.project.settings.gameObjectListWrapper).appendChild(select);
@@ -634,7 +769,10 @@ class Editor {
 
                 let title = document.createElement('div');
                 title.classList.add('title');
-                title.innerHTML = component.type;
+
+                let titleContent = document.createElement('div');
+                titleContent.classList.add('component_name');
+                titleContent.innerHTML = component.type;
 
                 let collapse = document.createElement('div');
                 collapse.classList.add('collapse');
@@ -644,12 +782,23 @@ class Editor {
                         this.closest('.component').classList.toggle('open');
                 });
 
+                title.appendChild(titleContent);
+                // can't disable transform components!
+                if (!(component instanceof Transform)) {
+                        title.appendChild(component.attributes['enabled'].createWidget());
+                }
+
                 title.appendChild(collapse);
 
                 let content = document.createElement('div');
                 content.classList.add('content');
 
                 for (let key in component.attributes) {
+                        // skip "enabled" attribute because we already added it in the title
+                        if (key === 'enabled') {
+                                continue;
+                        }
+
                         if (component.attributes[key] instanceof AttributeText) {
                                 content.appendChild(component.attributes[key].createWidget());
                         }
@@ -666,7 +815,7 @@ class Editor {
 
         // EVERYTHING COMBINED
         // create editor HTML for the current project
-        createEditorElements() {
+        generateEditorElements() {
                 // load sceneList
                 this.createScenesListElement();
 
@@ -675,7 +824,7 @@ class Editor {
         }
 
         // remove all current editor HTML elements
-        removeEditorElements() {
+        clearEditorElements() {
                 // scenes
                 this.removeScenesListElement();
 
@@ -686,20 +835,14 @@ class Editor {
                 this.removeComponentsListElement();
         }
 
-        /* HTML ELEMENTS */
-        // dropdown functions
-        dropdownClick(e) {
-                if (e.target.classList.contains('dropdown_button')) {
-                        this.closeAllDropdowns();
-
-                        e.target.parentElement.classList.add('open');
-                } else {
-                        if (!e.target.closest('.dropdown')) {
-                                this.closeAllDropdowns();
-                        }
-                }
+        // clear and create editor HTML
+        reloadEditorElements() {
+                this.clearEditorElements();
+                this.generateEditorElements();
         }
 
+        /* HTML ELEMENTS */
+        // dropdown functions
         closeAllDropdowns() {
                 let dropdowns = document.querySelectorAll('.dropdown');
 
@@ -713,14 +856,85 @@ class Editor {
         handleEvent(e) {
                 switch (e.type) {
                         case 'scene_list_changed':
-                                console.log('Event `scene_list_changed` occurred!');
-
-                                this.removeEditorElements();
-                                this.createEditorElements();
-
+                                this.onScenelistchanged(e);
                                 break;
+
+                        case 'mousedown':
+                                this.onMousedown(e);
+                                break;
+
+                        case 'mouseup':
+                                this.onMouseup(e);
+                                break;
+
+                        case 'mousemove':
+                                this.onMousemove(e);
+                                break;
+
+                        case 'click':
+                                this.onClick(e);
+                                break;
+
                         default:
                                 console.log(`Unexpected event: ${e.type}`);
                 }
+        }
+
+        // event function that is called on 'mousedown' event on canvas
+        onMousedown(e) {
+                if (e.which == 1) {
+                        this.cursor.leftClick = true;
+                        this.cursor.leftClickDownPos = new Vector2(e.clientX, e.clientY);
+                } else if (e.which == 3) {
+                        this.cursor.rightClick = true;
+                        this.cursor.rightClickDownPos = new Vector2(e.clientX, e.clientY);
+                }
+        }
+
+        // event function that is called on 'mouseup' event on canvas
+        onMouseup(e) {
+                if (e.which == 1) {
+                        this.cursor.leftClick = false;
+                        this.cursor.leftClickUpPos = new Vector2(e.clientX, e.clientY);
+                } else if (e.which == 3) {
+                        this.cursor.rightClick = false;
+                        this.cursor.rightClickUpPos = new Vector2(e.clientX, e.clientY);
+                }
+        }
+
+        // event function that is called on 'mousemove' event on canvas
+        onMousemove(e) {
+                // check if the cursor is hovering a gizmo
+                // @todo: add functionality
+                
+                this.hovering = this.canvas;
+                
+                // if no gizmo is being hovered and the left button is being held down, move the camera
+                if ((this.cursor.leftClick === true) &&
+                (this.hovering === this.canvas))
+                {
+                        let mouseMovement = new Vector2(e.movementX, e.movementY);
+                        this.camera.worldPos.subtract(mouseMovement);
+                }
+        }
+
+        // event function that is called on 'click' event on the document
+        onClick(e) {
+                if (e.target.classList.contains('dropdown_button')) {
+                        this.closeAllDropdowns();
+
+                        e.target.parentElement.classList.add('open');
+                } else {
+                        if (!e.target.closest('.dropdown')) {
+                                this.closeAllDropdowns();
+                        }
+                }
+        }
+
+        // event function that is called on custom 'scene_ist_changed' event on the window
+        onScenelistchanged(e) {
+                console.log(`Event '${e.type}' occurred!`);
+
+                this.reloadEditorElements();
         }
 }

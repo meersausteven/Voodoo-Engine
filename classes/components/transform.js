@@ -6,7 +6,6 @@ class Transform extends Component {
                 super();
 
                 // transform components may not be disabled
-                this.attributes['enabled'] = true;
                 this.attributes['position'] = new AttributeVector2('Position', position);
                 this.attributes['rotation'] = new AttributeNumber('Rotation', rotation);
         }

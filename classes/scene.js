@@ -115,36 +115,4 @@ class Scene {
 
                 return null;
         }
-
-        prepareForJsonExport() {
-                let dummy = {};
-
-                // scene settings
-                dummy.settings = {};
-                for (let key in this.settings) {
-                        if ((key !== 'remove') &&
-                            (key !== 'clear'))
-                        {
-                                dummy.settings[key] = this.settings[key];
-                        }
-                }
-
-                // scene active camera
-                dummy.activeCamera = [];
-                dummy.activeCamera[0] = {};
-                dummy.activeCamera[0].name 
-
-                // scene game objects
-                dummy.gameObjects = [];
-
-                let i = 0;
-                let l = this.gameObjects.length;
-                while (i < l) {
-                        dummy.gameObjects[i] = this.gameObjects[i].prepareForJsonExport();
-
-                        ++i;
-                }
-
-                return dummy;
-        }
 }
