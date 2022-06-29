@@ -1,6 +1,6 @@
 
 class Scene {
-        name = 'New Scene';
+        name;
         project;
         isCurrentScene;
         activeCamera;
@@ -11,6 +11,8 @@ class Scene {
         };
 
         constructor() {
+                this.name = new AttributeHiddenText('Name', 'New Scene');
+
                 // add default camera object
                 this.addGameObject(new CameraObject());
                 this.isCurrentScene = false;

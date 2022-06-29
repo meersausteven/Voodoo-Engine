@@ -471,32 +471,168 @@ class Editor {
                 return loadStorage;
         }
 
+        // create editor HTML element for opening the project settings popup
+        createProjectSettingsElement() {
+                let openSettings = document.createElement('div');
+                openSettings.classList.add('dropdown_content_item', 'project_settings');
+
+                // create button
+                let button = document.createElement('div');
+                button.classList.add('button_link');
+                button.innerHTML = 'Project Settings';
+                button.addEventListener('click', function() {
+                        document.body.appendChild(this.createProjectSettingsPopup());
+                }.bind(this));
+
+                openSettings.appendChild(button);
+
+                return openSettings;
+        }
+
+        // create editor HTML popup window for the project settings
+        createProjectSettingsPopup() {
+                let popup = document.createElement('div');
+                popup.classList.add('popup', 'project_settings');
+
+                // title
+                let popupTitle = document.createElement('div');
+                popupTitle.classList.add('popup_title');
+
+                let title = document.createElement('div');
+                title.classList.add('title');
+                title.innerHTML = 'Project Settings';
+
+                let closeButton = document.createElement('i');
+                closeButton.classList.add('close', 'fa', 'fa-xmark');
+                closeButton.addEventListener('click', function(e) {
+                        e.target.closest('.popup').remove();
+                });
+
+                popupTitle.appendChild(title);
+                popupTitle.appendChild(closeButton);
+
+                // content
+                let popupContent = document.createElement('div');
+                popupContent.classList.add('popup_content');
+
+                popupContent.appendChild(this.createProjectSettingsForm());
+
+                popup.appendChild(popupTitle);
+                popup.appendChild(popupContent);
+
+                return popup;
+        }
+
+        // create HTML form with this project's settings
+        createProjectSettingsForm() {
+                let form = document.createElement('form');
+                form.id = 'project-settings-form';
+
+                // create an input field for each setting
+                for (let key in this.project.settings) {
+                        let formItem = document.createElement('div');
+                        formItem.classList.add('form_item');
+
+                        let label = document.createElement('label');
+                        label.innerHTML = key;
+                        label.setAttribute('for', `item-${key}`);
+
+                        let input = document.createElement('input');
+                        input.id = `item-${key}`;
+                        input.setAttribute('type', 'text');
+                        input.value = this.project.settings[key];
+
+                        formItem.append(label);
+                        formItem.append(input);
+
+                        form.appendChild(formItem);
+                }
+
+                // add a submit button
+                let submitItem = document.createElement('div');
+                submitItem.classList.add('form_item');
+
+                let submitButton = document.createElement('input');
+                submitButton.setAttribute('type', 'submit');
+                submitButton.classList.add('fake_button');
+                submitButton.value = 'Save Changes';
+
+                submitItem.appendChild(submitButton);
+                form.appendChild(submitItem);
+
+                form.addEventListener('submit', function(e) {
+                        e.preventDefault();
+
+                        let i = 0;
+                        let l = form.children.length;
+                        // loop all form items and update this project's settings
+                        while (i < l) {
+                                let item = form.children[i];
+                                let itemInput = item.querySelector('input');
+                                let itemLabel = item.querySelector('label');
+
+                                if (itemInput.type !== 'submit') {
+                                        let setting = itemLabel.innerHTML;
+                                        let newValue = itemInput.value;
+        
+                                        this.project.settings[setting] = newValue;
+                                }
+
+                                ++i;
+                        }
+
+                        // remove popup after submitting
+                        e.target.closest('.popup').remove();
+                }.bind(this));
+
+                return form;
+        }
+
         // create editor HTML tabbar for different uses e.g. file options, project settings, etc.
         loadEditorTabbar() {
-                // file options
-                let item = document.createElement('div');
-                item.classList.add('dropdown', 'navbar_item');
+                // file dropdown options
+                let fileDropdown = document.createElement('div');
+                fileDropdown.classList.add('dropdown', 'navbar_item');
 
-                let button = document.createElement('div');
-                button.classList.add('dropdown_button');
-                button.innerHTML = 'File';
+                let fileDropdownButton = document.createElement('div');
+                fileDropdownButton.classList.add('dropdown_button');
+                fileDropdownButton.innerHTML = 'File';
 
-                item.appendChild(button);
-                let content = document.createElement('div');
-                content.classList.add('dropdown_content');
+                fileDropdown.appendChild(fileDropdownButton);
+                let fileDropdownContent = document.createElement('div');
+                fileDropdownContent.classList.add('dropdown_content');
 
                 // upload file
-                content.appendChild(this.createFileToProjectElement());
+                fileDropdownContent.appendChild(this.createFileToProjectElement());
                 // load project from localStorage
-                content.appendChild(this.createLoadStorageElement());
+                fileDropdownContent.appendChild(this.createLoadStorageElement());
 
                 // download project file
-                content.appendChild(this.createDownloadProjectElement());
+                fileDropdownContent.appendChild(this.createDownloadProjectElement());
                 // save project to localStorage
-                content.appendChild(this.createSaveStorageElement());
+                fileDropdownContent.appendChild(this.createSaveStorageElement());
 
-                item.appendChild(content);
-                document.querySelector(this.settings['tabbarSelector']).appendChild(item);
+                fileDropdown.appendChild(fileDropdownContent);
+                document.querySelector(this.settings['tabbarSelector']).appendChild(fileDropdown);
+
+                // project dropdown options
+                // file dropdown options
+                let projectDropdown = document.createElement('div');
+                projectDropdown.classList.add('dropdown', 'navbar_item');
+
+                let projectDropdownButton = document.createElement('div');
+                projectDropdownButton.classList.add('dropdown_button');
+                projectDropdownButton.innerHTML = 'Project';
+
+                projectDropdown.appendChild(projectDropdownButton);
+                let projectDropdownContent = document.createElement('div');
+                projectDropdownContent.classList.add('dropdown_content');
+
+                // upload file
+                projectDropdownContent.appendChild(this.createProjectSettingsElement());
+
+                projectDropdown.appendChild(projectDropdownContent);
+                document.querySelector(this.settings['tabbarSelector']).appendChild(projectDropdown);
         }
 
         // SCENES
@@ -514,6 +650,7 @@ class Editor {
                 // "add new scene" button
                 let button = document.createElement('div');
                 button.classList.add('fake_button', 'mt_auto');
+                button.title = 'Adds a new scene to the project';
                 button.innerHTML = 'Add New Scene';
                 button.addEventListener('click', function() {
                         this.project.addScene(new Scene());
@@ -541,17 +678,15 @@ class Editor {
         createSceneCardElement(scene) {
                 let wrapper = document.createElement('div');
                 wrapper.classList.add('scene');
+                
+                let name = scene.name.createWidget();
 
-                let label = document.createElement('div');
-                label.classList.add('name');
-                label.innerHTML = scene.name;
-
-                wrapper.appendChild(label);
+                wrapper.appendChild(name);
 
                 if (scene !== this.currentScene) {
                         let button = document.createElement('div');
                         button.classList.add('fake_button');
-                        button.innerHTML = 'Load Scene';
+                        button.innerHTML = 'Select';
                         button.addEventListener('click', function() {
                                 this.project.loadScene(this.project.getSceneIndex(scene));
 
@@ -579,6 +714,7 @@ class Editor {
 
                 // "add new gameObject" form
                 let select = document.createElement('select');
+                select.title = "Adds a new GameObject to the selected scene";
                 select.classList.add('add_gameObject');
 
                 let defaultOption = document.createElement('option');
@@ -685,7 +821,7 @@ class Editor {
 
                 // create info card
                 let card = document.createElement('div');
-                card.classList.add('card');
+                card.classList.add('card', 'components_list');
 
                 let title = document.createElement('div');
                 title.classList.add('card_title');
@@ -704,10 +840,11 @@ class Editor {
 
                 // add new component select to card content
                 let select = document.createElement('select');
+                select.title = "Adds a new component to the selected GameObject";
                 select.classList.add('add_component');
 
                 let defaultOption = document.createElement('option');
-                defaultOption.innerHTML = "Add new Component";
+                defaultOption.innerHTML = "Add New Component";
                 defaultOption.value = 0;
 
                 select.appendChild(defaultOption);
@@ -775,6 +912,7 @@ class Editor {
                 titleContent.innerHTML = component.type;
 
                 let collapse = document.createElement('div');
+                collapse.title = 'Collapse/Expand this component';
                 collapse.classList.add('collapse');
                 collapse.innerHTML = "&#10095;";
 

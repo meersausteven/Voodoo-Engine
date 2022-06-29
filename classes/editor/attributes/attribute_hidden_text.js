@@ -12,13 +12,25 @@ class AttributeHiddenText extends AttributeText {
                 wrapper.classList.add('attribute', 'hidden_text');
                 
                 let title = document.createElement('div');
+                title.classList.add('text');
                 title.innerHTML = this.value;
-                title.addEventListener('click', function(e) {
-                        let currentValue = e.target.innerHTML;
+
+                let editIcon = document.createElement('i');
+                editIcon.classList.add('edit_text', 'fa', 'fa-pen-nib');
+                editIcon.title = 'Edit';
+
+                editIcon.addEventListener('click', function(e) {
+                        let textElement = e.target.parentElement.querySelector('.text');
+                        if (textElement === null) {
+                                return;
+                        }
+
+                        let currentValue = textElement.innerHTML;
 
                         // create new text input field
                         let input = document.createElement('input');
                         input.setAttribute("type", "text");
+                        input.title = `'Enter' to confirm changes`;
                         input.value = currentValue;
                 
                         input.addEventListener('keyup', function(e) {
@@ -31,24 +43,29 @@ class AttributeHiddenText extends AttributeText {
                         input.addEventListener('keydown', function(e) {
                                 if (e.key === 'Enter') {
                                         let newValue = e.target.value;
-                                        if (e.target.value !== '') {
-                                                title.innerHTML = e.target.value;
 
-                                                if (this.validate(newValue)) {
-                                                        this.change(newValue);
-                                                }
+                                        if ((e.target.value === '') ||
+                                            (e.target.value.replace(/\s/g, '') === ''))
+                                        {
+                                                newValue = this.startValue;
                                         }
-                        
-                                        title.innerHTML = e.target.value;
+
+                                        title.innerHTML = newValue;
+                                        if (this.validate(newValue)) {
+                                                this.change(newValue);
+                                        }
+                                        
                                         e.target.parentElement.replaceChild(title, e.target);
                                 }
                         }.bind(this));
 
                         // replace this element with the new input element
-                        e.target.parentElement.replaceChild(input, e.target);
+                        e.target.parentElement.replaceChild(input, textElement);
+                        input.focus();
                 }.bind(this));
 
                 wrapper.appendChild(title);
+                wrapper.appendChild(editIcon);
                 
                 return wrapper;
         }

@@ -34,6 +34,7 @@ class AttributeBoolean extends AttributeText {
 
                 let input = document.createElement('input');
                 input.setAttribute("type", "checkbox");
+                input.title = this.name;
                 input.checked = this.value;
 
                 input.addEventListener('change', function(e) {
