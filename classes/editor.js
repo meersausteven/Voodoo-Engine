@@ -4,13 +4,15 @@ class Editor {
         project;
         // current scene
         currentScene;
+        // current game object
+        currentGameObject;
         // renderer
         renderer;
         // canvas
         canvas;
         canvasContext;
         camera;
-        // add new gameobject options
+        // add new game object options
         availableGameObjects = [];
         // add new component options
         availableComponents = [];
@@ -27,7 +29,6 @@ class Editor {
         constructor() {
                 // prepare canvas
                 this.canvas = document.querySelector(this.settings.canvasSelector);
-
                 // create new project @todo: add check if save is found in storage - otherwise load new project
                 this.project = new Project();
 
@@ -36,16 +37,21 @@ class Editor {
 
                 // choose first scene in project as current scene
                 this.currentScene = this.project.sceneList[0];
+                this.currentGameObject = null;
 
                 // create cursor class instance for input tracking
                 this.cursor = new Cursor();
 
+                // set canvas background color from project settings
+                this.canvas.style.backgroundColor = this.project.settings['canvasBackgroundColor'];
+
                 // ADD EVENT LISTENERS
                 this.canvas.addEventListener('mousedown', this);
                 this.canvas.addEventListener('mouseup', this);
-                this.canvas.addEventListener('mousemove', this);
+                document.addEventListener('mousemove', this);
                 document.addEventListener('click', this);
                 // custom events
+                window.addEventListener('project_settings_changed', this);
                 window.addEventListener('scene_list_changed', this);
         }
 
@@ -74,6 +80,8 @@ class Editor {
                         this.canvasContext.clearRect(0, 0, this.canvas.width, this.canvas.height);
                         this.camera.clear();
 
+                        // draw grid - @todo: add configurable grid size
+
                         let i = 0;
                         let l = this.currentScene.gameObjects.length;
                         // loop through all gameObjects in the current scene
@@ -95,22 +103,26 @@ class Editor {
                                         }
 
                                         // @todo: add check if the gameObject is selected - otherwise don't show gizmo
-                                        // always render transform components last!
-                                        // show gizmo for transform components
-                                        // up arrow
-                                        let upArrow = new TransformUpArrowGizmo(this.currentScene.gameObjects[i].transform);
-                                        upArrow.render(this.camera);
-                                        // right arrow
-                                        let rightArrow = new TransformRightArrowGizmo(this.currentScene.gameObjects[i].transform);
-                                        rightArrow.render(this.camera);
-                                        // center box
-                                        let centerBox = new TransformCenterBoxGizmo(this.currentScene.gameObjects[i].transform);
-                                        centerBox.render(this.camera);
+                                        if (this.currentScene.gameObjects[i] === this.currentGameObject) {
+                                                // always render transform components last!
+                                                // show gizmo for transform components
+                                                // up arrow
+                                                let upArrow = new TransformUpArrowGizmo(this.currentScene.gameObjects[i].transform);
+                                                upArrow.render(this.camera);
+                                                // right arrow
+                                                let rightArrow = new TransformRightArrowGizmo(this.currentScene.gameObjects[i].transform);
+                                                rightArrow.render(this.camera);
+                                                // center box
+                                                let centerBox = new TransformCenterBoxGizmo(this.currentScene.gameObjects[i].transform);
+                                                centerBox.render(this.camera);
+                                        }
                                 }
 
                                 ++i;
                         }
 
+                        // draw editor grid
+                        
                         // get view of editor camera
                         this.camera.update();
                         this.canvasContext.drawImage(this.camera.canvas, 0, 0);
@@ -142,92 +154,131 @@ class Editor {
                 }
         }
 
-        /* JSON IMPORT/EXPORT */
+        /* JSON IMPORT */
         // turn a passed json object into a project object
-        // @todo: this is ugly - split each loop into its own function for readability
         jsonToProject(json) {
-                // @todo: add functionality
+                // @todo: this is ugly - split each loop into its own function for readability and to reduce complexity from the ide
                 let dummy = JSON.parse(json);
 
-                let project = new Project(true);
+                let project = new Project();
                 project.settings = dummy.settings;
 
+                project.sceneList = this.jsonToSceneList(dummy);
+
+                this.project = project;
+
+                this.reloadEditorElements();
+        }
+
+        // create an array of a scenes using a given dummy (json) project object
+        jsonToSceneList(dummyProject) {
+                let sceneList = [];
+                console.log(dummyProject);
                 let i = 0;
-                let sl = dummy.sceneList.length;
-                while (i < sl) {
+                let l = dummyProject.sceneList.length;
+                while (i < l) {
                         let scene = new Scene();
-                        scene.settings = dummy.sceneList[i].settings;
+                        scene.settings = dummyProject.sceneList[i].settings;
 
-                        let j = 0;
-                        let go = dummy.sceneList[i].gameObjects.length;
-                        while (j < go) {
-                                let gameObject = new GameObject();
+                        scene.gameObjects = this.jsonToGameObjectsList(dummyProject.sceneList[i]);
 
-                                for (let key in dummy.sceneList[i].gameObjects[j].attributes) {
-                                        let dummyAttribute = dummy.sceneList[i].gameObjects[j].attributes[key];
-
-                                        if (!(dummyAttribute instanceof Object) || dummyAttribute instanceof Array) {
-                                                gameObject.attributes[key] = dummyAttribute;
-
-                                                continue;
-                                        }
-
-                                        gameObject.attributes[key].name = dummyAttribute.name;
-
-                                        if (dummyAttribute.value instanceof Object) {
-                                                gameObject.attributes[key].value = new Vector2(dummyAttribute.value.x, dummyAttribute.value.y);
-                                        } else {
-                                                gameObject.attributes[key].value = dummyAttribute.value;
-                                        }
-                                }
-
-                                let k = 0;
-                                let c = dummy.sceneList[i].gameObjects[j].components.length;
-                                while (k < c) {
-                                        let type = dummy.sceneList[i].gameObjects[j].components[k].type;
-                                        type = type.replace(/\s+/g, '');
-                                        let component = eval(`new ${type}()`);
-
-                                        for (let key in dummy.sceneList[i].gameObjects[j].components[k].attributes) {
-                                                let dummyAttribute = dummy.sceneList[i].gameObjects[j].components[k].attributes[key];
-
-                                                if (!(dummyAttribute instanceof Object) || dummyAttribute instanceof Array) {
-                                                        component.attributes[key] = dummyAttribute;
-
-                                                        continue;
-                                                }
-
-                                                component.attributes[key].name = dummyAttribute.name;
-
-                                                if (dummyAttribute.value instanceof Object) {
-                                                        component.attributes[key].value = new Vector2(dummyAttribute.value.x, dummyAttribute.value.y);
-                                                } else {
-                                                        component.attributes[key].value = dummyAttribute.value;
-                                                }
-                                        }
-
-                                        component.gameObject = gameObject;
-                                        gameObject.components[k] = component;
-
-                                        ++k;
-                                }
-
-                                scene.addGameObject(gameObject);
-
-                                ++j;
-                        }
-
-                        project.addScene(scene);
+                        sceneList.push(scene);
 
                         ++i;
                 }
 
-                this.project = project;
-                this.project.start();
-                
-                this.reloadEditorElements();
+                return sceneList;
         }
 
+        // create an array of a game objects using a given dummy (json) scene object
+        jsonToGameObjectsList(dummyScene) {
+                let gameObjectsList = [];
+
+                let i = 0;
+                let l = dummyScene.gameObjects.length;
+                while (i < l) {
+                        let gameObject = new GameObject();
+
+                        gameObject.attributes = this.jsonToGameObjectAttributesList(dummyScene.gameObjects[i], gameObject);
+                        gameObject.components = this.jsonToComponentsList(dummyScene.gameObjects[i], gameObject);
+
+                        gameObjectsList.push(gameObject);
+
+                        ++i;
+                }
+
+                return gameObjectsList;
+        }
+
+        // create an array of a game object's attributes using a given dummy (json) game object
+        jsonToGameObjectAttributesList(dummyObject, gameObject) {
+                let attributesList = [];
+
+                for (let key in gameObject.attributes) {
+                        let dummyAttribute = dummyObject.attributes[key];
+
+                        if (!(dummyAttribute instanceof Object) || (dummyAttribute instanceof Array)) {
+                                attributesList[key] = dummyAttribute;
+
+                                continue;
+                        }
+
+                        attributesList[key].name = dummyAttribute.name;
+
+                        if (dummyAttribute.value instanceof Object) {
+                                attributesList[key].value = new Vector2(dummyAttribute.value.x, dummyAttribute.value.y);
+                        } else {
+                                attributesList[key].value = dummyAttribute.value;
+                        }
+
+                        attribute.gameObject = gameObject;
+
+                        attributesList.push(attribute);
+                }
+
+                return attributesList;
+        }
+
+        // create an array of a game object's components using a given dummy (json) game object
+        jsonToComponentsList(dummyObject, gameObject) {
+                let componentsList = [];
+
+                let i = 0;
+                let l = dummyObject.components.length;
+                while (i < l) {
+                        let type = dummyObject.components[i].type;
+                        type = type.replace(/\s+/g, '');
+
+                        let component = eval(`new ${type}()`);
+
+                        for (let key in dummyObject.components[i].attributes) {
+                                let dummyAttribute = dummyObject.components[i].attributes[key];
+
+                                if (!(dummyAttribute instanceof Object) || dummyAttribute instanceof Array) {
+                                        component.attributes[key] = dummyAttribute;
+
+                                        continue;
+                                }
+
+                                component.attributes[key].name = dummyAttribute.name;
+
+                                if (dummyAttribute.value instanceof Object) {
+                                        component.attributes[key].value = new Vector2(dummyAttribute.value.x, dummyAttribute.value.y);
+                                } else {
+                                        component.attributes[key].value = dummyAttribute.value;
+                                }
+                        }
+
+                        component.gameObject = gameObject;
+                        componentsList.push(component);
+
+                        ++i;
+                }
+
+                return componentsList;
+        }
+
+        /* JSON EXPORT */
         // turn current project object into a json object
         projectToJson() {
                 let dummy = this.prepareProjectForJsonExport(this.project);
@@ -235,8 +286,7 @@ class Editor {
 
                 return json;
         }
-        
-        /* PREPARE OBJECTS FOR JSON EXPORT */
+
         // prepare a project object for json export
         prepareProjectForJsonExport(project) {
                 let dummy = {};
@@ -365,6 +415,7 @@ class Editor {
         }
 
         /* HTML EDITOR ELEMENTS */
+
         // TABBAR
         // create editor HTML Element for loading a project from an uploaded file
         createFileToProjectElement() {
@@ -400,7 +451,14 @@ class Editor {
                 let label = document.createElement('label');
                 label.classList.add('button_link');
                 label.innerHTML = 'Load Project From File';
+                label.title = 'Upload a JSON file to import a project';
                 label.setAttribute('for', input.id);
+
+                // add font awesome icon
+                let icon = document.createElement('i');
+                icon.classList.add('fa', 'fa-file-export');
+
+                label.prepend(icon);
 
                 wrapper.appendChild(input);
                 wrapper.appendChild(label);
@@ -417,6 +475,7 @@ class Editor {
                 let label = document.createElement('div');
                 label.classList.add('button_link');
                 label.innerHTML = 'Save Project As File';
+                label.title = 'Export the project as a JSON file';
                 label.addEventListener('click', function() {
                         // create invisible link element when clicked
                         let link = document.createElement('a');
@@ -430,6 +489,11 @@ class Editor {
                         link.remove();
                 }.bind(this));
 
+                // add font awesome icon
+                let icon = document.createElement('i');
+                icon.classList.add('fa', 'fa-file-import');
+
+                label.prepend(icon);
                 fileDownload.appendChild(label);
 
                 return fileDownload;
@@ -444,10 +508,16 @@ class Editor {
                 let link = document.createElement('a');
                 link.classList.add('button_link');
                 link.innerHTML = 'Save Project To Storage';
+                link.title = "Save the project to the browser's local storage";
                 link.addEventListener('click', function() {
                         this.saveProjectToStorage();
                 }.bind(this));
 
+                // add font awesome icon
+                let icon = document.createElement('i');
+                icon.classList.add('fa', 'fa-download');
+
+                link.prepend(icon);
                 saveStorage.appendChild(link);
 
                 return saveStorage;
@@ -462,10 +532,16 @@ class Editor {
                 let link = document.createElement('a');
                 link.classList.add('button_link');
                 link.innerHTML = 'Load Project From Storage';
+                link.title = "Load the project currently in the browser's local storage";
                 link.addEventListener('click', function() {
                         this.loadProjectFromStorage();
                 }.bind(this));
 
+                // add font awesome icon
+                let icon = document.createElement('i');
+                icon.classList.add('fa', 'fa-upload');
+
+                link.prepend(icon);
                 loadStorage.appendChild(link);
 
                 return loadStorage;
@@ -480,10 +556,16 @@ class Editor {
                 let button = document.createElement('div');
                 button.classList.add('button_link');
                 button.innerHTML = 'Project Settings';
+                button.title = 'Edit the project settings'
                 button.addEventListener('click', function() {
                         document.body.appendChild(this.createProjectSettingsPopup());
                 }.bind(this));
 
+                // add font awesome icon
+                let icon = document.createElement('i');
+                icon.classList.add('fa', 'fa-sliders');
+
+                button.prepend(icon);
                 openSettings.appendChild(button);
 
                 return openSettings;
@@ -574,13 +656,14 @@ class Editor {
                                 if (itemInput.type !== 'submit') {
                                         let setting = itemLabel.innerHTML;
                                         let newValue = itemInput.value;
-        
+
                                         this.project.settings[setting] = newValue;
                                 }
 
                                 ++i;
                         }
 
+                        window.dispatchEvent(new Event('project_settings_changed'));
                         // remove popup after submitting
                         e.target.closest('.popup').remove();
                 }.bind(this));
@@ -651,7 +734,7 @@ class Editor {
                 let button = document.createElement('div');
                 button.classList.add('fake_button', 'mt_auto');
                 button.title = 'Adds a new scene to the project';
-                button.innerHTML = 'Add New Scene';
+                button.innerHTML = '&#x2b; Add New Scene';
                 button.addEventListener('click', function() {
                         this.project.addScene(new Scene());
 
@@ -678,7 +761,7 @@ class Editor {
         createSceneCardElement(scene) {
                 let wrapper = document.createElement('div');
                 wrapper.classList.add('scene');
-                
+
                 let name = scene.name.createWidget();
 
                 wrapper.appendChild(name);
@@ -718,7 +801,7 @@ class Editor {
                 select.classList.add('add_gameObject');
 
                 let defaultOption = document.createElement('option');
-                defaultOption.innerHTML = "Add New GameObject";
+                defaultOption.innerHTML = "&#x2b; Add New GameObject";
                 defaultOption.value = 0;
 
                 select.appendChild(defaultOption);
@@ -797,9 +880,11 @@ class Editor {
 
                                 this.createComponentsListElement(gameObject);
                                 thisElement.classList.add('selected');
+                                this.currentGameObject = gameObject;
                         } else {
                                 thisElement.classList.remove('selected');
                                 this.removeComponentsListElement();
+                                this.currentGameObject = null;
                         }
                 }.bind(this));
 
@@ -844,7 +929,7 @@ class Editor {
                 select.classList.add('add_component');
 
                 let defaultOption = document.createElement('option');
-                defaultOption.innerHTML = "Add New Component";
+                defaultOption.innerHTML = "&#x2b; Add New Component";
                 defaultOption.value = 0;
 
                 select.appendChild(defaultOption);
@@ -993,6 +1078,10 @@ class Editor {
         // event callback function
         handleEvent(e) {
                 switch (e.type) {
+                        case 'project_settings_changed':
+                                this.onProjectsettingschanged(e);
+                                break;
+
                         case 'scene_list_changed':
                                 this.onScenelistchanged(e);
                                 break;
@@ -1044,9 +1133,9 @@ class Editor {
         onMousemove(e) {
                 // check if the cursor is hovering a gizmo
                 // @todo: add functionality
-                
+
                 this.hovering = this.canvas;
-                
+
                 // if no gizmo is being hovered and the left button is being held down, move the camera
                 if ((this.cursor.leftClick === true) &&
                 (this.hovering === this.canvas))
@@ -1074,5 +1163,13 @@ class Editor {
                 console.log(`Event '${e.type}' occurred!`);
 
                 this.reloadEditorElements();
+        }
+
+        // event function that is called on custom 'project_settings_changed' event on the window
+        onProjectsettingschanged(e) {
+                console.log(`Event '${e.type}' occurred!`);
+
+                // for now update canvas color
+                this.canvas.style.backgroundColor = this.project.settings['canvasBackgroundColor'];
         }
 }

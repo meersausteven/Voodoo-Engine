@@ -1,10 +1,16 @@
 
 :root {
         --black: #000000;
-        --silver: #bbbbbb;
-        --lightgray: #999999;
         --gray: #666666;
-        --red: #b91213;
+        --lightgray: #999999;
+        --silver: #bbbbbb;
+        --white: #ffffff;
+        --purple: #b432c9;
+        --blue: #2197c5;
+        --green: #59b432;
+        --yellow: #c9c921;
+        --orange: #c47832;
+        --red: #b43221;
 }
 
 html {
@@ -21,6 +27,7 @@ body {
         color: var(--gray);
         font-family: arial, sans-serif;
         user-select: none;
+        box-sizing: border-box;
 }
 
 /* Game area */
@@ -113,11 +120,11 @@ body {
 }
 
 .edit_mode #left-column {
-        border-right: 3px groove var(--gray);
+        border-right: 3px double var(--gray);
 }
 
 .edit_mode #right-column {
-        border-left: 3px groove var(--gray);
+        border-left: 3px double var(--gray);
 }
 
 .edit_mode #gameArea {
@@ -134,7 +141,6 @@ body {
         display: flex;
         flex-direction: column;
         padding: 0px 5px;
-        box-sizing: border-box;
         overflow: hidden;
 }
 
@@ -155,7 +161,6 @@ body {
         flex-direction: column;
         padding: 10px 0px;
         overflow-y: auto;
-        box-sizing: border-box;
 }
 
 .container .container_content .game_object {
@@ -266,6 +271,12 @@ body {
         line-height: 16px;
         color: var(--gray);
         cursor: pointer;
+        transition: 0.2s;
+}
+
+.container .container_content .add_gameObject:hover,
+.container .container_content .add_component:hover {
+        color: var(--lightgray);
 }
 
 /* card */
@@ -437,13 +448,19 @@ body {
 .dropdown .dropdown_button {
         cursor: pointer;
         color: var(--lightgray);
-        padding: 5px 10px;
+        padding: 5px 15px 5px 10px;
+        position: relative;
 }
 
 .dropdown .dropdown_button::after {
-        content: '\2023';
-        display: inline-block;
-        transform: rotate(90deg);
+        content: '\f0d7';
+        font-family: 'FontAwesome';
+        display: block;
+        position: absolute;
+        right: 5px;
+        top: 50%;
+        transform: translateY(-50%);
+        font-size: 10px;
 }
 
 .dropdown .dropdown_content {
@@ -505,7 +522,7 @@ body {
         flex-direction: column;
         background-color: var(--black);
         border: 2px solid var(--gray);
-        box-shadow: 0px 0px 3px 2px rgba(0, 0, 0, 0.25);
+        box-shadow: 1px 1px 3px 3px rgba(0, 0, 0, 0.25);
         position: fixed;
         left: 50%;
         top: 50%;
@@ -544,6 +561,43 @@ body {
         padding: 10px;
 }
 
+/* alerts */
+.alert {
+        background-color: var(--black);
+        border: 2px solid var(--gray);
+        box-shadow: 1px 1px 3px 3px rgba(0, 0, 0, 0.25);
+        padding: 5px 10px;
+        font-size: 18px;
+        line-height: 20px;
+        color: var(--gray);
+        z-index: 10;
+}
+
+.alert.danger {
+        border-color: var(--red);
+        color: var(--red);
+}
+
+.alert.warning {
+        border-color: var(--yellow);
+        color: var(--yellow);
+}
+
+.alert.success {
+        border-color: var(--green);
+        color: var(--green);
+}
+
+.alert.info {
+        border-color: var(--blue);
+        color: var(--blue);
+}
+
+.alert.unknown {
+        border-color: var(--purple);
+        color: var(--purple);
+}
+
 /* form */
 form {
         display: flex;
@@ -564,16 +618,14 @@ form .form_item label {
         max-width: calc(50% - 15px);
         padding-right: 15px;
         margin-right: 15px;
-        box-sizing: border-box;
 }
 
 form .form_item input[type="text"] {
         flex: 0 0 50%;
         max-width: 50%;
-        box-sizing: border-box;
 }
 
-form input[ŧype="submit"] {
+form input[type="submit"] {
         margin-top: 10px;
 }
 
@@ -604,7 +656,16 @@ form input[ŧype="submit"] {
         cursor: pointer;
 }
 
+.button_link .fa {
+        margin-right: 5px;
+        transition: 0.2s;
+}
+
 .button_link:hover {
+        color: var(--silver) !important;
+}
+
+.button_link:hover * {
         color: var(--silver) !important;
 }
 

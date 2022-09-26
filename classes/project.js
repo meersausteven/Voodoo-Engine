@@ -14,14 +14,14 @@ class Project {
         // settings
         settings = {
                 // name of the project
-                name: 'new Project',
+                projectName: 'New Project',
                 // index of the scene in sceneList which will be loaded when the project starts
                 defaultScene: 0,
                 // canvas
                 canvasSelector: '#gameArea',
                 canvasWidth: 1280,
                 canvasHeight: 720,
-                canvasBackgroundColor: '#000000',
+                canvasBackgroundColor: '#0e0f1f',
                 canvasHideCursor: false,
                 // fixed update interval in ms
                 fixedUpdateInterval: 10,
@@ -265,11 +265,8 @@ class Project {
                                 this.onMouseMove(e);
                                 break;
 
-                        case "project_settings_changed":
-                                this.syncSettings(e);
-                                break;
                         default:
-                                
+
                 }
         }
 
