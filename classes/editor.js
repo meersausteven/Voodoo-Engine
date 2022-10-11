@@ -1,4 +1,6 @@
 
+export { Editor };
+
 class Editor {
         // project
         project;
@@ -21,12 +23,78 @@ class Editor {
                 tabbarSelector: '#editor-tabbar',
                 canvasSelector: '#gameArea'
         };
+        // tabbar
+        tabbar;
         // mouse controls
         cursor;
         // update cycle for canvas
         animationFrame;
 
         constructor() {
+                // build editor html
+                // TABBAR
+                this.tabbar = new Tabbar(this.settings.tabbarSelector);
+                // file options tab
+                this.tabbar.addTab('tab-file', 'File', 'file');
+                // project options tab
+                this.tabbar.addTab('tab-project', 'Project', 'box-archive');
+                // scene options tab
+                this.tabbar.addTab('tab-scene', 'Scene', 'mountain-sun');
+                // build settings tab
+                this.tabbar.addTab('tab-build_settings', 'Build Settings', 'toolbox', null);
+                // share project tab
+                this.tabbar.addTab('tab-share', 'Share', 'share-nodes', null, TABBAR_POSITION_END);
+                this.tabbar.tabs['tab-share'].html.addEventListener('click', function() {
+                        new Snackbar('Sharing projects is not implemented yet!', SNACKBAR_WARNING);
+                });
+
+/*
+                // file dropdown options
+                let fileDropdown = document.createElement('div');
+                fileDropdown.classList.add('dropdown', 'navbar_item');
+
+                let fileDropdownButton = document.createElement('div');
+                fileDropdownButton.classList.add('dropdown_button');
+                fileDropdownButton.innerHTML = 'File';
+
+                fileDropdown.appendChild(fileDropdownButton);
+                let fileDropdownContent = document.createElement('div');
+                fileDropdownContent.classList.add('dropdown_content');
+
+                // upload file
+                fileDropdownContent.appendChild(this.createFileToProjectElement());
+                // load project from localStorage
+                fileDropdownContent.appendChild(this.createLoadStorageElement());
+
+                // download project file
+                fileDropdownContent.appendChild(this.createDownloadProjectElement());
+                // save project to localStorage
+                fileDropdownContent.appendChild(this.createSaveStorageElement());
+
+                fileDropdown.appendChild(fileDropdownContent);
+                document.querySelector(this.settings['tabbarSelector']).appendChild(fileDropdown);
+
+                // project dropdown options
+                // file dropdown options
+                let projectDropdown = document.createElement('div');
+                projectDropdown.classList.add('dropdown', 'navbar_item');
+
+                let projectDropdownButton = document.createElement('div');
+                projectDropdownButton.classList.add('dropdown_button');
+                projectDropdownButton.innerHTML = 'Project';
+
+                projectDropdown.appendChild(projectDropdownButton);
+                let projectDropdownContent = document.createElement('div');
+                projectDropdownContent.classList.add('dropdown_content');
+
+                // upload file
+                projectDropdownContent.appendChild(this.createProjectSettingsElement());
+
+                projectDropdown.appendChild(projectDropdownContent);
+                document.querySelector(this.settings['tabbarSelector']).appendChild(projectDropdown);
+*/
+
+
                 // prepare canvas
                 this.canvas = document.querySelector(this.settings.canvasSelector);
                 // create new project @todo: add check if save is found in storage - otherwise load new project
@@ -56,7 +124,7 @@ class Editor {
         }
 
         start() {
-                this.loadEditorTabbar();
+                //this.loadEditorTabbar();
                 this.generateEditorElements();
 
                 // prepare canvas
@@ -157,29 +225,31 @@ class Editor {
         /* JSON IMPORT */
         // turn a passed json object into a project object
         jsonToProject(json) {
-                // @todo: this is ugly - split each loop into its own function for readability and to reduce complexity from the ide
                 let dummy = JSON.parse(json);
 
                 let project = new Project();
-                project.settings = dummy.settings;
 
-                project.sceneList = this.jsonToSceneList(dummy);
+                project.settings = dummy.settings;
+                project.activeScene = dummy.activeScene;
+                project.sceneList = this.jsonToSceneList(dummy, project);
 
                 this.project = project;
+                this.project.loadScene(this.project.sceneList[this.project.activeScene]);
 
                 this.reloadEditorElements();
         }
 
         // create an array of a scenes using a given dummy (json) project object
-        jsonToSceneList(dummyProject) {
+        jsonToSceneList(dummyProject, project) {
                 let sceneList = [];
-                console.log(dummyProject);
+                
                 let i = 0;
                 let l = dummyProject.sceneList.length;
                 while (i < l) {
                         let scene = new Scene();
-                        scene.settings = dummyProject.sceneList[i].settings;
 
+                        scene.project = project;
+                        scene.settings = dummyProject.sceneList[i].settings;
                         scene.gameObjects = this.jsonToGameObjectsList(dummyProject.sceneList[i]);
 
                         sceneList.push(scene);
@@ -213,8 +283,8 @@ class Editor {
         // create an array of a game object's attributes using a given dummy (json) game object
         jsonToGameObjectAttributesList(dummyObject, gameObject) {
                 let attributesList = [];
-
-                for (let key in gameObject.attributes) {
+                
+                for (let key in dummyObject.attributes) {
                         let dummyAttribute = dummyObject.attributes[key];
 
                         if (!(dummyAttribute instanceof Object) || (dummyAttribute instanceof Array)) {
@@ -223,6 +293,7 @@ class Editor {
                                 continue;
                         }
 
+                        attributesList[key] = {};
                         attributesList[key].name = dummyAttribute.name;
 
                         if (dummyAttribute.value instanceof Object) {
@@ -231,9 +302,7 @@ class Editor {
                                 attributesList[key].value = dummyAttribute.value;
                         }
 
-                        attribute.gameObject = gameObject;
-
-                        attributesList.push(attribute);
+                        attributesList[key].gameObject = gameObject;
                 }
 
                 return attributesList;
@@ -311,9 +380,7 @@ class Editor {
                         ++i;
                 }
 
-                let json = JSON.stringify(dummy);
-
-                return json;
+                return dummy;
         }
 
         // prepare a scene object for the json export
@@ -356,6 +423,7 @@ class Editor {
                 // game object attributes
                 dummy.attributes = {};
 
+                console.log(gameObject);
                 for (let key in gameObject.attributes) {
                         if ((key === 'remove') ||
                                 (key === 'clear'))

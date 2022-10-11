@@ -6,35 +6,40 @@
         </head>
         <body class="play_mode">
                 <canvas id="gameArea"></canvas>
-                
-                <div id="menuBar">
-                        <div class="tabbar">
-                                <div class="tab" onclick="tabClick(this)" data-target="#console">
-                                        Console
-                                </div>
-                        </div>
-                        <div id="console" class="tab-content"></div>
-                </div>
                                 
                 <!-- root classes -->
                 <script src="classes/scene.js"></script>
                 <script src="classes/project.js"></script>
-                
+                <script src="classes/renderer.js"></script>
+                <script src="classes/cursor.js"></script>
+
                 <!-- collection classes -->
                 <script src="classes/collection/vector2.js"></script>
+                <script src="classes/collection/range.js"></script>
                 <script src="classes/collection/debugger.js"></script>
                 <script src="classes/collection/polygon/polygon.js"></script>
                 <script src="classes/collection/polygon/polygon_circle.js"></script>
                 <script src="classes/collection/polygon/polygon_capsule.js"></script>
 
+                <!-- editor elements -->
+                <script src="classes/editor/attributes/attribute_text.js"></script>
+                <script src="classes/editor/attributes/attribute_hidden_text.js"></script>
+                <script src="classes/editor/attributes/attribute_number.js"></script>
+                <script src="classes/editor/attributes/attribute_boolean.js"></script>
+                <script src="classes/editor/attributes/attribute_color.js"></script>
+                <script src="classes/editor/attributes/attribute_vector2.js"></script>
+                <script src="classes/editor/attributes/attribute_image.js"></script>
+
                 <!-- components -->
                         <!-- other -->
                         <script src="classes/components/component.js"></script>
+                        <script src="classes/components/transform.js"></script>
+                        <script src="classes/components/camera.js"></script>
                         <script src="classes/components/rigidbody.js"></script>
                         <script src="classes/components/animation.js"></script>
 
                         <!-- renderers -->
-                        <script src="classes/components/renderers/renderer.js"></script>
+                        <script src="classes/components/renderers/component_renderer.js"></script>
                         <script src="classes/components/renderers/box_renderer.js"></script>
                         <script src="classes/components/renderers/circle_renderer.js"></script>
                         <script src="classes/components/renderers/polygon_renderer.js"></script>
@@ -50,7 +55,7 @@
 
                 <!-- game objects -->
                 <script src="classes/game objects/game_object.js"></script>
-                <script src="classes/game objects/main_camera.js"></script>
+                <script src="classes/game objects/camera_object.js"></script>
 
                 <!-- other -->
                 <script src="lib.js"></script>
