@@ -1,5 +1,8 @@
 
+import { Project } from './modules/project.js';
+
 // create file picker
+// @todo: clean this up - read project file from directory
 let input = document.createElement('input');
 input.setAttribute('type', 'file');
 input.setAttribute('accept', 'application/json');

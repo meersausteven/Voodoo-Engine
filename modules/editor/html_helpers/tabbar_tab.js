@@ -38,11 +38,7 @@ export class TabbarTab {
 
                         // create dropdown button
                         let button = new HtmlElement('div', null, {class: 'dropdown_button row'});
-                        button.addEventListener('click', function(e) {
-                                let dropdown = e.target.closest('.dropdown');
-                                dropdown.classList.toggle('open');
-                        });
-
+                        
                         let buttonLabel = new HtmlElement('div', this.title, {class: 'title'});
 
                         if (iconElement !== null) {

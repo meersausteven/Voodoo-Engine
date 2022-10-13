@@ -81,13 +81,13 @@ export class Editor {
                 this.tabbar = new Tabbar(this.settings.tabbarSelector);
                 // file options tab
                 this.tabbar.addTab('tab-file', 'File', 'file', true);
-                this.tabbar.tabs['tab-file'].addDropdownItem(this.createFileToProjectElement());
-                this.tabbar.tabs['tab-file'].addDropdownItem(this.createLoadStorageElement());
-                this.tabbar.tabs['tab-file'].addDropdownItem(this.createDownloadProjectElement());
-                this.tabbar.tabs['tab-file'].addDropdownItem(this.createSaveStorageElement());
+                this.tabbar.tabs['tab-file'].addDropdownItem(this.createUploadProjectFileButton());
+                this.tabbar.tabs['tab-file'].addDropdownItem(this.createLoadStorageButton());
+                this.tabbar.tabs['tab-file'].addDropdownItem(this.createDownloadProjectButton());
+                this.tabbar.tabs['tab-file'].addDropdownItem(this.createSaveStorageButton());
                 // project options tab
                 this.tabbar.addTab('tab-project', 'Project', 'box-archive', true);
-                this.tabbar.tabs['tab-project'].addDropdownItem(this.createProjectSettingsElement());
+                this.tabbar.tabs['tab-project'].addDropdownItem(this.createOpenProjectSettingsButton());
                 // scene options tab
                 this.tabbar.addTab('tab-scene', 'Scene', 'mountain-sun');
                 // build settings tab
@@ -211,6 +211,7 @@ export class Editor {
         // save current project to localStorage
         saveProjectToStorage() {
                 localStorage.setItem('project', this.projectToJson());
+                new Snackbar('Project saved to storage.', SNACKBAR_SUCCESS);
         }
 
         // load a project from the localStorage
@@ -221,8 +222,9 @@ export class Editor {
                     (typeof json !== 'undefined'))
                 {
                         this.jsonToProject(json);
+                        new Snackbar('Project successfully loaded from storage.', SNACKBAR_SUCCESS);
                 } else {
-                        console.log('No Project in storage. Try saving one first.');
+                        new Snackbar('No Project in storage. Try saving one first.', SNACKBAR_WARNING);
                 }
         }
 
@@ -231,265 +233,80 @@ export class Editor {
         jsonToProject(json) {
                 let dummy = JSON.parse(json);
 
-                let project = new Project();
+                let project = Object.assign(dummy, new Project());
+                this.project = Object.setPrototypeOf(project, Project.prototype);
 
-                project.settings = dummy.settings;
-                project.activeScene = dummy.activeScene;
-                project.sceneList = this.jsonToSceneList(dummy, project);
-
-                this.project = project;
                 this.project.loadScene(this.project.sceneList[this.project.activeScene]);
 
                 this.reloadEditorElements();
         }
 
-        // create an array of a scenes using a given dummy (json) project object
-        jsonToSceneList(dummyProject, project) {
-                let sceneList = [];
-                
-                let i = 0;
-                let l = dummyProject.sceneList.length;
-                while (i < l) {
-                        let scene = new Scene();
-
-                        scene.project = project;
-                        scene.settings = dummyProject.sceneList[i].settings;
-                        scene.gameObjects = this.jsonToGameObjectsList(dummyProject.sceneList[i]);
-
-                        sceneList.push(scene);
-
-                        ++i;
-                }
-
-                return sceneList;
-        }
-
-        // create an array of a game objects using a given dummy (json) scene object
-        jsonToGameObjectsList(dummyScene) {
-                let gameObjectsList = [];
-
-                let i = 0;
-                let l = dummyScene.gameObjects.length;
-                while (i < l) {
-                        let gameObject = new GameObject();
-
-                        gameObject.attributes = this.jsonToGameObjectAttributesList(dummyScene.gameObjects[i], gameObject);
-                        gameObject.components = this.jsonToComponentsList(dummyScene.gameObjects[i], gameObject);
-
-                        gameObjectsList.push(gameObject);
-
-                        ++i;
-                }
-
-                return gameObjectsList;
-        }
-
-        // create an array of a game object's attributes using a given dummy (json) game object
-        jsonToGameObjectAttributesList(dummyObject, gameObject) {
-                let attributesList = [];
-                
-                for (let key in dummyObject.attributes) {
-                        let dummyAttribute = dummyObject.attributes[key];
-
-                        if (!(dummyAttribute instanceof Object) || (dummyAttribute instanceof Array)) {
-                                attributesList[key] = dummyAttribute;
-
-                                continue;
-                        }
-
-                        attributesList[key] = {};
-                        attributesList[key].name = dummyAttribute.name;
-
-                        if (dummyAttribute.value instanceof Object) {
-                                attributesList[key].value = new Vector2(dummyAttribute.value.x, dummyAttribute.value.y);
-                        } else {
-                                attributesList[key].value = dummyAttribute.value;
-                        }
-
-                        attributesList[key].gameObject = gameObject;
-                }
-
-                return attributesList;
-        }
-
-        // create an array of a game object's components using a given dummy (json) game object
-        jsonToComponentsList(dummyObject, gameObject) {
-                let componentsList = [];
-
-                let i = 0;
-                let l = dummyObject.components.length;
-                while (i < l) {
-                        let type = dummyObject.components[i].type;
-                        type = type.replace(/\s+/g, '');
-
-                        let component = eval(`new ${type}()`);
-
-                        for (let key in dummyObject.components[i].attributes) {
-                                let dummyAttribute = dummyObject.components[i].attributes[key];
-
-                                if (!(dummyAttribute instanceof Object) || dummyAttribute instanceof Array) {
-                                        component.attributes[key] = dummyAttribute;
-
-                                        continue;
-                                }
-
-                                component.attributes[key].name = dummyAttribute.name;
-
-                                if (dummyAttribute.value instanceof Object) {
-                                        component.attributes[key].value = new Vector2(dummyAttribute.value.x, dummyAttribute.value.y);
-                                } else {
-                                        component.attributes[key].value = dummyAttribute.value;
-                                }
-                        }
-
-                        component.gameObject = gameObject;
-                        componentsList.push(component);
-
-                        ++i;
-                }
-
-                return componentsList;
-        }
-
         /* JSON EXPORT */
         // turn current project object into a json object
         projectToJson() {
-                let dummy = this.prepareProjectForJsonExport(this.project);
+                let dummy = this.simpleProjectPreparation(this.project);
                 let json = JSON.stringify(dummy);
 
                 return json;
         }
 
-        // prepare a project object for json export
-        prepareProjectForJsonExport(project) {
-                let dummy = {};
-
-                // project settings
-                dummy.settings = {};
-                for (let key in project.settings) {
-                        dummy.settings[key] = project.settings[key];
-                }
-
-                // project active scene
-                dummy.activeScene = project.settings['defaultScene'];
-
-                // project scene list
-                dummy.sceneList = [];
-
+        // remove cyclic project values
+        simpleProjectPreparation(project) {
                 let i = 0;
                 let l = project.sceneList.length;
                 while (i < l) {
-                        dummy.sceneList[i] = this.prepareSceneForJsonExport(project.sceneList[i]);
+                        this.simpleScenePreparation(project.sceneList[i]);
 
                         ++i;
                 }
 
-                return dummy;
+                return project;
         }
 
-        // prepare a scene object for the json export
-        prepareSceneForJsonExport(scene) {
-                let dummy = {};
-
-                // scene settings
-                dummy.settings = {};
-                for (let key in scene.settings) {
-                        if ((key !== 'remove') &&
-                            (key !== 'clear'))
-                        {
-                                dummy.settings[key] = scene.settings[key];
-                        }
-                }
-
-                // scene active camera
-                dummy.activeCamera = [];
-                dummy.activeCamera[0] = {};
-                dummy.activeCamera[0].name 
-
-                // scene game objects
-                dummy.gameObjects = [];
+        // remove cyclic scene values
+        simpleScenePreparation(scene) {
+                scene.project = null;
 
                 let i = 0;
                 let l = scene.gameObjects.length;
                 while (i < l) {
-                        dummy.gameObjects[i] = this.prepareGameObjectForJsonExport(scene.gameObjects[i]);
+                        this.simpleGameObjectPreparation(scene.gameObjects[i]);
 
                         ++i;
                 }
 
-                return dummy;
+                return scene;
         }
 
-        // prepare a gameObject for the json export
-        prepareGameObjectForJsonExport(gameObject) {
-                let dummy = {};
-
-                // game object attributes
-                dummy.attributes = {};
-
-                console.log(gameObject);
-                for (let key in gameObject.attributes) {
-                        if ((key === 'remove') ||
-                                (key === 'clear'))
-                        {
-                                continue;
-                        }
-
-                        dummy.attributes[key] = {};
-
-                        dummy.attributes[key].type = gameObject.attributes[key].type;
-                        dummy.attributes[key].name = gameObject.attributes[key].name;
-                        dummy.attributes[key].value = gameObject.attributes[key].value;
-                }
-
-                // game object components
-                dummy.components = [];
+        // remove cyclic gameObject values
+        simpleGameObjectPreparation(gameObject) {
+                gameObject.scene = null;
 
                 let i = 0;
                 let l = gameObject.components.length;
                 while (i < l) {
-                        dummy.components[i] = this.prepareComponentForJsonExport(gameObject.components[i]);
+                        this.simpleComponentPreparation(gameObject.components[i]);
 
                         ++i;
                 }
 
-                return dummy;
+                return gameObject;
         }
 
-        // prepare a component for the json export
-        prepareComponentForJsonExport(component) {
-                let dummy = {};
+        // remove cyclic component values
+        simpleComponentPreparation(component) {
+                component.gameObject = null;
 
-                dummy.type = component.type;
-                dummy.attributes = {};
-
-                // component attributes
                 for (let key in component.attributes) {
-                        if ((key === 'remove') ||
-                            (key === 'clear'))
-                        {
-                                continue;
-                        }
-
-                        if (!(component.attributes[key] instanceof AttributeText)) {
-                                dummy.attributes[key] = component.attributes[key];
-
-                                continue;
-                        }
-
-                        dummy.attributes[key] = {};
-
-                        dummy.attributes[key].name = component.attributes[key].name;
-                        dummy.attributes[key].value = component.attributes[key].value;
+                        component.attributes[key].component = null;
                 }
 
-                return dummy;
+                return component;
         }
 
-        /* HTML EDITOR ELEMENTS */
-
+        /* CUSTOM HTML BUTTON ELEMENTS */
         // create editor HTML Element for loading a project from an uploaded file
-        createFileToProjectElement() {
+        createUploadProjectFileButton() {
                 let wrapper = new HtmlElement('div', null, {class: 'upload_file'});
 
                 // create file input element
@@ -537,7 +354,7 @@ export class Editor {
         }
 
         // create editor HTML element for turning the current project into a .json file and downloading it
-        createDownloadProjectElement() {
+        createDownloadProjectButton() {
                 let fileDownload = new HtmlElement('div', null, {class: 'download_file'});
 
                 // create fake link
@@ -567,7 +384,7 @@ export class Editor {
         }
 
         // create editor HTML element for saving the current project in the localStorage
-        createSaveStorageElement() {
+        createSaveStorageButton() {
                 let saveStorage = new HtmlElement('div', null, {class: 'save_storage'});
 
                 // create link
@@ -589,7 +406,7 @@ export class Editor {
         }
 
         // create editor HTML element for loading a project from the localStorage
-        createLoadStorageElement() {
+        createLoadStorageButton() {
                 let loadStorage = new HtmlElement('div', null, {class: 'save_storage'});
 
                 // create link
@@ -611,7 +428,7 @@ export class Editor {
         }
 
         // create editor HTML element for opening the project settings popup
-        createProjectSettingsElement() {
+        createOpenProjectSettingsButton() {
                 let openSettings = new HtmlElement('div', null, {class: 'project_settings'});
 
                 // create button
@@ -699,8 +516,8 @@ export class Editor {
         // create editor HTML element for the scene list
         createScenesListElement() {
                 let i = 0;
-                let sl = this.project.sceneList.length;
-                while (i < sl) {
+                let l = this.project.sceneList.length;
+                while (i < l) {
                         // loop all scenes in project and add scene card HTML
                         this.createSceneCardElement(this.project.sceneList[i]);
 
@@ -952,8 +769,8 @@ export class Editor {
                 });
 
                 title.appendChild(titleContent);
-                // can't disable transform components!
                 if (!(component instanceof Transform)) {
+                        // can't disable transform components!
                         title.appendChild(component.attributes['enabled'].createWidget());
                 }
 
@@ -962,8 +779,8 @@ export class Editor {
                 let content = new HtmlElement('div', null, {class: 'content'});
 
                 for (let key in component.attributes) {
-                        // skip "enabled" attribute because we already added it in the title
                         if (key === 'enabled') {
+                                // skip "enabled" attribute because we already added it in the title
                                 continue;
                         }
 
@@ -979,9 +796,8 @@ export class Editor {
         }
 
         // TRANSFORM WIDGET
+        // @todo: add widget
 
-
-        // EVERYTHING COMBINED
         // create editor HTML for the current project
         generateEditorElements() {
                 // load sceneList
@@ -1011,47 +827,52 @@ export class Editor {
 
         /* HTML ELEMENTS */
         // dropdown functions
-        closeAllDropdowns() {
+        closeAllDropdowns(tabbar = null) {
                 let dropdowns = document.querySelectorAll('.dropdown');
 
-                for (let i = 0; i < dropdowns.length; i++) {
+                if (tabbar !== null) {
+                        dropdowns = tabbar.querySelectorAll('.dropdown');
+                }
+
+                let i = 0;
+                let l = dropdowns.length;
+                while (i < l) {
                         dropdowns[i].classList.remove('open');
+
+                        ++i;
                 }
         }
 
-        /* EVENT CALLS */
-        // event callback function
+        /* EVENTS */
+        // event handler function
         handleEvent(e) {
-                switch (e.type) {
-                        case 'project_settings_changed':
-                                this.onProjectsettingschanged(e);
-                                break;
-
-                        case 'scene_list_changed':
-                                this.onScenelistchanged(e);
-                                break;
-
-                        case 'mousedown':
+                let eventLookup = {
+                        project_settings_changed: function(e) {
+                                this.onProjectSettingsChanged(e);
+                        }.bind(this),
+                        scene_list_changed: function(e) {
+                                this.onSceneListChanged(e);
+                        }.bind(this),
+                        mousedown: function(e) {
                                 this.onMousedown(e);
-                                break;
-
-                        case 'mouseup':
+                        }.bind(this),
+                        mouseup: function(e) {
                                 this.onMouseup(e);
-                                break;
-
-                        case 'mousemove':
+                        }.bind(this),
+                        mousemove: function(e) {
                                 this.onMousemove(e);
-                                break;
-
-                        case 'click':
+                        }.bind(this),
+                        click: function(e) {
                                 this.onClick(e);
-                                break;
-
-                        default:
+                        }.bind(this),
+                        default: function(e) {
                                 console.log(`Unexpected event: ${e.type}`);
-                }
-        }
+                        }.bind(this)
+                };
 
+                return (eventLookup[e.type] || eventLookup['default'])(e);
+        }
+        
         // event function that is called on 'mousedown' event on canvas
         onMousedown(e) {
                 if (e.which == 1) {
@@ -1090,16 +911,18 @@ export class Editor {
                 }
         }
 
-        // event function that is called on 'click' event on the document
+        // event function that is called on 'click' event on document
         onClick(e) {
-                if (e.target.classList.contains('dropdown_button')) {
-                        this.closeAllDropdowns();
+                let dropdownButton = e.target.closest('.dropdown_button');
 
-                        e.target.parentElement.classList.add('open');
+                if (dropdownButton !== null) {
+                        let closestDropdown = dropdownButton.closest('.dropdown');
+                        
+                        this.closeAllDropdowns(dropdownButton.closest('.tabbar'));
+
+                        closestDropdown.classList.add('open');
                 } else {
-                        if (!e.target.closest('.dropdown')) {
-                                this.closeAllDropdowns();
-                        }
+                        this.closeAllDropdowns();
                 }
         }
 
