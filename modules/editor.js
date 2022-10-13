@@ -30,7 +30,13 @@ import { CircleCollider } from './components/colliders/circle_collider.js';
 import { CapsuleCollider } from './components/colliders/capsule_collider.js';
 
 // import attributes
+import { AttributeBoolean } from './editor/attributes/attribute_boolean.js';
+import { AttributeColor } from './editor/attributes/attribute_color.js';
+import { AttributeHiddenText } from './editor/attributes/attribute_hidden_text.js';
+import { AttributeImage } from './editor/attributes/attribute_image.js';
+import { AttributeNumber } from './editor/attributes/attribute_number.js';
 import { AttributeText } from './editor/attributes/attribute_text.js';
+import { AttributeVector2 } from './editor/attributes/attribute_vector2.js';
 
 // import gizmos
 import { TransformUpArrowGizmo } from './editor/gizmos/transform_up_arrow_gizmo.js';
@@ -231,20 +237,64 @@ export class Editor {
         /* JSON IMPORT */
         // turn a passed json object into a project object
         jsonToProject(json) {
-                let dummy = JSON.parse(json);
+                let jsonProject = JSON.parse(json);
 
-                let project = Object.assign(dummy, new Project());
-                this.project = Object.setPrototypeOf(project, Project.prototype);
+                let project = Object.assign(jsonProject, new Project());
 
-                this.project.loadScene(this.project.sceneList[this.project.activeScene]);
+                this.project = this.simpleProjectConversion(project);
+
+                this.currentScene = this.project.sceneList[0];
 
                 this.reloadEditorElements();
+        }
+
+        simpleProjectConversion(project) {
+                project = Object.setPrototypeOf(project, Project.prototype);
+
+                let i = 0;
+                let l = project.sceneList.length;
+                while (i < l) {
+                        project.sceneList[i].project = project;
+                        this.simpleSceneConversion(project.sceneList[i]);
+
+                        ++i;
+                }
+
+                return project;
+        }
+
+        simpleSceneConversion(scene) {
+                let i = 0;
+                let l = scene.gameObjects.length;
+                while (i < l) {
+                        scene.gameObjects[i].scene = scene;
+                        this.simpleGameObjectConversion(scene.gameObjects[i]);
+
+                        ++i;
+                }
+
+                return scene;
+        }
+
+        simpleGameObjectConversion(gameObject) {
+                let i = 0;
+                let l = gameObject.components.length;
+                while (i < l) {
+                        gameObject.components[i].gameObject = gameObject;
+                        console.log(gameObject.components[i]);
+
+                        ++i;
+                }
+
+                return gameObject;
         }
 
         /* JSON EXPORT */
         // turn current project object into a json object
         projectToJson() {
-                let dummy = this.simpleProjectPreparation(this.project);
+                // @todo: fix this - we need to clone this.project to successfully remove the parents without altering this.project
+                let dummyProject = structuredClone(this.project);
+                let dummy = this.simpleProjectPreparation(dummyProject);
                 let json = JSON.stringify(dummy);
 
                 return json;
