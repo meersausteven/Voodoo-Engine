@@ -1,34 +1,22 @@
 
 import { Project } from './modules/project.js';
 
-// create file picker
-// @todo: clean this up - read project file from directory
-let input = document.createElement('input');
-input.setAttribute('type', 'file');
-input.setAttribute('accept', 'application/json');
-input.addEventListener('change', function(e) {
-        let file = e.target.files[0];
+var project = new Project();
 
-        if (file.type !== 'application/json') {
-                console.log("only .json files are accepted!");
-                return false;
-        }
+if (localStorage['project'] !== null) {
+        // try opening a project from the localStorage
+        project = project.convertToProject(localStorage['project']);
+        project.start();
+} else if (loadFile()) {
+        // if no file was found in localStorage try loading from the server
+        var xmlhttp = new XMLHttpRequest();
+        xmlhttp.open("GET", '/project_file/project.json', false);
+        xmlhttp.send();
 
-        let reader = new FileReader();
-
-        reader.addEventListener('load', function() {
-                // instantiate a new project
-                var project = new Project();
-                
-                project.jsonToProject(reader.result);
+        if (xmlhttp.status == 200) {
+                project = project.convertToProject(xmlhttp.responseText);
                 project.start();
-
-                delete(this);
-        }.bind(this));
-
-        if (file) {
-                reader.readAsText(file);
         }
-});
-
-document.body.appendChild(input);
+} else {
+        console.warn('ERROR: No project file was found in localStorage nor on the server');
+}

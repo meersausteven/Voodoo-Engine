@@ -1,5 +1,7 @@
 
 export class AttributeText {
+        type = 'Attribute Text';
+        
         name;
         value;
         startValue;

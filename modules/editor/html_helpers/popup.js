@@ -39,5 +39,12 @@ export class Popup {
                 this.html.appendChild(popupContent);
 
                 document.body.appendChild(this.html);
+
+                // position popup in center of page
+                let leftPos = (document.body.clientWidth / 2) - (this.html.clientWidth / 2);
+                let topPos = (document.body.clientHeight / 2) - (this.html.clientHeight / 2);
+
+                this.html.style.top = topPos + 'px';
+                this.html.style.left = leftPos + 'px';
         }
 }

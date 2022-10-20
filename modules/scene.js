@@ -1,29 +1,43 @@
 
 import { GameObject } from './game_objects/game_object.js';
-import { CameraObject } from './game_objects/camera_object.js';
+
+import { Camera } from './components/camera.js';
 
 import { AttributeHiddenText } from './editor/attributes/attribute_hidden_text.js';
 
 export class Scene {
-        name;
         project;
         isCurrentScene;
         activeCamera;
         gameObjects = [];
+        attributes = {};
         settings = {
                 sortingLayers: [],
 
         };
 
-        constructor() {
-                this.name = new AttributeHiddenText('Name', 'New Scene');
+        constructor(project) {
+                this.project = project;
+                
+                this.attributes['name'] = new AttributeHiddenText('Name', 'New Scene');
 
-                // add default camera object
-                this.addGameObject(new CameraObject());
+                // add default main camera
+                this.addGameObject(new GameObject());
+                this.gameObjects[0].attributes['name'].value = "Main Camera";
+                // add camera component to default main camera
+                this.gameObjects[0].addComponent(
+                        new Camera(this.project.settings['canvasWidth'], this.project.settings['canvasHeight'])
+                );
+
                 this.isCurrentScene = false;
         }
 
         start() {
+                // add camera component to default main camera
+                this.gameObjects[0].addComponent(
+                        new Camera(this.project.settings['canvasWidth'], this.project.settings['canvasHeight'])
+                );
+
                 //start all game objects
                 let i = 0;
                 let l = this.gameObjects.length;

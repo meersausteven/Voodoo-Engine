@@ -2,6 +2,8 @@
 import { AttributeText } from './attribute_text.js';
 
 export class AttributeHiddenText extends AttributeText {
+        type = 'Attribute Hidden Text';
+        
         constructor(name, value) {
                 // string name: name of this attribute
                 // string value: value of this attribute

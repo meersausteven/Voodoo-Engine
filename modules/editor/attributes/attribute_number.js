@@ -2,6 +2,8 @@
 import { AttributeText } from './attribute_text.js';
 
 export class AttributeNumber extends AttributeText {
+        type = 'Attribute Number';
+        
         constructor(name, value, range = null) {
                 // string name: name of this attribute
                 // int value: value of this attribute

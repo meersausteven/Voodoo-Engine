@@ -7,7 +7,6 @@ import { Cursor } from './cursor.js';
 
 // import game objects
 import { GameObject } from './game_objects/game_object.js';
-import { CameraObject } from './game_objects/camera_object.js';
 
 // import collection
 import { Vector2 } from './collection/vector2.js';
@@ -66,9 +65,24 @@ export class Editor {
         canvasContext;
         camera;
         // add new game object options
-        availableGameObjects = [];
+        availableGameObjects = [
+                'Game Object'
+        ];
         // add new component options
-        availableComponents = [];
+        availableComponents = [
+                'Camera',
+                'Box Renderer',
+                'Circle Renderer',
+                'Sprite Renderer',
+                //'Polygon Renderer',
+                //'Polygon Circle Renderer',
+                //'Polygon Capsule Renderer',
+                'Box Collider',
+                'Circle Collider',
+                //'Capsule Collider',
+                'Rigidbody',
+                'Animation'
+        ];
         // settings
         settings = {
                 tabbarSelector: '#editor-tabbar',
@@ -76,6 +90,8 @@ export class Editor {
         };
         // tabbar
         tabbar;
+        // moving popup
+        movePopup = null;
         // mouse controls
         cursor;
         // update cycle for canvas
@@ -95,14 +111,22 @@ export class Editor {
                 this.tabbar.addTab('tab-project', 'Project', 'box-archive', true);
                 this.tabbar.tabs['tab-project'].addDropdownItem(this.createOpenProjectSettingsButton());
                 // scene options tab
-                this.tabbar.addTab('tab-scene', 'Scene', 'mountain-sun');
+                //this.tabbar.addTab('tab-scene', 'Scene', 'mountain-sun');
                 // build settings tab
-                this.tabbar.addTab('tab-build_settings', 'Build Settings', 'toolbox');
+                //this.tabbar.addTab('tab-build_settings', 'Build Settings', 'toolbox');
+                // about tab
+                this.tabbar.addTab('tab-about', 'About', 'circle-question', false, TABBAR_POSITION_END);
+                this.tabbar.tabs['tab-about'].html.addEventListener('click', function() {
+                        new Popup('About', this.createAboutPopupContent(), 'about_popup')
+                }.bind(this));
                 // share project tab
-                this.tabbar.addTab('tab-share', 'Share', 'share-nodes', false, TABBAR_POSITION_END);
+                this.tabbar.addTab('tab-share', 'Share', 'share-nodes', false);
                 this.tabbar.tabs['tab-share'].html.addEventListener('click', function() {
                         new Snackbar('Sharing projects is not implemented yet!', SNACKBAR_WARNING);
                 });
+
+                // play button
+                document.body.appendChild(this.createPlayButton());
 
                 // build editor object
                 // prepare canvas
@@ -124,8 +148,8 @@ export class Editor {
                 this.canvas.style.backgroundColor = this.project.settings['canvasBackgroundColor'];
 
                 // ADD EVENT LISTENERS
-                this.canvas.addEventListener('mousedown', this);
-                this.canvas.addEventListener('mouseup', this);
+                document.addEventListener('mousedown', this);
+                document.addEventListener('mouseup', this);
                 document.addEventListener('mousemove', this);
                 document.addEventListener('click', this);
                 // custom events
@@ -134,7 +158,6 @@ export class Editor {
         }
 
         start() {
-                //this.loadEditorTabbar();
                 this.generateEditorElements();
 
                 // prepare canvas
@@ -216,7 +239,8 @@ export class Editor {
         /* LOCAL STORAGE */
         // save current project to localStorage
         saveProjectToStorage() {
-                localStorage.setItem('project', this.projectToJson());
+                localStorage.setItem('project', this.project.convertToJson());
+
                 new Snackbar('Project saved to storage.', SNACKBAR_SUCCESS);
         }
 
@@ -227,131 +251,11 @@ export class Editor {
                 if ((json !== null) &&
                     (typeof json !== 'undefined'))
                 {
-                        this.jsonToProject(json);
+                        this.project = this.project.convertToProject(json);
                         new Snackbar('Project successfully loaded from storage.', SNACKBAR_SUCCESS);
                 } else {
                         new Snackbar('No Project in storage. Try saving one first.', SNACKBAR_WARNING);
                 }
-        }
-
-        /* JSON IMPORT */
-        // turn a passed json object into a project object
-        jsonToProject(json) {
-                let jsonProject = JSON.parse(json);
-
-                let project = Object.assign(jsonProject, new Project());
-
-                this.project = this.simpleProjectConversion(project);
-
-                this.currentScene = this.project.sceneList[0];
-
-                this.reloadEditorElements();
-        }
-
-        simpleProjectConversion(project) {
-                project = Object.setPrototypeOf(project, Project.prototype);
-
-                let i = 0;
-                let l = project.sceneList.length;
-                while (i < l) {
-                        project.sceneList[i].project = project;
-                        this.simpleSceneConversion(project.sceneList[i]);
-
-                        ++i;
-                }
-
-                return project;
-        }
-
-        simpleSceneConversion(scene) {
-                let i = 0;
-                let l = scene.gameObjects.length;
-                while (i < l) {
-                        scene.gameObjects[i].scene = scene;
-                        this.simpleGameObjectConversion(scene.gameObjects[i]);
-
-                        ++i;
-                }
-
-                return scene;
-        }
-
-        simpleGameObjectConversion(gameObject) {
-                let i = 0;
-                let l = gameObject.components.length;
-                while (i < l) {
-                        gameObject.components[i].gameObject = gameObject;
-                        console.log(gameObject.components[i]);
-
-                        ++i;
-                }
-
-                return gameObject;
-        }
-
-        /* JSON EXPORT */
-        // turn current project object into a json object
-        projectToJson() {
-                // @todo: fix this - we need to clone this.project to successfully remove the parents without altering this.project
-                let dummyProject = structuredClone(this.project);
-                let dummy = this.simpleProjectPreparation(dummyProject);
-                let json = JSON.stringify(dummy);
-
-                return json;
-        }
-
-        // remove cyclic project values
-        simpleProjectPreparation(project) {
-                let i = 0;
-                let l = project.sceneList.length;
-                while (i < l) {
-                        this.simpleScenePreparation(project.sceneList[i]);
-
-                        ++i;
-                }
-
-                return project;
-        }
-
-        // remove cyclic scene values
-        simpleScenePreparation(scene) {
-                scene.project = null;
-
-                let i = 0;
-                let l = scene.gameObjects.length;
-                while (i < l) {
-                        this.simpleGameObjectPreparation(scene.gameObjects[i]);
-
-                        ++i;
-                }
-
-                return scene;
-        }
-
-        // remove cyclic gameObject values
-        simpleGameObjectPreparation(gameObject) {
-                gameObject.scene = null;
-
-                let i = 0;
-                let l = gameObject.components.length;
-                while (i < l) {
-                        this.simpleComponentPreparation(gameObject.components[i]);
-
-                        ++i;
-                }
-
-                return gameObject;
-        }
-
-        // remove cyclic component values
-        simpleComponentPreparation(component) {
-                component.gameObject = null;
-
-                for (let key in component.attributes) {
-                        component.attributes[key].component = null;
-                }
-
-                return component;
         }
 
         /* CUSTOM HTML BUTTON ELEMENTS */
@@ -370,14 +274,14 @@ export class Editor {
                         let file = e.target.files[0];
 
                         if (file.type !== 'application/json') {
-                                console.log("only .json files are accepted!");
+                                console.warn("only .json files are accepted!");
                                 return false;
                         }
 
                         let reader = new FileReader();
 
                         reader.addEventListener('load', function() {
-                                this.jsonToProject(reader.result);
+                                this.project = this.project.convertToProject(reader.result);
                         }.bind(this));
 
                         if (file) {
@@ -416,7 +320,7 @@ export class Editor {
                         // create invisible link element when clicked
                         let link = new HtmlElement('a', null, {
                                 class: 'button_link',
-                                href: 'data:text/json;charset=utf-8,' + encodeURIComponent(this.projectToJson()),
+                                href: 'data:text/json;charset=utf-8,' + encodeURIComponent(this.project.convertToJson()),
                                 download: `${this.project.settings['name']}-${Date.now()} .json`
                         });
                         // click link automatically and remove it afterwards
@@ -562,6 +466,50 @@ export class Editor {
                 return form;
         }
 
+        // create editor HTML element the about popup
+        createAboutPopupContent() {
+                let wrapper = new HtmlElement('div', null, {});
+
+                let engineName = new HtmlElement('div', 'JS 2D-Engine', {class: 'engine_name mt_10 text_bold text_center'});
+                wrapper.appendChild(engineName);
+
+                let version = new HtmlElement('div', 'v1.0a', {class: 'version text_center'});
+                wrapper.appendChild(version);
+
+                let infoText = new HtmlElement('div', 'This engine is open source and free to use.<br>Please report any that try to sell this software!<br><br>Feel free to experiment with the different components and this editor!<br>Thank you for using my software!', {class: 'engine_info mx_20 text_center'});
+                wrapper.appendChild(infoText);
+
+                let creator = new HtmlElement('div', 'Created by Sven May', {class: 'creator'});
+                wrapper.appendChild(creator);
+
+                let supportButton = new HtmlElement('a', 'Support the creator', {class: 'fake_button button_link support py_5 px_10', href: '#'});
+                wrapper.appendChild(supportButton);
+
+                return wrapper;
+        }
+
+        createPlayButton() {
+                let wrapper = new HtmlElement('div', '', {id: 'play-button', title: 'Start Play-Mode', class: 'py_10 px_20'});
+                wrapper.addEventListener('click', function() {
+                        this.startPlayMode();
+                }.bind(this));
+
+                let icon = new HtmlElement('i', '', {class: 'fa fa-play'});
+                wrapper.appendChild(icon);
+
+                return wrapper;
+        }
+
+        // PLAY MODE
+        startPlayMode() {
+                new Snackbar('Starting Play-Mode...', SNACKBAR_NEUTRAL);
+
+                this.saveProjectToStorage();
+
+                let currentUrl = window.location.origin + window.location.pathname;
+                window.open(currentUrl.replace('edit_mode', 'play_mode'), '_blank').focus();
+        }
+
         // SCENES
         // create editor HTML element for the scene list
         createScenesListElement() {
@@ -580,9 +528,10 @@ export class Editor {
                         title: 'Adds a new scene to the project'
                 });
                 button.addEventListener('click', function() {
-                        this.project.addScene(new Scene());
-
-                        window.dispatchEvent(new Event('scene_list_changed'));
+                        this.project.addScene(new Scene(this.project));
+                        this.reloadEditorElements();
+                        
+                        new Snackbar('New Scene successfully added', SNACKBAR_SUCCESS);
                 }.bind(this));
 
                 document.querySelector(this.project.settings.sceneListWrapper).appendChild(button);
@@ -605,7 +554,7 @@ export class Editor {
         createSceneCardElement(scene) {
                 let wrapper = new HtmlElement('div', null, {class: 'scene'});
 
-                let name = scene.name.createWidget();
+                let name = scene.attributes['name'].createWidget();
 
                 wrapper.appendChild(name);
 
@@ -637,17 +586,17 @@ export class Editor {
                 }
 
                 // "add new gameObject" form
-                let select = new HtmlElement('select', 'Adds a new GameObject to the selected scene', {class: 'add_gameObject'});
+                let select = new HtmlElement('select', 'Adds a new Game Object to the selected scene', {class: 'add_gameObject'});
 
-                let defaultOption = new HtmlElement('option', '&#x2b; Add New GameObject', {value: 0});
+                let defaultOption = new HtmlElement('option', '&#x2b; Add new Game Object', {value: 0});
 
                 select.appendChild(defaultOption);
 
                 i = 0;
-                l = this.project.availableGameObjects.length;
+                l = this.availableGameObjects.length;
                 while (i < l) {
                         // loop all available game objects for the dropdown
-                        let option = new HtmlElement('option', this.project.availableGameObjects[i], {value: this.project.availableGameObjects[i]});
+                        let option = new HtmlElement('option', this.availableGameObjects[i], {value: this.availableGameObjects[i]});
 
                         select.appendChild(option);
 
@@ -657,7 +606,7 @@ export class Editor {
                 select.addEventListener('change', function(e) {
                         let selectedOption = e.target.children[e.target.selectedIndex].value;
                         if (selectedOption !== 0) {
-                                let newObject = eval(`new ${selectedOption}()`);
+                                let newObject = eval(`new ${selectedOption.replace(' ', '')}()`);
 
                                 this.currentScene.addGameObject(newObject);
                         }
@@ -758,9 +707,9 @@ export class Editor {
                 select.appendChild(defaultOption);
 
                 let j = 0;
-                let ac = this.project.availableComponents.length;
+                let ac = this.availableComponents.length;
                 while (j < ac) {
-                        let option = new HtmlElement('option', this.project.availableComponents[j], {value: this.project.availableComponents[j]});
+                        let option = new HtmlElement('option', this.availableComponents[j], {value: this.availableComponents[j]});
 
                         select.appendChild(option);
 
@@ -770,7 +719,7 @@ export class Editor {
                 select.addEventListener('change', function(e) {
                         let selectedOption = e.target.children[e.target.selectedIndex].value;
                         if (selectedOption !== 0) {
-                                let newComponent = eval(`new ${selectedOption}()`);
+                                let newComponent = eval(`new ${selectedOption.replace(' ', '')}()`);
 
                                 gameObject.addComponent(newComponent);
                         }
@@ -916,7 +865,7 @@ export class Editor {
                                 this.onClick(e);
                         }.bind(this),
                         default: function(e) {
-                                console.log(`Unexpected event: ${e.type}`);
+                                console.warn(`Unexpected event: ${e.type}`);
                         }.bind(this)
                 };
 
@@ -926,11 +875,21 @@ export class Editor {
         // event function that is called on 'mousedown' event on canvas
         onMousedown(e) {
                 if (e.which == 1) {
-                        this.cursor.leftClick = true;
-                        this.cursor.leftClickDownPos = new Vector2(e.clientX, e.clientY);
+                        // if editor canvas has been clicked - move camera
+                        if (e.target.closest(this.settings.canvasSelector) !== null) {
+                                this.cursor.leftClick = true;
+                                this.cursor.leftClickDownPos = new Vector2(e.clientX, e.clientY);
+                        }
+
+                        // if a popup title has been clicked - move popup
+                        if (e.target.closest('.popup_title') !== null) {
+                                this.movePopup = e.target.closest('.popup');
+                        }
                 } else if (e.which == 3) {
-                        this.cursor.rightClick = true;
-                        this.cursor.rightClickDownPos = new Vector2(e.clientX, e.clientY);
+                        if (e.target.closest(this.settings.canvasSelector) !== null) {
+                                this.cursor.rightClick = true;
+                                this.cursor.rightClickDownPos = new Vector2(e.clientX, e.clientY);
+                        }
                 }
         }
 
@@ -939,6 +898,8 @@ export class Editor {
                 if (e.which == 1) {
                         this.cursor.leftClick = false;
                         this.cursor.leftClickUpPos = new Vector2(e.clientX, e.clientY);
+
+                        this.movePopup = null;
                 } else if (e.which == 3) {
                         this.cursor.rightClick = false;
                         this.cursor.rightClickUpPos = new Vector2(e.clientX, e.clientY);
@@ -949,15 +910,22 @@ export class Editor {
         onMousemove(e) {
                 // check if the cursor is hovering a gizmo
                 // @todo: add functionality
-
-                this.hovering = this.canvas;
+                if (e.target.closest(this.settings.canvasSelector) !== null) {
+                        this.hovering = this.canvas;
+                }
 
                 // if no gizmo is being hovered and the left button is being held down, move the camera
                 if ((this.cursor.leftClick === true) &&
-                (this.hovering === this.canvas))
+                    (this.hovering === this.canvas))
                 {
                         let mouseMovement = new Vector2(e.movementX, e.movementY);
                         this.camera.worldPos.subtract(mouseMovement);
+                }
+
+                // move popup if one is being dragged
+                if (this.movePopup !== null) {
+                        this.movePopup.style.top = this.movePopup.offsetTop + e.movementY + 'px';
+                        this.movePopup.style.left = this.movePopup.offsetLeft + e.movementX + 'px';
                 }
         }
 

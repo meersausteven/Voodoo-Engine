@@ -4,6 +4,8 @@ import { Vector2 } from '../../collection/vector2.js';
 import { AttributeText } from './attribute_text.js';
 
 export class AttributeVector2 extends AttributeText {
+        type = 'Attribute Vector2';
+        
         validate(newValue) {
                 if (!isNaN(newValue.x) &&
                     !isNaN(newValue.y)) {

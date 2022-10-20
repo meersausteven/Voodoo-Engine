@@ -2,6 +2,8 @@
 import { AttributeText } from './attribute_text.js';
 
 export class AttributeColor extends AttributeText {
+        type = 'Attribute Color';
+        
         constructor(name, value) {
                 // string name: name of this attribute
                 // boolean value: value of this attribute

@@ -2,6 +2,8 @@
 import { AttributeText } from './attribute_text.js';
 
 export class AttributeImage extends AttributeText {
+        type = 'Attribute Image';
+        
         constructor(name, value) {
                 // string name: name of this attribute
                 // string value: value of this attribute in form of a path
