@@ -33,11 +33,6 @@ export class Scene {
         }
 
         start() {
-                // add camera component to default main camera
-                this.gameObjects[0].addComponent(
-                        new Camera(this.project.settings['canvasWidth'], this.project.settings['canvasHeight'])
-                );
-
                 //start all game objects
                 let i = 0;
                 let l = this.gameObjects.length;
@@ -45,14 +40,13 @@ export class Scene {
                 while (i < l) {
                         if (this.gameObjects[i].attributes['enabled'].value === true) {
                                 this.gameObjects[i].start();
-                                console.log("started " + this.gameObjects[i].attributes['name'].value);
                         }
 
                         ++i;
                 }
 
                 // get default camera component
-                this.activeCamera = this.#getCamera();
+                this.activeCamera = this.getCamera();
         }
 
         processUpdateFrame() {
@@ -75,7 +69,7 @@ export class Scene {
                         // get active camera view
                         this.project.canvasContext.clearRect(0, 0, this.project.canvas.width, this.project.canvas.height);
 
-                        this.project.canvasContext.drawImage(this.activeCamera.canvas, 0, 0);
+                        this.project.canvasContext.drawImage(this.activeCamera.frameImage, this.project.canvas.width / 2, this.project.canvas.height / 2);
                 }
         }
 
@@ -115,7 +109,7 @@ export class Scene {
                 }
         }
 
-        #getCamera() {
+        getCamera() {
                 let i = 0;
                 let l = this.gameObjects.length;
 

@@ -43,5 +43,4 @@ export class CircleRenderer extends ComponentRenderer {
 
                 camera.canvasContext.restore();
         }
-
 }

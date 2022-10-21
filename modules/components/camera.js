@@ -20,10 +20,13 @@ export class Camera extends Component {
 
                 this.worldPos = new Vector2();
 
-                this.canvas = document.createElement('canvas');
-                this.canvas.width = this.attributes['viewWidth'].value;
-                this.canvas.height = this.attributes['viewHeight'].value;
-                this.canvasContext = this.canvas.getContext("2d");
+                this.prepareCanvas();
+        }
+
+        start() {
+                if (this.canvas === null) {
+                        this.prepareCanvas();
+                }
         }
 
         // clear canvas
@@ -32,6 +35,8 @@ export class Camera extends Component {
         }
 
         update() {
+                this.clear();
+
                 if (this.gameObject !== null) {
                         this.attributes['worldPos'] = new Vector2(
                                 this.gameObject.transform.attributes['position'].value.x,
@@ -42,5 +47,12 @@ export class Camera extends Component {
                 }
 
                 this.frameImage = this.canvas;
+        }
+
+        prepareCanvas() {
+                this.canvas = document.createElement('canvas');
+                this.canvas.width = this.attributes['viewWidth'].value;
+                this.canvas.height = this.attributes['viewHeight'].value;
+                this.canvasContext = this.canvas.getContext("2d");
         }
 }

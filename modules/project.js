@@ -95,15 +95,12 @@ export class Project {
                 this.renderer = new Renderer();
 
                 // prepare canvas
-                this.canvas = document.querySelector(this.settings.canvasSelector);
-                this.canvas.width = this.settings.canvasWidth;
-                this.canvas.height = this.settings.canvasHeight;
-                this.canvasContext = this.canvas.getContext("2d");
-                this.canvasContext.imageSmoothingEnabled = false;
-                this.canvas.addEventListener('project_settings_changed', this);
+                this.prepareCanvas();
         }
 
         start() {
+                this.prepareCanvas();
+
                 // add event listeners for input
                 this.addInputListeners();
 
@@ -121,7 +118,6 @@ export class Project {
 
         stop() {
                 this.removeInputListeners();
-                this.canvas.removeEventListener('project_settings_changed', this);
 
                 clearInterval(this.fixedUpdate);
                 window.cancelAnimationFrame(this.animationFrame);
@@ -158,6 +154,14 @@ export class Project {
                 {
                         this.activeScene.processFixedUpdateFrame();
                 }
+        }
+
+        prepareCanvas() {
+                this.canvas = document.querySelector(this.settings.canvasSelector);
+                this.canvas.width = this.settings.canvasWidth;
+                this.canvas.height = this.settings.canvasHeight;
+                this.canvasContext = this.canvas.getContext("2d");
+                this.canvasContext.imageSmoothingEnabled = false;
         }
 
         addScene(scene) {
@@ -250,12 +254,14 @@ export class Project {
                 let jsonProject = JSON.parse(json);
 
                 let convertedProject = this.projectConversion(jsonProject);
-console.log(convertedProject);
+
                 return convertedProject;
         }
 
         projectConversion(project) {
                 project = Object.setPrototypeOf(project, Project.prototype);
+
+                project.renderer = Object.setPrototypeOf(project.renderer, Renderer.prototype);
 
                 let i = 0;
                 let l = project.sceneList.length;
@@ -347,7 +353,7 @@ console.log(convertedProject);
                 this.projectPostCloningCleanup(dummyProject);
 
                 let json = JSON.stringify(dummyProject);
-console.log(json);
+
                 return json;
         }
 
@@ -475,16 +481,19 @@ console.log(json);
         handleEvent(e) {
                 let eventLookup = {
                         mousedown: function(e) {
-                                this.onMousedown(e);
+                                this.onMouseDown(e);
                         }.bind(this),
                         mouseup: function(e) {
-                                this.onMouseup(e);
+                                this.onMouseUp(e);
                         }.bind(this),
                         mousemove: function(e) {
-                                this.onMousemove(e);
+                                this.onMouseMove(e);
                         }.bind(this),
                         keydown: function(e) {
                                 this.onKeyDown(e);
+                        }.bind(this),
+                        keyup: function(e) {
+                                this.onKeyUp(e);
                         }.bind(this),
                         default: function(e) {
                                 console.warn(`Unexpected event: ${e.type}`);

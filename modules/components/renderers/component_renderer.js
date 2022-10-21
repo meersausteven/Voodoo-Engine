@@ -12,11 +12,11 @@ export class ComponentRenderer extends Component {
                 super();
                 
                 this.attributes['offset'] = new AttributeVector2('Offset', offset);
-                this.attributes['worldPos'] = new Vector2();
+                this.worldPos = new Vector2();
         }
 
         update() {
-                this.attributes['worldPos'] = new Vector2(
+                this.worldPos = new Vector2(
                         this.gameObject.transform.attributes['position'].value.x + this.attributes['offset'].value.x,
                         this.gameObject.transform.attributes['position'].value.y + this.attributes['offset'].value.y
                 );

@@ -240,8 +240,6 @@ export class Editor {
         // save current project to localStorage
         saveProjectToStorage() {
                 localStorage.setItem('project', this.project.convertToJson());
-
-                new Snackbar('Project saved to storage.', SNACKBAR_SUCCESS);
         }
 
         // load a project from the localStorage
@@ -348,6 +346,8 @@ export class Editor {
                 });
                 link.addEventListener('click', function() {
                         this.saveProjectToStorage();
+
+                        new Snackbar('Project saved to storage.', SNACKBAR_SUCCESS);
                 }.bind(this));
 
                 // add font awesome icon
