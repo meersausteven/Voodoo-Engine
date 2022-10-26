@@ -182,15 +182,15 @@ export class Editor {
                         this.camera.clear();
 
                         // draw grid - @todo: add configurable grid size
-
                         let i = 0;
                         let l = this.currentScene.gameObjects.length;
-                        // loop through all gameObjects in the current scene
                         while (i < l) {
+                                // loop through all gameObjects in the current scene
                                 if (this.currentScene.gameObjects[i].attributes['enabled'].value === true) {
+                                        // loop through all components in the current gameObject
+
                                         let j = 0;
                                         let c = this.currentScene.gameObjects[i].components.length;
-                                        // loop through all components in the current gameObject
                                         while (j < c) {
                                                 // only render component renderer components if they are enabled
                                                 if (this.currentScene.gameObjects[i].components[j].attributes['enabled'].value === true) {
@@ -225,7 +225,6 @@ export class Editor {
                         // draw editor grid
                         
                         // get view of editor camera
-                        this.camera.update();
                         this.canvasContext.drawImage(this.camera.canvas, 0, 0);
                 }
 

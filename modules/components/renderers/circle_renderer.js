@@ -26,7 +26,7 @@ export class CircleRenderer extends ComponentRenderer {
 
         render(camera) {
                 camera.canvasContext.save();
-                camera.canvasContext.translate(this.gameObject.transform.attributes['position'].value.x + this.attributes['offset'].value.x - camera.worldPos.x, this.gameObject.transform.attributes['position'].value.y + this.attributes['offset'].value.y - camera.worldPos.y);
+                camera.canvasContext.translate(this.gameObject.transform.attributes['position'].value.x + this.attributes['offset'].value.x, this.gameObject.transform.attributes['position'].value.y + this.attributes['offset'].value.y);
                 camera.canvasContext.rotate(Math.degreesToRadians(this.gameObject.transform.attributes['rotation'].value));
 
                 camera.canvasContext.beginPath();

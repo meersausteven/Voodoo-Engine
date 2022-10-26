@@ -46,7 +46,12 @@ export class Renderer {
                         if ((this.componentRenderer[i].attributes['enabled'].value === true) &&
                             (this.componentRenderer[i].gameObject.attributes['enabled'].value === true))
                         {
+                                camera.canvasContext.save();
+                                camera.canvasContext.translate(camera.gameObject.scene.project.settings['canvasWidth'] / 2, camera.gameObject.scene.project.settings['canvasHeight'] / 2)
+
                                 this.componentRenderer[i].render(camera);
+
+                                camera.canvasContext.restore();
                         }
 
                         ++i;

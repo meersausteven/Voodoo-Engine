@@ -69,7 +69,7 @@ export class Scene {
                         // get active camera view
                         this.project.canvasContext.clearRect(0, 0, this.project.canvas.width, this.project.canvas.height);
 
-                        this.project.canvasContext.drawImage(this.activeCamera.frameImage, this.project.canvas.width / 2, this.project.canvas.height / 2);
+                        this.project.canvasContext.drawImage(this.activeCamera.frameImage, 0, 0);
                 }
         }
 

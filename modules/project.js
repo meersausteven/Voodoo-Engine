@@ -100,6 +100,7 @@ export class Project {
 
         start() {
                 this.prepareCanvas();
+                this.canvas.style.backgroundColor = this.settings['canvasBackgroundColor'];
 
                 // add event listeners for input
                 this.addInputListeners();

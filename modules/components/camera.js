@@ -12,6 +12,9 @@ export class Camera extends Component {
         cavnasContext;
         frameImage;
 
+        debugCanvas;
+        debugContext;
+
         constructor(width, height) {
                 super();
 
@@ -27,6 +30,18 @@ export class Camera extends Component {
                 if (this.canvas === null) {
                         this.prepareCanvas();
                 }
+
+                this.debugCanvas = document.createElement('canvas');
+                this.debugCanvas.style.position = 'absolute';
+                this.debugCanvas.style.left = '20px';
+                this.debugCanvas.style.bottom = '20px';
+                this.debugCanvas.style.backgroundColor = 'black';
+                this.debugCanvas.style.border = '2px solid #ccc';
+                document.body.appendChild(this.debugCanvas);
+                this.debugCanvas.width = this.attributes['viewWidth'].value / 10;
+                this.debugCanvas.height = this.attributes['viewHeight'].value / 10;
+                this.debugContext = this.debugCanvas.getContext("2d");
+                this.debugContext.scale(1 / 10, 1 / 10);
         }
 
         // clear canvas
@@ -38,7 +53,7 @@ export class Camera extends Component {
                 this.clear();
 
                 if (this.gameObject !== null) {
-                        this.attributes['worldPos'] = new Vector2(
+                        this.worldPos = new Vector2(
                                 this.gameObject.transform.attributes['position'].value.x,
                                 this.gameObject.transform.attributes['position'].value.y
                         );
@@ -47,6 +62,8 @@ export class Camera extends Component {
                 }
 
                 this.frameImage = this.canvas;
+
+                this.debugContext.drawImage(this.frameImage, 0, 0);
         }
 
         prepareCanvas() {
