@@ -196,7 +196,12 @@ export class Editor {
                                                 if (this.currentScene.gameObjects[i].components[j].attributes['enabled'].value === true) {
                                                         // render component renderer components
                                                         if (this.currentScene.gameObjects[i].components[j] instanceof ComponentRenderer) {
+                                                                this.camera.canvasContext.save();
+                                                                this.camera.canvasContext.translate(this.canvas.width / 2, this.canvas.height / 2);
+
                                                                 this.currentScene.gameObjects[i].components[j].render(this.camera);
+
+                                                                this.camera.canvasContext.restore();
                                                         }
                                                 }
 
