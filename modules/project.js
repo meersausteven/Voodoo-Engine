@@ -32,6 +32,7 @@ import { AttributeVector2 } from './editor/attributes/attribute_vector2.js';
 
 // other classes
 import { Renderer } from './renderer.js';
+import { Physics } from './physics.js';
 
 import { Scene } from './scene.js';
 
@@ -46,6 +47,9 @@ export class Project {
 
         // renderer
         renderer;
+
+        // physics
+        physics;
 
         // settings
         settings = {
@@ -93,6 +97,9 @@ export class Project {
 
                 // add renderer
                 this.renderer = new Renderer();
+
+                // add physics
+                this.physics = new Physics();
 
                 // prepare canvas
                 this.prepareCanvas();
@@ -264,6 +271,8 @@ export class Project {
 
                 project.renderer = Object.setPrototypeOf(project.renderer, Renderer.prototype);
 
+                this.physicsConversion(project.physics);
+
                 let i = 0;
                 let l = project.sceneList.length;
                 while (i < l) {
@@ -274,6 +283,15 @@ export class Project {
                 }
 
                 return project;
+        }
+
+        physicsConversion(physics) {
+                physics = Object.setPrototypeOf(physics, Physics.prototype);
+
+                // convert this physics' attributes
+                for (let key in physics.attributes) {
+                        this.attributeConversion(physics.attributes[key]);
+                }
         }
 
         sceneConversion(scene) {
@@ -340,6 +358,11 @@ export class Project {
                 let prototype = eval(`new ${instanceName}`);
                 
                 attribute = Object.setPrototypeOf(attribute, Object.getPrototypeOf(prototype));
+
+                if (instanceName == 'AttributeVector2') {
+                        attribute.value = Object.setPrototypeOf(attribute.value, Vector2.prototype);
+                        attribute.startValue = Object.setPrototypeOf(attribute.startValue, Vector2.prototype);
+                }
 
                 return attribute;
         }

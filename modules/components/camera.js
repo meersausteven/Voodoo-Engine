@@ -11,10 +11,10 @@ export class Camera extends Component {
         canvas;
         cavnasContext;
         frameImage;
-
+/*
         debugCanvas;
         debugContext;
-
+*/
         constructor(width, height) {
                 super();
 
@@ -31,6 +31,7 @@ export class Camera extends Component {
                         this.prepareCanvas();
                 }
 
+                /*
                 this.debugCanvas = document.createElement('canvas');
                 this.debugCanvas.style.position = 'absolute';
                 this.debugCanvas.style.left = '20px';
@@ -42,6 +43,7 @@ export class Camera extends Component {
                 this.debugCanvas.height = this.attributes['viewHeight'].value / 10;
                 this.debugContext = this.debugCanvas.getContext("2d");
                 this.debugContext.scale(1 / 10, 1 / 10);
+                */
         }
 
         // clear canvas
@@ -62,8 +64,10 @@ export class Camera extends Component {
                 }
 
                 this.frameImage = this.canvas;
-
+                /*
+                this.debugContext.clearRect(0, 0, this.debugCanvas.width, this.debugCanvas.height);
                 this.debugContext.drawImage(this.frameImage, 0, 0);
+                */
         }
 
         prepareCanvas() {

@@ -1,5 +1,6 @@
 
 export class Vector2 {
+        type = "Vector2";
         x;
         y;
         magnitude;

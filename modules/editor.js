@@ -110,6 +110,8 @@ export class Editor {
                 // project options tab
                 this.tabbar.addTab('tab-project', 'Project', 'box-archive', true);
                 this.tabbar.tabs['tab-project'].addDropdownItem(this.createOpenProjectSettingsButton());
+                this.tabbar.tabs['tab-project'].addDropdownItem(this.createOpenRendererSettingsButton());
+                this.tabbar.tabs['tab-project'].addDropdownItem(this.createOpenPhysicsSettingsButton());
                 // scene options tab
                 //this.tabbar.addTab('tab-scene', 'Scene', 'mountain-sun');
                 // build settings tab
@@ -467,6 +469,140 @@ export class Editor {
                         e.target.closest('.popup').remove();
                 }.bind(this));
 
+                return form;
+        }
+
+        // create HTML form with this project's renderer settings
+        createOpenRendererSettingsButton() {
+                let openSettings = new HtmlElement('div', null, {class: 'renderer_settings'});
+
+                // create button
+                let button = new HtmlElement('div', 'Renderer Settings', {
+                        class: 'button_link',
+                        title: 'Edit the project`s renderer settings'
+                });
+                button.addEventListener('click', function() {
+                        new Popup('Renderer Settings', this.createRendererSettingsForm(), 'renderer_settings');
+                }.bind(this));
+
+                // add font awesome icon
+                let icon = new HtmlElement('i', null, {class: 'fa fa-image'});
+
+                button.prepend(icon);
+                openSettings.appendChild(button);
+
+                return openSettings;
+        }
+
+        // create HTML form with this project's renderer settings
+        createRendererSettingsForm() {
+                let form = new HtmlElement('form', null, {id: 'renderer-settings-form'});
+
+                // create an input field for each setting
+                /*
+                for (let key in this.project.settings) {
+                        let formItem = new HtmlElement('div', null, {class: 'form_item'});
+
+                        let label = new HtmlElement('label', key, {for: `item-${key}`});
+
+                        let input = new HtmlElement('input', null, {
+                                id: `item-${key}`,
+                                type: 'text',
+                                value: this.project.settings[key]
+                        });
+
+                        formItem.append(label);
+                        formItem.append(input);
+
+                        form.appendChild(formItem);
+                }
+                */
+
+                // add a submit button
+                let submitItem = new HtmlElement('div', null, {class: 'form_item'});
+
+                let submitButton = new HtmlElement('input', null, {
+                        class: 'fake_button',
+                        type: 'submit',
+                        value: 'Save Changes'
+                });
+
+                submitItem.appendChild(submitButton);
+                form.appendChild(submitItem);
+/*
+                form.addEventListener('submit', function(e) {
+                        e.preventDefault();
+
+                        let i = 0;
+                        let l = form.children.length;
+                        // loop all form items and update this project's settings
+                        while (i < l) {
+                                let item = form.children[i];
+                                let itemInput = item.querySelector('input');
+                                let itemLabel = item.querySelector('label');
+
+                                if (itemInput.type !== 'submit') {
+                                        let setting = itemLabel.innerHTML;
+                                        let newValue = itemInput.value;
+
+                                        this.project.settings[setting] = newValue;
+                                }
+
+                                ++i;
+                        }
+
+                        window.dispatchEvent(new Event('project_settings_changed'));
+                        // remove popup after submitting
+                        e.target.closest('.popup').remove();
+                }.bind(this));
+*/
+                return form;
+        }
+
+        // create HTML form with this project's physics settings
+        createOpenPhysicsSettingsButton() {
+                let openSettings = new HtmlElement('div', null, {class: 'physics_settings'});
+
+                // create button
+                let button = new HtmlElement('div', 'Physics Settings', {
+                        class: 'button_link',
+                        title: 'Edit the project`s physics settings'
+                });
+                button.addEventListener('click', function() {
+                        new Popup('Physics Settings', this.createPhysicsSettingsForm(), 'physics_settings');
+                }.bind(this));
+
+                // add font awesome icon
+                let icon = new HtmlElement('i', null, {class: 'fa fa-explosion'});
+
+                button.prepend(icon);
+                openSettings.appendChild(button);
+
+                return openSettings;
+        }
+
+        createPhysicsSettingsForm() {
+                let form = new HtmlElement('form', null, {id: 'physics-settings-form'});
+
+                // create widgets for all attributes
+                for (let key in this.project.physics.attributes) {
+                        let widget = this.project.physics.attributes[key].createWidget();
+
+                        form.appendChild(widget);
+                }
+/* 
+                // add a submit button
+                let submitItem = new HtmlElement('div', null, {class: 'form_item'});
+
+                let submitButton = new HtmlElement('input', null, {
+                        class: 'fake_button',
+                        type: 'submit',
+                        value: 'Save Changes'
+                });
+
+                submitItem.appendChild(submitButton);
+                form.appendChild(submitItem);
+*/
                 return form;
         }
 
