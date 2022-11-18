@@ -20,15 +20,5 @@ export class ComponentRenderer extends Component {
                         this.gameObject.transform.attributes['position'].value.x + this.attributes['offset'].value.x,
                         this.gameObject.transform.attributes['position'].value.y + this.attributes['offset'].value.y
                 );
-                
-                this.passToRenderer();
-        }
-
-        passToRenderer() {
-                /*
-                @todo: ADD FUNCTIONALITY TO PASS A RenderedObject-Object TO THE PROJECTS RENDERER
-                       WORLD POSITION, ROTATION, WIDTH, HEIGHT, BOUNDS, etc. ARE NECCESSARY
-                */
-                this.gameObject.scene.project.renderer.addComponentRenderer(this);
         }
 }

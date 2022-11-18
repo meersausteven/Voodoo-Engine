@@ -22,6 +22,7 @@ export class Camera extends Component {
                 this.attributes['viewHeight'] = new AttributeNumber('view height', height);
 
                 this.worldPos = new Vector2();
+                this.center = new Vector2();
 
                 this.prepareCanvas();
         }
@@ -58,6 +59,11 @@ export class Camera extends Component {
                         this.worldPos = new Vector2(
                                 this.gameObject.transform.attributes['position'].value.x,
                                 this.gameObject.transform.attributes['position'].value.y
+                        );
+
+                        this.center = new Vector2(
+                                this.worldPos.x + this.width / 2,
+                                this.worldPos.y + this.height / 2
                         );
 
                         this.gameObject.scene.project.renderer.renderToCameraView(this);

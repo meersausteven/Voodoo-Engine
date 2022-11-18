@@ -86,7 +86,10 @@ export class Editor {
         // settings
         settings = {
                 tabbarSelector: '#editor-tabbar',
-                canvasSelector: '#gameArea'
+                canvasSelector: '#gameArea',
+                displayGrid: true,
+                gridSizeX: 100,
+                gridSizeY: 100
         };
         // tabbar
         tabbar;
@@ -101,13 +104,16 @@ export class Editor {
                 // build editor html
                 // TABBAR
                 this.tabbar = new Tabbar(this.settings.tabbarSelector);
-                // file options tab
+                // 'File' tab
                 this.tabbar.addTab('tab-file', 'File', 'file', true);
                 this.tabbar.tabs['tab-file'].addDropdownItem(this.createUploadProjectFileButton());
                 this.tabbar.tabs['tab-file'].addDropdownItem(this.createLoadStorageButton());
                 this.tabbar.tabs['tab-file'].addDropdownItem(this.createDownloadProjectButton());
                 this.tabbar.tabs['tab-file'].addDropdownItem(this.createSaveStorageButton());
-                // project options tab
+                // 'Editor' tab
+                this.tabbar.addTab('tab-editor', 'Editor', 'newspaper', true);
+                this.tabbar.tabs['tab-editor'].addDropdownItem(this.createOpenEditorSettingsButton());
+                // 'Project' tab
                 this.tabbar.addTab('tab-project', 'Project', 'box-archive', true);
                 this.tabbar.tabs['tab-project'].addDropdownItem(this.createOpenProjectSettingsButton());
                 this.tabbar.tabs['tab-project'].addDropdownItem(this.createOpenRendererSettingsButton());
@@ -176,6 +182,7 @@ export class Editor {
 
         // @todo: this is ugly - make it more readable!
         processFrame() {
+                //console.time('editor_frame');
                 if ((this.currentScene !== null) &&
                     (typeof this.currentScene !== 'undefined'))
                 {
@@ -198,12 +205,10 @@ export class Editor {
                                                 if (this.currentScene.gameObjects[i].components[j].attributes['enabled'].value === true) {
                                                         // render component renderer components
                                                         if (this.currentScene.gameObjects[i].components[j] instanceof ComponentRenderer) {
-                                                                this.camera.canvasContext.save();
-                                                                this.camera.canvasContext.translate(this.canvas.width / 2, this.canvas.height / 2);
+                                                                // we need to update the renderer components to get the correct world position
+                                                                this.currentScene.gameObjects[i].components[j].update();
 
                                                                 this.currentScene.gameObjects[i].components[j].render(this.camera);
-
-                                                                this.camera.canvasContext.restore();
                                                         }
                                                 }
 
@@ -230,11 +235,39 @@ export class Editor {
                         }
 
                         // draw editor grid
-                        
-                        // get view of editor camera
-                        this.canvasContext.drawImage(this.camera.canvas, 0, 0);
+                        if (this.settings['displayGrid'] === true) {
+                                this.canvasContext.save();
+                                this.canvasContext.lineWidth = 0.25;
+                                this.canvasContext.strokeStyle = '#ffffff';
+
+                                let gridOffsetX = -(this.camera.worldPos.x % this.settings['gridSizeX']);
+                                for (let i = gridOffsetX; i < this.canvas.width; i += this.settings['gridSizeX']) {
+                                        this.canvasContext.beginPath();
+
+                                        this.canvasContext.moveTo(i, 0);
+                                        this.canvasContext.lineTo(i, this.canvas.height);
+
+                                        this.canvasContext.stroke();
+                                }
+
+                                let gridOffsetY = -(this.camera.worldPos.y % this.settings['gridSizeY']);
+                                for (let j = gridOffsetY; j < this.canvas.height; j += this.settings['gridSizeY']) {
+                                        this.canvasContext.beginPath();
+
+                                        this.canvasContext.moveTo(0, j);
+                                        this.canvasContext.lineTo(this.canvas.width, j);
+
+                                        this.canvasContext.stroke();
+                                }
+
+                                this.canvasContext.restore();
+
+                                // get view of editor camera
+                                this.canvasContext.drawImage(this.camera.canvas, 0, 0);
+                        }
                 }
 
+                //console.timeEnd('editor_frame');
                 window.requestAnimationFrame(this.processFrame.bind(this));
         }
 
@@ -385,6 +418,90 @@ export class Editor {
                 loadStorage.appendChild(link);
 
                 return loadStorage;
+        }
+
+        // create editor HTML element for opening the project settings popup
+        createOpenEditorSettingsButton() {
+                let openSettings = new HtmlElement('div', null, {class: 'editor_settings'});
+
+                // create button
+                let button = new HtmlElement('div', 'Editor Settings', {
+                        class: 'button_link',
+                        title: 'Edit the editor settings'
+                });
+                button.addEventListener('click', function() {
+                        new Popup('Editor Settings', this.createEditorSettingsForm(), 'editor_settings');
+                }.bind(this));
+
+                // add font awesome icon
+                let icon = new HtmlElement('i', null, {class: 'fa fa-sliders'});
+
+                button.prepend(icon);
+                openSettings.appendChild(button);
+
+                return openSettings;
+        }
+
+        createEditorSettingsForm() {
+                let form = new HtmlElement('form', null, {id: 'editor-settings-form'});
+
+                // create an input field for each setting
+                for (let key in this.settings) {
+                        let formItem = new HtmlElement('div', null, {class: 'form_item'});
+
+                        let label = new HtmlElement('label', key, {for: `item-${key}`});
+
+                        let input = new HtmlElement('input', null, {
+                                id: `item-${key}`,
+                                type: 'text',
+                                value: this.settings[key]
+                        });
+
+                        formItem.append(label);
+                        formItem.append(input);
+
+                        form.appendChild(formItem);
+                }
+
+                // add a submit button
+                let submitItem = new HtmlElement('div', null, {class: 'form_item'});
+
+                let submitButton = new HtmlElement('input', null, {
+                        class: 'fake_button',
+                        type: 'submit',
+                        value: 'Save Changes'
+                });
+
+                submitItem.appendChild(submitButton);
+                form.appendChild(submitItem);
+
+                form.addEventListener('submit', function(e) {
+                        e.preventDefault();
+
+                        let i = 0;
+                        let l = form.children.length;
+                        // loop all form items and update this editor's settings
+                        while (i < l) {
+                                let item = form.children[i];
+                                let itemInput = item.querySelector('input');
+                                let itemLabel = item.querySelector('label');
+
+                                if (itemInput.type !== 'submit') {
+                                        let setting = itemLabel.innerHTML;
+                                        let newValue = itemInput.value;
+
+                                        this.settings[setting] = newValue;
+                                }
+
+                                ++i;
+                        }
+
+                        window.dispatchEvent(new Event('editor_settings_changed'));
+                        // remove popup after submitting
+                        e.target.closest('.popup').remove();
+                }.bind(this));
+
+                return form;
         }
 
         // create editor HTML element for opening the project settings popup
@@ -1075,7 +1192,7 @@ export class Editor {
 
                 if (dropdownButton !== null) {
                         let closestDropdown = dropdownButton.closest('.dropdown');
-                        
+
                         this.closeAllDropdowns(dropdownButton.closest('.tabbar'));
 
                         closestDropdown.classList.add('open');
@@ -1086,15 +1203,11 @@ export class Editor {
 
         // event function that is called on custom 'scene_ist_changed' event on the window
         onScenelistchanged(e) {
-                console.log(`Event '${e.type}' occurred!`);
-
                 this.reloadEditorElements();
         }
 
         // event function that is called on custom 'project_settings_changed' event on the window
         onProjectsettingschanged(e) {
-                console.log(`Event '${e.type}' occurred!`);
-
                 // for now update canvas color
                 this.canvas.style.backgroundColor = this.project.settings['canvasBackgroundColor'];
         }
