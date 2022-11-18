@@ -11,7 +11,7 @@ export class Tabbar {
         parent;
         tabs;
 
-        constructor(parentSelector) {
+        constructor(parentSelector) {console.log(parentSelector);
                 this.parent = document.querySelector(parentSelector);
                 this.tabs = [];
 

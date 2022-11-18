@@ -85,11 +85,10 @@ export class Editor {
         ];
         // settings
         settings = {
-                tabbarSelector: '#editor-tabbar',
-                canvasSelector: '#gameArea',
-                displayGrid: true,
-                gridSizeX: 100,
-                gridSizeY: 100
+                'tabbarSelector': new AttributeText('Tabbar Selector', '#editor-tabbar'),
+                'canvasSelector': new AttributeText('Canvas Selector', '#gameArea'),
+                'displayGrid': new AttributeBoolean('Display Grid', true),
+                'gridSize': new AttributeVector2('Grid Size', new Vector2(100, 100))
         };
         // tabbar
         tabbar;
@@ -103,7 +102,7 @@ export class Editor {
         constructor() {
                 // build editor html
                 // TABBAR
-                this.tabbar = new Tabbar(this.settings.tabbarSelector);
+                this.tabbar = new Tabbar(this.settings.tabbarSelector.value);
                 // 'File' tab
                 this.tabbar.addTab('tab-file', 'File', 'file', true);
                 this.tabbar.tabs['tab-file'].addDropdownItem(this.createUploadProjectFileButton());
@@ -138,7 +137,7 @@ export class Editor {
 
                 // build editor object
                 // prepare canvas
-                this.canvas = document.querySelector(this.settings.canvasSelector);
+                this.canvas = document.querySelector(this.settings.canvasSelector.value);
                 // create new project @todo: add check if save is found in storage - otherwise load new project
                 this.project = new Project();
 
@@ -235,13 +234,13 @@ export class Editor {
                         }
 
                         // draw editor grid
-                        if (this.settings['displayGrid'] === true) {
+                        if (this.settings['displayGrid'].value === true) {
                                 this.canvasContext.save();
                                 this.canvasContext.lineWidth = 0.25;
                                 this.canvasContext.strokeStyle = '#ffffff';
 
-                                let gridOffsetX = -(this.camera.worldPos.x % this.settings['gridSizeX']);
-                                for (let i = gridOffsetX; i < this.canvas.width; i += this.settings['gridSizeX']) {
+                                let gridOffsetX = -(this.camera.worldPos.x % this.settings['gridSize'].value.x);
+                                for (let i = gridOffsetX; i < this.canvas.width; i += this.settings['gridSize'].value.x) {
                                         this.canvasContext.beginPath();
 
                                         this.canvasContext.moveTo(i, 0);
@@ -250,8 +249,8 @@ export class Editor {
                                         this.canvasContext.stroke();
                                 }
 
-                                let gridOffsetY = -(this.camera.worldPos.y % this.settings['gridSizeY']);
-                                for (let j = gridOffsetY; j < this.canvas.height; j += this.settings['gridSizeY']) {
+                                let gridOffsetY = -(this.camera.worldPos.y % this.settings['gridSize'].value.y);
+                                for (let j = gridOffsetY; j < this.canvas.height; j += this.settings['gridSize'].value.y) {
                                         this.canvasContext.beginPath();
 
                                         this.canvasContext.moveTo(0, j);
@@ -427,7 +426,7 @@ export class Editor {
                 // create button
                 let button = new HtmlElement('div', 'Editor Settings', {
                         class: 'button_link',
-                        title: 'Edit the editor settings'
+                        title: 'Change the editor settings'
                 });
                 button.addEventListener('click', function() {
                         new Popup('Editor Settings', this.createEditorSettingsForm(), 'editor_settings');
@@ -445,24 +444,13 @@ export class Editor {
         createEditorSettingsForm() {
                 let form = new HtmlElement('form', null, {id: 'editor-settings-form'});
 
-                // create an input field for each setting
+                // create widgets for all attributes
                 for (let key in this.settings) {
-                        let formItem = new HtmlElement('div', null, {class: 'form_item'});
+                        let widget = this.settings[key].createWidget();
 
-                        let label = new HtmlElement('label', key, {for: `item-${key}`});
-
-                        let input = new HtmlElement('input', null, {
-                                id: `item-${key}`,
-                                type: 'text',
-                                value: this.settings[key]
-                        });
-
-                        formItem.append(label);
-                        formItem.append(input);
-
-                        form.appendChild(formItem);
+                        form.appendChild(widget);
                 }
-
+/* 
                 // add a submit button
                 let submitItem = new HtmlElement('div', null, {class: 'form_item'});
 
@@ -474,33 +462,7 @@ export class Editor {
 
                 submitItem.appendChild(submitButton);
                 form.appendChild(submitItem);
-
-                form.addEventListener('submit', function(e) {
-                        e.preventDefault();
-
-                        let i = 0;
-                        let l = form.children.length;
-                        // loop all form items and update this editor's settings
-                        while (i < l) {
-                                let item = form.children[i];
-                                let itemInput = item.querySelector('input');
-                                let itemLabel = item.querySelector('label');
-
-                                if (itemInput.type !== 'submit') {
-                                        let setting = itemLabel.innerHTML;
-                                        let newValue = itemInput.value;
-
-                                        this.settings[setting] = newValue;
-                                }
-
-                                ++i;
-                        }
-
-                        window.dispatchEvent(new Event('editor_settings_changed'));
-                        // remove popup after submitting
-                        e.target.closest('.popup').remove();
-                }.bind(this));
-
+*/
                 return form;
         }
 
@@ -1133,7 +1095,7 @@ export class Editor {
         onMousedown(e) {
                 if (e.which == 1) {
                         // if editor canvas has been clicked - move camera
-                        if (e.target.closest(this.settings.canvasSelector) !== null) {
+                        if (e.target.closest(this.settings['canvasSelector'].value) !== null) {
                                 this.cursor.leftClick = true;
                                 this.cursor.leftClickDownPos = new Vector2(e.clientX, e.clientY);
                         }
@@ -1143,7 +1105,7 @@ export class Editor {
                                 this.movePopup = e.target.closest('.popup');
                         }
                 } else if (e.which == 3) {
-                        if (e.target.closest(this.settings.canvasSelector) !== null) {
+                        if (e.target.closest(this.settings['canvasSelector'].value) !== null) {
                                 this.cursor.rightClick = true;
                                 this.cursor.rightClickDownPos = new Vector2(e.clientX, e.clientY);
                         }
@@ -1167,7 +1129,7 @@ export class Editor {
         onMousemove(e) {
                 // check if the cursor is hovering a gizmo
                 // @todo: add functionality
-                if (e.target.closest(this.settings.canvasSelector) !== null) {
+                if (e.target.closest(this.settings['canvasSelector'].value) !== null) {
                         this.hovering = this.canvas;
                 }
 
