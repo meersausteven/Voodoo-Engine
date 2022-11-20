@@ -260,10 +260,10 @@ export class Editor {
                                 }
 
                                 this.canvasContext.restore();
-
-                                // get view of editor camera
-                                this.canvasContext.drawImage(this.camera.canvas, 0, 0);
                         }
+
+                        // get view of editor camera
+                        this.canvasContext.drawImage(this.camera.canvas, 0, 0);
                 }
 
                 //console.timeEnd('editor_frame');
