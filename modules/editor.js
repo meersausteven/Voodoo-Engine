@@ -1074,7 +1074,7 @@ export class Editor {
 
                 for (let key in component.attributes) {
                         if (key === 'enabled') {
-                                // skip "enabled" attribute because we already added it in the title
+                                // skip 'enabled' attribute because we already added it in the title
                                 continue;
                         }
 
