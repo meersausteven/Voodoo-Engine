@@ -16,27 +16,27 @@ export class Rigidbody extends Component {
                 this.attributes['obeyGravity'] = new AttributeBoolean('Obey Gravity', true);
                 this.attributes['canCollide'] = new AttributeBoolean('Can Collide', true);
                 this.attributes['mass'] = new AttributeNumber('Mass', 1);
-                this.attributes['gravityScale'] = new AttributeNumber('Gravity Scale', 1);
-                this.attributes['frictionScale'] = new AttributeNumber('Friction Scale', 1);
+                this.attributes['gravityMultiplier'] = new AttributeNumber('Gravity Multiplier', 1);
+                this.attributes['frictionMultiplier'] = new AttributeNumber('Friction Multiplier', 1);
         }
 
         update() {
                 // increase velocity according to gravity
                 let physicsGravity = new Vector2(this.gameObject.scene.project.physics.attributes['gravity'].value.x, this.gameObject.scene.project.physics.attributes['gravity'].value.y);
-                physicsGravity.multiply(time.deltaTime);
+                physicsGravity = Vector2.multiply(physicsGravity, time.deltaTime);
 
                 if (this.attributes['obeyGravity'].value === true) {
-                        this.attributes['velocity'].add(physicsGravity);
+                        this.attributes['velocity'] = Vector2.add(this.attributes['velocity'], physicsGravity);
                 }
 
                 // apply velocity to gameObject
-                this.gameObject.transform.attributes['position'].value.add(this.attributes['velocity']);
+                this.gameObject.transform.attributes['position'].value = Vector2.add(this.gameObject.transform.attributes['position'].value, this.attributes['velocity']);
 
                 // decrease velocity according to friction
-                let physicsFriction = this.gameObject.scene.project.physics.attributes['friction'].value;
-                physicsFriction.multiply(this.attributes['frictionScale'].value);
+                let physicsFriction = this.gameObject.scene.project.physics.attributes['airResistance'].value;
+                physicsFriction = Vector2.multiply(physicsFriction, this.attributes['frictionMultiplier'].value);
 
-                this.attributes['velocity'].multiply(physicsFriction);
+                this.attributes['velocity'] = Vector2.divide(this.attributes['velocity'], physicsFriction);
 
                 // set velocity to zero if it's small enough
                 if ((this.attributes['velocity'].x < 0.01) &&
@@ -51,6 +51,6 @@ export class Rigidbody extends Component {
         }
 
         addForce(force) {
-                this.attributes['velocity'].add(force);
+                this.attributes['velocity'] = Vector2.add(this.attributes['velocity'], force);
         }
 }

@@ -18,9 +18,9 @@ export class GameObject {
                 let transform = new Transform(new Vector2(x, y), rotation);
                 this.addComponent(transform);
 
-                this.transform = this.getTransform();
+                this.transform = transform;
 
-                this.attributes['name'] = new AttributeHiddenText('Name', "New GameObject");
+                this.attributes['name'] = new AttributeHiddenText('Name', 'New GameObject', 'current_gameObject_name_changed');
                 this.attributes['enabled'] = new AttributeBoolean('Enabled', true);
         }
 
@@ -31,7 +31,7 @@ export class GameObject {
 
                 while (i < l) {
                         this.components[i].start();
-                        console.log("started " + this.components[i].type);
+
                         ++i;
                 }
         }
@@ -78,30 +78,45 @@ export class GameObject {
                 }
         }
         
+        /*
+         * adds a component to this gameObject
+         * @param Component component: a component
+         */
         addComponent(component) {
                 if (component instanceof Component) {
                         component.gameObject = this;
                         this.components.push(component);
-
-                        return true;
                 }
 
-                return false;
+                new TypeError('Component could not be added as it is not an instance of the Component class');
         }
 
-        removeComponent(index) {
-                if ((typeof index == "number") &&
-                    (this.components[index] !== null) &&
-                    (typeof this.components[index] != "undefined"))
-                {
-                        this.components[index] = null;
+        /*
+         * removes a component from this gameObject
+         * @param Component component: a component that is to be removed
+         */
+        removeComponent(component) {
+                if (component instanceof Component) {
+                        let i = 0;
+                        let l = this.components.length;
+                        
+                        while (i < l) {
+                                if (this.components[i] === component) {
+                                        this.components.splice(i, 1);
+                                }
 
-                        return true;
+                                ++i;
+                        }
+
+                        new Error('Component could not be removed as it is not part of this gameObject');
                 }
-
-                return false;
         }
         
+        /*
+         * get the transform component of this gameObject
+         * @param Component component: a component
+         * @return: this gameObject's transform component
+         */
         getTransform() {
                 let i = 0;
                 let l = this.components.length;
@@ -114,6 +129,6 @@ export class GameObject {
                         ++i;
                 }
 
-                return null;
+                new Error('This gameObject does not contain a transform component');
         }
 }

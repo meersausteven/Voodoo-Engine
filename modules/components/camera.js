@@ -11,18 +11,20 @@ export class Camera extends Component {
         canvas;
         cavnasContext;
         frameImage;
-/*
-        debugCanvas;
-        debugContext;
-*/
+        // debugCanvas;
+        // debugContext;
+
+        /*
+         * @param Number width: width of the camera view (canvas)
+         * @param Number height: height of the camera view (canvas)
+         */
         constructor(width, height) {
                 super();
 
-                this.attributes['viewWidth'] = new AttributeNumber('view width', width);
-                this.attributes['viewHeight'] = new AttributeNumber('view height', height);
+                this.attributes['viewWidth'] = new AttributeNumber('View Width', width);
+                this.attributes['viewHeight'] = new AttributeNumber('View Height', height);
 
                 this.worldPos = new Vector2();
-                this.center = new Vector2();
 
                 this.prepareCanvas();
         }
@@ -61,11 +63,6 @@ export class Camera extends Component {
                                 this.gameObject.transform.attributes['position'].value.y
                         );
 
-                        this.center = new Vector2(
-                                this.worldPos.x + this.width / 2,
-                                this.worldPos.y + this.height / 2
-                        );
-
                         this.gameObject.scene.project.renderer.renderToCameraView(this);
                 }
 
@@ -78,8 +75,10 @@ export class Camera extends Component {
 
         prepareCanvas() {
                 this.canvas = document.createElement('canvas');
+
                 this.canvas.width = this.attributes['viewWidth'].value;
                 this.canvas.height = this.attributes['viewHeight'].value;
+                
                 this.canvasContext = this.canvas.getContext("2d");
         }
 }

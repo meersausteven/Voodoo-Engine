@@ -11,6 +11,7 @@
         --yellow: #c9c921;
         --orange: #c47832;
         --red: #b43221;
+        --darkred: #822114;
 }
 
 html {
@@ -146,8 +147,8 @@ body {
         border: none;
 }
 
-.container .container_content .component:not(.open) > .title .collapse {
-        transform: rotate(-90deg);
+.container .container_content .component:not(.open) > .title .collapse .fa::before {
+        content: '\f106';
 }
 
 .container .container_content .component > .title {
@@ -161,17 +162,47 @@ body {
 .container .container_content .component > .title .component_name {
         flex: 1 1 auto;
 }
-
-.container .container_content .component > .title .attribute.boolean {
-        flex: 0 0 auto;
-        display: block;
-        padding: 0px;
-        margin: 0px 5px;
-        border: none;
+/* component settings dropdown */
+.container .container_content .component > .title .dropdown .dropdown_button {
+        padding: 0px 15px 0px 5px;
 }
 
-.container .container_content .component > .title .attribute.boolean label {
-        display: none;
+.container .container_content .component > .title .dropdown .dropdown_content {
+        left: auto;
+        right: 0px;
+}
+
+.container .container_content .component > .title .dropdown .dropdown_content .dropdown_content_item {
+        display: flex;
+        padding: 5px;
+        margin: 0px;
+}
+
+.container .container_content .component > .title .dropdown .dropdown_content .dropdown_content_item label,
+.container .container_content .component > .title .dropdown .dropdown_content .dropdown_content_item span {
+        flex: 1 1 auto;
+        font-size: 14px;
+        line-height: 16px;
+}
+
+.container .container_content .component > .title .dropdown .dropdown_content .dropdown_content_item label + *,
+.container .container_content .component > .title .dropdown .dropdown_content .dropdown_content_item span + * {
+        flex: 0 0 auto;
+        margin-left: 10px;
+        font-size: 16px;
+        line-height: 16px;
+}
+
+.container .container_content .component > .title .dropdown .dropdown_content .dropdown_content_item.remove_component,
+.container .container_content .component > .title .dropdown .dropdown_content .dropdown_content_item.remove_component * {
+        color: var(--darkred);
+        transition: 0.2s;
+        cursor: pointer;
+}
+
+.container .container_content .component > .title .dropdown .dropdown_content .dropdown_content_item.remove_component:hover,
+.container .container_content .component > .title .dropdown .dropdown_content .dropdown_content_item.remove_component:hover * {
+        color: var(--red);
 }
 
 .container .container_content .component > .title .collapse {
@@ -180,7 +211,6 @@ body {
         padding: 0px 3px;
         font-size: 12px;
         color: var(--lightgray);
-        transform: rotate(90deg);
 }
 
 .container .container_content .scene {
@@ -206,7 +236,7 @@ body {
 }
 
 .container .container_content .add_gameObject,
-.container .container_content .add_component {
+.container .container_content #add-component-dropdown {
         width: 100%;
         background-color: transparent;
         border: 1px solid var(--gray);
@@ -221,7 +251,7 @@ body {
 }
 
 .container .container_content .add_gameObject:hover,
-.container .container_content .add_component:hover {
+.container .container_content #add-component-dropdown:hover {
         color: var(--lightgray);
 }
 
@@ -743,6 +773,16 @@ form input[type="submit"] {
 
 #play-button:hover .fa {
         color: var(--lightgray);
+}
+
+/* context menu */
+#context-menu {
+        position: absolute;
+        z-index: 1;
+        background-color: var(--black);
+        border: 1px solid var(--gray);
+        border-radius: 5px;
+        padding: 5px 10px;
 }
 
 /* margin classes */

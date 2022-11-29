@@ -4,11 +4,13 @@ import { AttributeText } from './attribute_text.js';
 export class AttributeBoolean extends AttributeText {
         type = 'Attribute Boolean';
         
-        constructor(name, value) {
-                // string name: name of this attribute
-                // boolean value: value of this attribute
-                
-                super(name, value);
+        /*
+         * @param string name: name of this attribute
+         * @param bool value: value of this attribute
+         * @param string event: event name that should be dispatched when the value changed
+         */
+        constructor(name, value, event = null) {
+                super(name, value, event);
         }
 
         validate(newValue) {

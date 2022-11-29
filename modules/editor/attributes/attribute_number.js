@@ -4,12 +4,15 @@ import { AttributeText } from './attribute_text.js';
 export class AttributeNumber extends AttributeText {
         type = 'Attribute Number';
         
-        constructor(name, value, range = null) {
-                // string name: name of this attribute
-                // int value: value of this attribute
-                // Range range: min, max and step of this value's range
-                
-                super(name, value);
+        /*
+         * @param string name: name of the attribute
+         * @param Number value: value of the attribute
+         * @param string event: event name that should be dispatched when the value changed
+         * @param Range range: range with min, max and step size
+         */
+        constructor(name, value, event = null, range = null) {
+        
+                super(name, value, event);
 
                 this.range = range;
         }

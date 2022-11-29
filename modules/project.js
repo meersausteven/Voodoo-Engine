@@ -112,10 +112,15 @@ export class Project {
                 // add event listeners for input
                 this.addInputListeners();
 
+                // add a new renderer if none is given
+                if (this.renderer === null) {
+                        this.renderer = new Renderer();
+                }
+
                 // start first scene if no active scene is given
                 if ((this.activeScene === null) ||
-                        (typeof this.activeScene === 'undefined'))
-                {
+                    (typeof this.activeScene === 'undefined')
+                ) {
                         this.loadScene(this.settings['defaultScene']);
                 }
 
@@ -147,8 +152,8 @@ export class Project {
 
                 // process update frame in scene
                 if ((this.activeScene !== null) &&
-                    (typeof this.activeScene !== 'undefined'))
-                {
+                    (typeof this.activeScene !== 'undefined')
+                ) {
                         this.activeScene.processUpdateFrame();
                 }
 
@@ -158,16 +163,18 @@ export class Project {
         processFixedUpdateFrame() {
                 // process fixed update frame in scene
                 if ((this.activeScene !== null) &&
-                    (typeof this.activeScene !== 'undefined'))
-                {
+                    (typeof this.activeScene !== 'undefined')
+                ) {
                         this.activeScene.processFixedUpdateFrame();
                 }
         }
 
         prepareCanvas() {
                 this.canvas = document.querySelector(this.settings.canvasSelector);
+
                 this.canvas.width = this.settings.canvasWidth;
                 this.canvas.height = this.settings.canvasHeight;
+
                 this.canvasContext = this.canvas.getContext("2d");
                 this.canvasContext.imageSmoothingEnabled = false;
         }
@@ -187,24 +194,22 @@ export class Project {
         removeScene(index) {
                 if ((typeof index == "number") &&
                     ((this.sceneList[index] !== null) &&
-                    (typeof this.sceneList[index] != "undefined"))
+                     (typeof this.sceneList[index] !== 'undefined'))
                 ) {
                         this.sceneList[index] = null;
 
                         dispatchEvent(new Event('scene_list_changed'));
-
-                        return true;
                 }
         }
 
         loadScene(index) {
                 if ((typeof this.sceneList[index] !== 'undefined') &&
-                    (this.sceneList[index] !== null))
-                {
+                    (this.sceneList[index] !== null)
+                ) {
                         // unload old scene
                         if ((typeof this.activeScene !== 'undefined') && 
-                            (this.activeScene !== null))
-                        {
+                            (this.activeScene !== null)
+                        ) {
                                 this.activeScene.isCurrentScene = false;
                         }
 
@@ -212,8 +217,6 @@ export class Project {
                         this.activeScene = this.sceneList[index];
                         this.activeScene.isCurrentScene = true;
                         this.activeScene.start();
-
-                        return true;
                 }
         }
 
@@ -240,20 +243,6 @@ export class Project {
                 }
 
                 console.warn("ERROR: active scene not found in sceneList");
-        }
-
-        syncSettings() {
-                // hide cursor
-                if (this.settings.canvasHideCursor &&
-                        !this.canvas.classList.contains('no-cursor')) {
-                        this.canvas.classList.add('no-cursor');
-                } else if (!this.settings.canvasHideCursor &&
-                        this.canvas.classList.contains('no-cursor')) {
-                        this.canvas.classList.remove('no-cursor')
-                }
-
-                // change canvas background-color
-                this.canvas.style.backgroundColor = this.settings.canvasBackgroundColor;
         }
         
         /* JSON IMPORT */

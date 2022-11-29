@@ -56,13 +56,21 @@ export class Editor {
         project;
         // current scene
         currentScene;
-        // current game object
+        // currently selected game object
         currentGameObject;
+        currentGameObjectHTML;
+        // currently selected component
+        currentComponent;
+        currentComponentHTML;
+        currentComponentGizmos = [];
         // renderer
         renderer;
         // canvas
         canvas;
         canvasContext;
+        // canvas zoom
+        canvasZoom;
+        // camera
         camera;
         // add new game object options
         availableGameObjects = [
@@ -88,7 +96,9 @@ export class Editor {
                 'tabbarSelector': new AttributeText('Tabbar Selector', '#editor-tabbar'),
                 'canvasSelector': new AttributeText('Canvas Selector', '#gameArea'),
                 'displayGrid': new AttributeBoolean('Display Grid', true),
-                'gridSize': new AttributeVector2('Grid Size', new Vector2(100, 100))
+                'gridSize': new AttributeVector2('Grid Size', new Vector2(100, 100)),
+                'gridLineWidth': new AttributeNumber('Grid Line Width', 0.25),
+                'gridLineColor': new AttributeColor('Grid Line Color', '#ffffff')
         };
         // tabbar
         tabbar;
@@ -117,22 +127,18 @@ export class Editor {
                 this.tabbar.tabs['tab-project'].addDropdownItem(this.createOpenProjectSettingsButton());
                 this.tabbar.tabs['tab-project'].addDropdownItem(this.createOpenRendererSettingsButton());
                 this.tabbar.tabs['tab-project'].addDropdownItem(this.createOpenPhysicsSettingsButton());
-                // scene options tab
-                //this.tabbar.addTab('tab-scene', 'Scene', 'mountain-sun');
-                // build settings tab
-                //this.tabbar.addTab('tab-build_settings', 'Build Settings', 'toolbox');
-                // about tab
+                // 'About' tab
                 this.tabbar.addTab('tab-about', 'About', 'circle-question', false, TABBAR_POSITION_END);
                 this.tabbar.tabs['tab-about'].html.addEventListener('click', function() {
                         new Popup('About', this.createAboutPopupContent(), 'about_popup')
                 }.bind(this));
-                // share project tab
+                // 'Share' tab
                 this.tabbar.addTab('tab-share', 'Share', 'share-nodes', false);
                 this.tabbar.tabs['tab-share'].html.addEventListener('click', function() {
                         new Snackbar('Sharing projects is not implemented yet!', SNACKBAR_WARNING);
                 });
 
-                // play button
+                // 'start play mode' button
                 document.body.appendChild(this.createPlayButton());
 
                 // build editor object
@@ -150,6 +156,7 @@ export class Editor {
 
                 // create cursor class instance for input tracking
                 this.cursor = new Cursor();
+                this.canvasZoom = 1;
 
                 // set canvas background color from project settings
                 this.canvas.style.backgroundColor = this.project.settings['canvasBackgroundColor'];
@@ -159,6 +166,8 @@ export class Editor {
                 document.addEventListener('mouseup', this);
                 document.addEventListener('mousemove', this);
                 document.addEventListener('click', this);
+                document.addEventListener('wheel', this);
+                document.addEventListener('current_gameObject_name_changed', this);
                 // custom events
                 window.addEventListener('project_settings_changed', this);
                 window.addEventListener('scene_list_changed', this);
@@ -181,7 +190,6 @@ export class Editor {
 
         // @todo: this is ugly - make it more readable!
         processFrame() {
-                //console.time('editor_frame');
                 if ((this.currentScene !== null) &&
                     (typeof this.currentScene !== 'undefined'))
                 {
@@ -189,85 +197,105 @@ export class Editor {
                         this.canvasContext.clearRect(0, 0, this.canvas.width, this.canvas.height);
                         this.camera.clear();
 
-                        // draw grid - @todo: add configurable grid size
-                        let i = 0;
-                        let l = this.currentScene.gameObjects.length;
-                        while (i < l) {
-                                // loop through all gameObjects in the current scene
-                                if (this.currentScene.gameObjects[i].attributes['enabled'].value === true) {
-                                        // loop through all components in the current gameObject
-
-                                        let j = 0;
-                                        let c = this.currentScene.gameObjects[i].components.length;
-                                        while (j < c) {
-                                                // only render component renderer components if they are enabled
-                                                if (this.currentScene.gameObjects[i].components[j].attributes['enabled'].value === true) {
-                                                        // render component renderer components
-                                                        if (this.currentScene.gameObjects[i].components[j] instanceof ComponentRenderer) {
-                                                                // we need to update the renderer components to get the correct world position
-                                                                this.currentScene.gameObjects[i].components[j].update();
-
-                                                                this.currentScene.gameObjects[i].components[j].render(this.camera);
-                                                        }
-                                                }
-
-                                                ++j;
-                                        }
-
-                                        // @todo: add check if the gameObject is selected - otherwise don't show gizmo
-                                        if (this.currentScene.gameObjects[i] === this.currentGameObject) {
-                                                // always render transform components last!
-                                                // show gizmo for transform components
-                                                // up arrow
-                                                let upArrow = new TransformUpArrowGizmo(this.currentScene.gameObjects[i].transform);
-                                                upArrow.render(this.camera);
-                                                // right arrow
-                                                let rightArrow = new TransformRightArrowGizmo(this.currentScene.gameObjects[i].transform);
-                                                rightArrow.render(this.camera);
-                                                // center box
-                                                let centerBox = new TransformCenterBoxGizmo(this.currentScene.gameObjects[i].transform);
-                                                centerBox.render(this.camera);
-                                        }
-                                }
-
-                                ++i;
-                        }
-
-                        // draw editor grid
-                        if (this.settings['displayGrid'].value === true) {
-                                this.canvasContext.save();
-                                this.canvasContext.lineWidth = 0.25;
-                                this.canvasContext.strokeStyle = '#ffffff';
-
-                                let gridOffsetX = -(this.camera.worldPos.x % this.settings['gridSize'].value.x);
-                                for (let i = gridOffsetX; i < this.canvas.width; i += this.settings['gridSize'].value.x) {
-                                        this.canvasContext.beginPath();
-
-                                        this.canvasContext.moveTo(i, 0);
-                                        this.canvasContext.lineTo(i, this.canvas.height);
-
-                                        this.canvasContext.stroke();
-                                }
-
-                                let gridOffsetY = -(this.camera.worldPos.y % this.settings['gridSize'].value.y);
-                                for (let j = gridOffsetY; j < this.canvas.height; j += this.settings['gridSize'].value.y) {
-                                        this.canvasContext.beginPath();
-
-                                        this.canvasContext.moveTo(0, j);
-                                        this.canvasContext.lineTo(this.canvas.width, j);
-
-                                        this.canvasContext.stroke();
-                                }
-
-                                this.canvasContext.restore();
-                        }
+                        // process scene frame and draw grid
+                        this.processCurrentSceneFrame();
+                        this.drawGrid();
 
                         // get view of editor camera
                         this.canvasContext.drawImage(this.camera.canvas, 0, 0);
                 }
 
-                //console.timeEnd('editor_frame');
                 window.requestAnimationFrame(this.processFrame.bind(this));
+        }
+
+        // process frame for current scene
+        processCurrentSceneFrame() {
+                let i = 0;
+                let l = this.currentScene.gameObjects.length;
+                while (i < l) {
+                        this.processGameObjectFrame(this.currentScene.gameObjects[i]);
+
+                        ++i;
+                }
+        }
+
+        // process frame for the passed GameObject
+        processGameObjectFrame(gameObject) {
+                // skip all disabled gameObjects
+                if (gameObject.attributes['enabled'].value === true) {
+                        // loop through all components in the current gameObject
+                        let i = 0;
+                        let l = gameObject.components.length;
+                        while (i < l) {
+                                this.processComponentFrame(gameObject.components[i]);
+
+                                ++i;
+                        }
+
+                        // @todo: improve the gizmo display - add cursor checks to this as well
+                        // @todo: differentiate between components - currently only transform gizmos
+                        if (gameObject === this.currentGameObject) {
+                                // transform.up arrow
+                                let upArrow = new TransformUpArrowGizmo(gameObject.transform);
+                                // transform.right arrow
+                                let rightArrow = new TransformRightArrowGizmo(gameObject.transform);
+                                // center box - transform position
+                                let centerBox = new TransformCenterBoxGizmo(gameObject.transform);
+                                this.currentComponentGizmos = [upArrow, rightArrow, centerBox];
+
+                                let g = 0;
+                                let gl = this.currentComponentGizmos.length;
+                                while (g < gl) {
+                                        this.currentComponentGizmos[g].render(this.camera);
+
+                                        ++g;
+                                }
+                        }
+                }
+        }
+
+        // process frame for the passed component
+        processComponentFrame(component) {
+                // skip all components that are disabled
+                if (component.attributes['enabled'].value === true) {
+                        // component renderer components
+                        if (component instanceof ComponentRenderer) {
+                                // we need to update the renderer components to get the correct world position
+                                component.update();
+                                component.render(this.camera);
+                        }
+                }
+        }
+
+        // draw editor grid
+        drawGrid() {
+                if (this.settings['displayGrid'].value === true) {
+                        this.canvasContext.save();
+                        this.canvasContext.lineWidth = this.settings['gridLineWidth'].value;
+                        this.canvasContext.strokeStyle = this.settings['gridLineColor'].value;
+
+                        let gridOffsetX = -(this.camera.worldPos.x % this.settings['gridSize'].value.x);
+                        for (let i = gridOffsetX; i < this.canvas.width; i += this.settings['gridSize'].value.x) {
+                                this.canvasContext.beginPath();
+
+                                this.canvasContext.moveTo(i, 0);
+                                this.canvasContext.lineTo(i, this.canvas.height);
+
+                                this.canvasContext.stroke();
+                        }
+
+                        let gridOffsetY = -(this.camera.worldPos.y % this.settings['gridSize'].value.y);
+                        for (let j = gridOffsetY; j < this.canvas.height; j += this.settings['gridSize'].value.y) {
+                                this.canvasContext.beginPath();
+
+                                this.canvasContext.moveTo(0, j);
+                                this.canvasContext.lineTo(this.canvas.width, j);
+
+                                this.canvasContext.stroke();
+                        }
+
+                        this.canvasContext.restore();
+                }
         }
 
         stop() {
@@ -689,13 +717,13 @@ export class Editor {
         createAboutPopupContent() {
                 let wrapper = new HtmlElement('div', null, {});
 
-                let engineName = new HtmlElement('div', 'JS 2D-Engine', {class: 'engine_name mt_10 text_bold text_center'});
+                let engineName = new HtmlElement('div', 'Voodoo', {class: 'engine_name mt_10 text_bold text_center'});
                 wrapper.appendChild(engineName);
 
                 let version = new HtmlElement('div', 'v1.0a', {class: 'version text_center'});
                 wrapper.appendChild(version);
 
-                let infoText = new HtmlElement('div', 'This engine is open source and free to use.<br>Please report any that try to sell this software!<br><br>Feel free to experiment with the different components and this editor!<br>Thank you for using my software!', {class: 'engine_info mx_20 text_center'});
+                let infoText = new HtmlElement('div', 'Voodoo is an open source JavaScript based in-browser game engine and is free to use.<br>Please report any that try to sell this engine for profit!<br><br>Feel free to experiment with the different components and the editor.<br>Thank you for using Voodoo!', {class: 'engine_info mx_20 text_center'});
                 wrapper.appendChild(infoText);
 
                 let creator = new HtmlElement('div', 'Created by Sven May', {class: 'creator'});
@@ -882,10 +910,12 @@ export class Editor {
                                 this.createComponentsListElement(gameObject);
                                 thisElement.classList.add('selected');
                                 this.currentGameObject = gameObject;
+                                this.currentGameObjectHTML = thisElement;
                         } else {
                                 thisElement.classList.remove('selected');
                                 this.removeComponentsListElement();
                                 this.currentGameObject = null;
+                                this.currentGameObjectHTML = null;
                         }
                 }.bind(this));
 
@@ -919,20 +949,18 @@ export class Editor {
                 }
 
                 // add new component select to card content
-                let select = new HtmlElement('select', 'Adds a new component to the selected GameObject', {class: 'add_component'});
+                let select = new HtmlElement('select', null, {id: 'add-component-dropdown', title: 'Adds a new component to the selected GameObject'});
 
                 let defaultOption = new HtmlElement('option', '&#x2b; Add New Component', {value: 0});
-
                 select.appendChild(defaultOption);
 
-                let j = 0;
-                let ac = this.availableComponents.length;
-                while (j < ac) {
-                        let option = new HtmlElement('option', this.availableComponents[j], {value: this.availableComponents[j]});
-
+                i = 0;
+                l = this.availableComponents.length;
+                while (i < l) {
+                        let option = new HtmlElement('option', this.availableComponents[i], {value: this.availableComponents[i]});
                         select.appendChild(option);
 
-                        ++j;
+                        ++i;
                 }
                 
                 select.addEventListener('change', function(e) {
@@ -941,10 +969,16 @@ export class Editor {
                                 let newComponent = eval(`new ${selectedOption.replace(' ', '')}()`);
 
                                 gameObject.addComponent(newComponent);
+
+                                let componentCardElement = this.createComponentCardElement(newComponent);
+                                let parent = document.querySelector('.components_list .card_content');
+                                let nextSibling = document.getElementById('add-component-dropdown');
+                                
+                                parent.insertBefore(componentCardElement, nextSibling);
                         }
 
-                        this.removeComponentsListElement();
-                        this.createComponentsListElement(gameObject);
+                        // reset selected index after adding a new component
+                        select.value = 0;
                 }.bind(this));
 
                 content.appendChild(select);
@@ -977,23 +1011,65 @@ export class Editor {
                         wrapper.classList.add('open');
                 }
 
+                // title wrapper
                 let title = new HtmlElement('div', null, {class: 'title'});
 
-                let titleContent = new HtmlElement('div', component.type, {class: 'component_name'});
-
-                let collapse = new HtmlElement('div', '&#10095;', {class: 'collapse', title: 'Collapse/Expand this component'});
+                // collapse component
+                let collapse = new HtmlElement('div', null, {class: 'collapse', title: 'Collapse/Expand this component'});
                 collapse.addEventListener('click', function() {
                         this.closest('.component').classList.toggle('open');
                 });
 
-                title.appendChild(titleContent);
-                if (!(component instanceof Transform)) {
-                        // can't disable transform components!
-                        title.appendChild(component.attributes['enabled'].createWidget());
-                }
+                let collapseIcon = new HtmlElement('i', null, {class: 'fa fa-angle-down'});
+                collapse.appendChild(collapseIcon);
 
                 title.appendChild(collapse);
 
+                // component name
+                let titleContent = new HtmlElement('div', component.type, {class: 'component_name'});
+                title.appendChild(titleContent);
+
+                // component settings dropdown menu
+                let dropdown = new HtmlElement('div', null, {class: 'dropdown'});
+
+                let dropdownButton = new HtmlElement('div', null, {class: 'dropdown_button', title: 'Component settings'});
+
+                let icon = new HtmlElement('i', null, {class: 'fa fa-gear'});
+                dropdownButton.appendChild(icon);
+
+                dropdown.appendChild(dropdownButton);
+
+                let dropdownContent = new HtmlElement('div', null, {class: 'dropdown_content'});
+
+                if (!(component instanceof Transform)) {
+                        // enable / disable component widget
+                        let enableComponent = component.attributes['enabled'].createWidget();
+                        enableComponent.classList.add('dropdown_content_item');
+                        dropdownContent.appendChild(enableComponent);
+
+                        // remove component button
+                        // @todo: fix renderer component removal - removed component renderers are still passed to play mode
+                        let removeComponent = new HtmlElement('div', null, {class: 'remove_component dropdown_content_item', title: 'Remove this component'});
+                        removeComponent.addEventListener('click', function() {
+                                component.gameObject.removeComponent(component);
+                                wrapper.remove();
+                        }.bind(this));
+
+                        let removeText = new HtmlElement('span', 'Remove Component');
+                        removeComponent.appendChild(removeText);
+
+                        let removeIcon = new HtmlElement('i', null, {class: 'fa fa-xmark'});
+                        removeComponent.appendChild(removeIcon);
+
+                        dropdownContent.appendChild(removeComponent);
+                }
+
+                dropdown.appendChild(dropdownContent);
+                if (dropdownContent.children.length > 0) {
+                        title.appendChild(dropdown);
+                }
+
+                // content
                 let content = new HtmlElement('div', null, {class: 'content'});
 
                 for (let key in component.attributes) {
@@ -1083,6 +1159,12 @@ export class Editor {
                         click: function(e) {
                                 this.onClick(e);
                         }.bind(this),
+                        wheel: function(e) {
+                                this.onWheel(e);
+                        }.bind(this),
+                        current_gameObject_name_changed: function(e) {
+                                this.onCurrentGameObjectNameChanged(e);
+                        }.bind(this),
                         default: function(e) {
                                 console.warn(`Unexpected event: ${e.type}`);
                         }.bind(this)
@@ -1094,15 +1176,15 @@ export class Editor {
         // event function that is called on 'mousedown' event on canvas
         onMousedown(e) {
                 if (e.which == 1) {
-                        // if editor canvas has been clicked - move camera
-                        if (e.target.closest(this.settings['canvasSelector'].value) !== null) {
-                                this.cursor.leftClick = true;
-                                this.cursor.leftClickDownPos = new Vector2(e.clientX, e.clientY);
-                        }
-
                         // if a popup title has been clicked - move popup
                         if (e.target.closest('.popup_title') !== null) {
                                 this.movePopup = e.target.closest('.popup');
+                        }
+                } else if (e.which == 2) {
+                        // if editor canvas has been clicked - move camera
+                        if (e.target.closest(this.settings['canvasSelector'].value) !== null) {
+                                this.cursor.wheelClick = true;
+                                this.cursor.wheelClickDownPos = new Vector2(e.clientX, e.clientY);
                         }
                 } else if (e.which == 3) {
                         if (e.target.closest(this.settings['canvasSelector'].value) !== null) {
@@ -1119,6 +1201,9 @@ export class Editor {
                         this.cursor.leftClickUpPos = new Vector2(e.clientX, e.clientY);
 
                         this.movePopup = null;
+                } else if (e.which == 2) {
+                        this.cursor.wheelClick = false;
+                        this.cursor.wheelClickUpPos = new Vector2(e.clientX, e.clientY);
                 } else if (e.which == 3) {
                         this.cursor.rightClick = false;
                         this.cursor.rightClickUpPos = new Vector2(e.clientX, e.clientY);
@@ -1127,24 +1212,24 @@ export class Editor {
 
         // event function that is called on 'mousemove' event on canvas
         onMousemove(e) {
-                // check if the cursor is hovering a gizmo
-                // @todo: add functionality
-                if (e.target.closest(this.settings['canvasSelector'].value) !== null) {
-                        this.hovering = this.canvas;
-                }
+                if (e.target !== document) {
+                        if (e.target.closest(this.settings['canvasSelector'].value) !== null) {
+                                this.hovering = this.canvas;
+                        }
 
-                // if no gizmo is being hovered and the left button is being held down, move the camera
-                if ((this.cursor.leftClick === true) &&
-                    (this.hovering === this.canvas))
-                {
-                        let mouseMovement = new Vector2(e.movementX, e.movementY);
-                        this.camera.worldPos.subtract(mouseMovement);
-                }
+                        // if no gizmo is being hovered and the wheel (middle button) is being held down, move the camera
+                        if ((this.cursor.wheelClick === true) &&
+                            (this.hovering === this.canvas))
+                        {
+                                let mouseMovement = new Vector2(e.movementX, e.movementY);
+                                this.camera.worldPos.subtract(mouseMovement);
+                        }
 
-                // move popup if one is being dragged
-                if (this.movePopup !== null) {
-                        this.movePopup.style.top = this.movePopup.offsetTop + e.movementY + 'px';
-                        this.movePopup.style.left = this.movePopup.offsetLeft + e.movementX + 'px';
+                        // move popup if one is being dragged
+                        if (this.movePopup !== null) {
+                                this.movePopup.style.top = this.movePopup.offsetTop + e.movementY + 'px';
+                                this.movePopup.style.left = this.movePopup.offsetLeft + e.movementX + 'px';
+                        }
                 }
         }
 
@@ -1161,6 +1246,26 @@ export class Editor {
                 } else {
                         this.closeAllDropdowns();
                 }
+        }
+
+        // event function that is called on 'wheel' event on canvas
+        onWheel(e) {
+                // @todo: fix the scaling !!!
+                if (e.wheelDelta > 0) {
+                        this.canvasZoom += 0.5;
+                } else {
+                        this.canvasZoom -= 0.5;
+                }
+
+                // clamp zoom
+                this.canvasZoom = Math.clamp(this.canvasZoom, 0.5, 1.5);
+
+                this.camera.canvasContext.scale(this.canvasZoom, this.canvasZoom);
+        }
+
+        onCurrentGameObjectNameChanged(e) {
+                let gameObjectTitle = this.currentGameObjectHTML.querySelector('.title');
+                gameObjectTitle.innerHTML = this.currentGameObject.attributes['name'].value;
         }
 
         // event function that is called on custom 'scene_ist_changed' event on the window

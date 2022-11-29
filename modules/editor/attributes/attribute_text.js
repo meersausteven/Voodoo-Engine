@@ -6,12 +6,15 @@ export class AttributeText {
         value;
         startValue;
 
-        constructor(name, value) {
-                // string name: name of this attribute
-                // string value: value of this attribute
-                
+        /*
+         * @param string name: name of the attribute
+         * @param string value: value of the attribute
+         * @param string event: event name that should be dispatched when the value changed
+         */
+        constructor(name, value, event = null) {
                 this.name = name;
                 this.value = value;
+                this.event = event;
                 this.startValue = value;
         }
 
@@ -26,17 +29,16 @@ export class AttributeText {
         eventCall(event) {
                 let newValue = event.target.value;
                 
-                if ((event.type == 'change') &&
-                    (newValue == '')) {
+                if (newValue == '') {
                         newValue = this.startValue;
-                        event.target.value = newValue;
+                        event.target.value = newValue;console.log(newValue);
                 }
 
                 if (this.validate(newValue)) {
                         this.change(newValue);
 
-                        if (event.type == 'change') {
-                                event.target.dispatchEvent(new Event('value_changed'));
+                        if (this.event !== null) {
+                                document.dispatchEvent(new Event(this.event));
                         }
                 }
         }

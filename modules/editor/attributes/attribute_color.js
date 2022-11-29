@@ -4,11 +4,13 @@ import { AttributeText } from './attribute_text.js';
 export class AttributeColor extends AttributeText {
         type = 'Attribute Color';
         
-        constructor(name, value) {
-                // string name: name of this attribute
-                // boolean value: value of this attribute
-                
-                super(name, value);
+        /*
+         * @param string name: name of the attribute
+         * @param string value: value of the attribute
+         * @param string event: event name that should be dispatched when the value changed
+         */
+        constructor(name, value, event) {
+                super(name, value, event);
         }
 
         validate(newValue) {

@@ -10,11 +10,13 @@ export class TabbarTab {
         dropdownItems;
         position;
 
+        /*
+         * @param string id: id for this tab - used to identify this tab (should be unique)
+         * @param string title: title that is displayed inside tab
+         * @param string icon: FontAwesome icon name that is displayed next to the title
+         * @param array dropdown: array of dropdown items(object) - tag, content, attributes
+         */
         constructor(id, title, icon = null, dropdown = false, position = TABBAR_POSITION_START) {
-                // string id: id for this tab - used to identify this tab (should be unique)
-                // string title: title that is displayed inside tab
-                // string icon: FontAwesome icon name that is displayed next to the title
-                // array dropdown: array of dropdown items(object) - tag, content, attributes
                 this.id = id;
                 this.title = title;
                 this.icon = icon;

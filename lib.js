@@ -137,33 +137,37 @@ Math.degreesToRadians = function(degrees) {
         return radians
 };
 
+/* calculate the dot product between two points
+ * @param Vector2 a: first point
+ * @param Vector2 b: second point
+ */
 Math.dot = function(a, b) {
         let dot;
 
-        dot = x * x + y * y;
+        dot = (a.x * b.x) + (a.y * b.y);
 
         return dot;
 };
-/*
+
+/* interpolate between two numbers
+ * @param Number a: minimum
+ * @param Number b: maximum
+ * @param Number t: interpolation value
+ */
 Math.lerp = function(a, b, t) {
         let lerp;
 
-        lerp = (1 - t) * a + t * b;
+        lerp = a + ((b - a) * t);
 
         return lerp
 };
 
-Math.fade = function(t) {
-        let fade;
-
-        fade = t * t * t * (t * (t * 6 - 15) + 10);
-
-        return fade;
-};
-*/
-// create an array with random static noise values between 0 and 1
-// takes in width and height of the noise (texture)
-// returns array with length of width * height
+/* create an array with random static noise values between 0 and 1
+ * takes in width and height of the noise (texture)
+ * returns array with length of width * height
+ * @param Number width: width of the noise texture
+ * @param Number height: height of the noise texture 
+ */
 Math.staticNoise = function(width, height) {
         let noise = [];
         
@@ -178,9 +182,12 @@ Math.staticNoise = function(width, height) {
         return noise;
 };
 
-// create an array with random perlin noise values between 0 and 1
-// takes in width and height of the noise (texture)
-// returns array with length of width * height
+/* create an array with random perlin noise values between 0 and 1
+ * takes in width and height of the noise (texture)
+ * returns array with length of width * height
+ * @param Number width: width of the noise texture
+ * @param Number height: height of the noise texture 
+ */
 Math.perlinNoise = function(width, height) {
         // @todo: add perlin noise function
 

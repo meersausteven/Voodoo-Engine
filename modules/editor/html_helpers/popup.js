@@ -7,9 +7,11 @@ export class Popup {
         content;
         id;
 
+        /*
+         * @param string title: title that is displayed on top of the popup
+         * @param HTMLNode content: html that is displayed inside the popup
+         */
         constructor(title, content, id = null) {
-                // string title: title that is displayed on top of the popup
-                // html content: html that is displayed inside the popup
                 this.title = title;
                 this.content = content;
                 this.id = id;

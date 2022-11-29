@@ -16,9 +16,14 @@ export class ComponentRenderer extends Component {
         }
 
         update() {
-                this.worldPos = new Vector2(
-                        this.gameObject.transform.attributes['position'].value.x + this.attributes['offset'].value.x,
-                        this.gameObject.transform.attributes['position'].value.y + this.attributes['offset'].value.y
-                );
+                this.worldPos = Vector2.add(this.gameObject.transform.attributes['position'].value, this.attributes['offset'].value);
+
+                if (this.gameObject !== null) {
+                        this.passToRenderer();
+                }
+        }
+
+        passToRenderer() {
+                this.gameObject.scene.project.renderer.addComponentRenderer(this);
         }
 }

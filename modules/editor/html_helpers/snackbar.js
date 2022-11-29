@@ -13,9 +13,11 @@ export class Snackbar {
         type;
         displayTime;
 
+        /*
+         * @param string text: text that is displayed inside the snackbar
+         * @param int displayTime: time in miliseconds how long the snackbar will be displayed
+         */
         constructor(text, type = SNACKBAR_NEUTRAL, displayTime = 5000) {
-                // string text: text that is displayed inside the snackbar
-                // int displayTime: time in miliseconds how long the snackbar will be displayed
                 this.text = text;
                 this.type = type;
                 this.displayTime = displayTime;

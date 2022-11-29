@@ -9,11 +9,12 @@ import { Component } from './component.js';
 export class Transform extends Component {
         type = "Transform";
         
-        constructor(position = new Vector2(), rotation = 0) {
+        constructor(position = new Vector2(), rotation = 0, scale = new Vector2(1, 1)) {
                 super();
 
                 // transform components may not be disabled
                 this.attributes['position'] = new AttributeVector2('Position', position);
                 this.attributes['rotation'] = new AttributeNumber('Rotation', rotation);
+                this.attributes['scale'] = new AttributeVector2('Scale', scale);
         }
 }

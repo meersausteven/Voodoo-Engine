@@ -1,11 +1,13 @@
 
 export class EditorComponentGizmo {
         component;
+        hovered;
         width;
         height;
 
         constructor(component) {
                 this.component = component;
+                this.hovered = false;
         }
 
         mouseDown() {

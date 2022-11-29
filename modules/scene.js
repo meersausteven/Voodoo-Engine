@@ -23,6 +23,7 @@ export class Scene {
 
                 // add default main camera
                 this.addGameObject(new GameObject());
+                this.gameObjects[0].attributes['name'].startValue = "Main Camera";
                 this.gameObjects[0].attributes['name'].value = "Main Camera";
                 // add camera component to default main camera
                 this.gameObjects[0].addComponent(
@@ -101,18 +102,18 @@ export class Scene {
         removeGameobject(index) {
                 if ((typeof index == "number") &&
                     ((this.gameObjects[index] !== null) &&
-                    (typeof this.gameObjects[index] !== "undefined")))
-                {
+                    (typeof this.gameObjects[index] !== "undefined"))
+                ) {
                         this.gameObjects[index] = null;
 
                         window.dispatchEvent(new Event('game_object_list_changed'));
                 }
         }
 
+        // get main camera in this scene
         getCamera() {
                 let i = 0;
                 let l = this.gameObjects.length;
-
                 while (i < l) {
                         let j = 0;
                         let c = this.gameObjects[i].components.length;

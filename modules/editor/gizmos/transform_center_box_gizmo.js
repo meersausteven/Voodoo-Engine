@@ -18,6 +18,11 @@ export class TransformCenterBoxGizmo extends EditorComponentGizmo {
 
                 camera.canvasContext.translate(this.component.gameObject.transform.attributes['position'].value.x - camera.worldPos.x, this.component.gameObject.transform.attributes['position'].value.y - camera.worldPos.y);
                 camera.canvasContext.rotate(Math.degreesToRadians(this.component.gameObject.transform.attributes['rotation'].value));
+
+                if (this.hovered === true) {
+                        camera.canvasContext.fillStyle = '#ffffff';
+                        camera.canvasContext.fillRect(-this.width / 2, -this.height / 2, this.sprite.width, this.sprite.height)
+                }
                 camera.canvasContext.drawImage(this.sprite, -this.width / 2, -this.height / 2, this.sprite.width, this.sprite.height);
 
                 camera.canvasContext.restore();

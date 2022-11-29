@@ -18,10 +18,10 @@ export class CircleRenderer extends ComponentRenderer {
 
                 super(offset);
 
+                this.attributes['radius'] = new AttributeNumber('Radius', radius);
                 this.attributes['fillColor'] = new AttributeColor('Fill Color', fillColor);
                 this.attributes['borderWidth'] = new AttributeNumber('Border Width', borderWidth);
                 this.attributes['borderColor'] = new AttributeColor('Border Color', borderColor);
-                this.attributes['radius'] = new AttributeNumber('Radius', radius);
         }
 
         // renders a circle to the camera

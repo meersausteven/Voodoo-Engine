@@ -7,7 +7,7 @@ export class Physics {
 
         constructor() {
                 this.attributes['gravity'] = new AttributeVector2('Gravity', new Vector2(0, 9.81));
-                this.attributes['friction'] = new AttributeVector2('Friction', new Vector2(0.98, 0.98));
+                this.attributes['airResistance'] = new AttributeVector2('Air Resistance', new Vector2(1.02, 1.02));
         }
 
         // check if a circle and a square are overlapping

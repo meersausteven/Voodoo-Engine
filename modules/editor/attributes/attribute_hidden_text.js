@@ -4,11 +4,13 @@ import { AttributeText } from './attribute_text.js';
 export class AttributeHiddenText extends AttributeText {
         type = 'Attribute Hidden Text';
         
-        constructor(name, value) {
-                // string name: name of this attribute
-                // string value: value of this attribute
-                
-                super(name, value);
+        /*
+         * @param string name: name of the attribute
+         * @param string value: value of the attribute
+         * @param string event: event name that should be dispatched when the value changed
+         */
+        constructor(name, value, event = null) {
+                super(name, value, event);
         }
         
         createWidget() {
@@ -58,6 +60,8 @@ export class AttributeHiddenText extends AttributeText {
                                         if (this.validate(newValue)) {
                                                 this.change(newValue);
                                         }
+                                        
+                                        this.eventCall(e);
                                         
                                         e.target.parentElement.replaceChild(title, e.target);
                                 }

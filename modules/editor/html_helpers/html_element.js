@@ -1,10 +1,11 @@
 
 export class HtmlElement {
+        /*
+         * @param string tag: html tag that is to be created
+         * @param string|HTMLNode content: innerHTML for this tag
+         * @param string attributes: html attributes for this element - multiple classes are separated by spaces
+         */
         constructor(tag, content = null, attributes = {}) {
-                // string tag: html tag that is to be created
-                // string/htmlnode content: innerHTML for this tag
-                // string attributes: html attributes for this element - multiple classes are separated by spaces
-
                 let html = document.createElement(tag);
                 if (content !== null) {
                         html.innerHTML = content;

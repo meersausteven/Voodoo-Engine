@@ -8,6 +8,10 @@ export class Cursor {
         leftClick;
         leftClickDownPos;
         leftClickUpPos;
+        // wheel click
+        wheelClick;
+        wheelClickDownPos;
+        wheelClickUpPos;
         // right click
         rightClick;
         rightClickDownPos;
@@ -20,6 +24,10 @@ export class Cursor {
                 this.leftClick = false;
                 this.leftClickDownPos = null;
                 this.leftClickUpPos = null;
+
+                this.wheelClick = false;
+                this.wheelClickDownPos = null;
+                this.wheelClickUpPos = null;
 
                 this.rightClick = false;
                 this.rightClickDownPos = null;
