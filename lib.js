@@ -1,25 +1,5 @@
 
-///////////////
-/* Variables */
-///////////////
-
-// timeout with which the mouse movement will be reset
-var mouseMoveTimeout;
-
-// globally available time object
-// time values in ms
-var time = {
-        startTime: null,
-        lastFrame: null,
-        totalTime: null,
-        deltaTime: null
-};
-
-/////////////
-/* Methods */
-/////////////
-
-/* @todo: MOVE THIS SOMEWHERE ELSE; ONLY NEEDED INSIDE A PROJECT AS AN ASSET
+/* todo: MOVE THIS SOMEWHERE ELSE; ONLY NEEDED INSIDE A PROJECT AS AN ASSET
 // simple movement in 8 directions (wasd / arrows)
 function simple8DirMovement(obj) {
         let directionX = 0;
@@ -87,6 +67,7 @@ function simple8DirMovement(obj) {
 }
 */
 
+// todo: move this to the renderer
 // used for array.sort()
 // works only with game objects
 function sortByYPos(a, b) {
@@ -116,7 +97,6 @@ Math.valueBetween = function(value, start, end) {
         return false;
 };
 
-// add clamp function to Math object
 // clamps a given value between a min and a max value
 // returns the clamped value
 Math.clamp = function(value, min, max) {
@@ -137,6 +117,9 @@ Math.degreesToRadians = function(degrees) {
         return radians
 };
 
+// add gravitational constant to Math object
+Math.G = 6.67430 * Math.pow(10, -11);
+
 /* calculate the dot product between two points
  * @param Vector2 a: first point
  * @param Vector2 b: second point
@@ -149,10 +132,11 @@ Math.dot = function(a, b) {
         return dot;
 };
 
-/* interpolate between two numbers
- * @param Number a: minimum
- * @param Number b: maximum
- * @param Number t: interpolation value
+/*
+ * interpolate between two numbers
+ * @param number a: minimum
+ * @param number b: maximum
+ * @param number t: interpolation value
  */
 Math.lerp = function(a, b, t) {
         let lerp;
@@ -162,11 +146,12 @@ Math.lerp = function(a, b, t) {
         return lerp
 };
 
-/* create an array with random static noise values between 0 and 1
+/*
+ * create an array with random static noise values between 0 and 1
  * takes in width and height of the noise (texture)
  * returns array with length of width * height
- * @param Number width: width of the noise texture
- * @param Number height: height of the noise texture 
+ * @param number width: width of the noise texture
+ * @param number height: height of the noise texture 
  */
 Math.staticNoise = function(width, height) {
         let noise = [];
@@ -182,14 +167,15 @@ Math.staticNoise = function(width, height) {
         return noise;
 };
 
-/* create an array with random perlin noise values between 0 and 1
+/*
+ * create an array with random perlin noise values between 0 and 1
  * takes in width and height of the noise (texture)
  * returns array with length of width * height
- * @param Number width: width of the noise texture
- * @param Number height: height of the noise texture 
+ * @param number width: width of the noise texture
+ * @param number height: height of the noise texture 
  */
 Math.perlinNoise = function(width, height) {
-        // @todo: add perlin noise function
+        // todo: add perlin noise function
 
 };
 

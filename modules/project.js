@@ -15,6 +15,8 @@ import { ComponentRenderer } from './components/renderers/component_renderer.js'
 import { BoxRenderer } from './components/renderers/box_renderer.js';
 import { CircleRenderer } from './components/renderers/circle_renderer.js';
 import { SpriteRenderer } from './components/renderers/sprite_renderer.js';
+import { TextRenderer } from './components/renderers/text_renderer.js';
+import { LineRenderer } from './components/renderers/line_renderer.js';
 
 import { Collider } from './components/colliders/collider.js';
 import { BoxCollider } from './components/colliders/box_collider.js';
@@ -29,12 +31,20 @@ import { AttributeImage } from './editor/attributes/attribute_image.js';
 import { AttributeNumber } from './editor/attributes/attribute_number.js';
 import { AttributeText } from './editor/attributes/attribute_text.js';
 import { AttributeVector2 } from './editor/attributes/attribute_vector2.js';
+import { AttributeSelect } from './editor/attributes/attribute_select.js';
+import { AttributeArrayText } from './editor/attributes/attribute_array_text.js';
+import { AttributeArrayNumber } from './editor/attributes/attribute_array_number.js';
+import { AttributeArrayVector2 } from './editor/attributes/attribute_array_vector2.js';
 
 // other classes
 import { Renderer } from './renderer.js';
 import { Physics } from './physics.js';
 
 import { Scene } from './scene.js';
+
+import { Time } from './time.js';
+
+const time = new Time();
 
 export class Project {
         // canvas
@@ -138,17 +148,7 @@ export class Project {
 
         processFrame(currentTime) {
                 // track time
-                if (!time.startTime) {
-                        time.startTime = currentTime / 1000;
-                }
-
-                if (!time.lastFrame) {
-                        time.lastFrame = currentTime / 1000;
-                }
-
-                time.totalTime = (currentTime / 1000) - time.startTime;
-                time.deltaTime = (currentTime / 1000) - time.lastFrame;
-                time.lastFrame = currentTime / 1000;
+                time.update(currentTime);
 
                 // process update frame in scene
                 if ((this.activeScene !== null) &&
@@ -244,7 +244,7 @@ export class Project {
 
                 console.warn("ERROR: active scene not found in sceneList");
         }
-        
+
         /* JSON IMPORT */
         // turn a passed json object into a project object
         convertToProject(json) {
@@ -331,7 +331,7 @@ export class Project {
         componentConversion(component) {
                 let instanceName = component.type.replace(/\s/g, '');
                 let prototype = eval(`new ${instanceName}`);
-                
+
                 component = Object.setPrototypeOf(component, Object.getPrototypeOf(prototype));
 
                 // convert this component's attributes
@@ -345,7 +345,7 @@ export class Project {
         attributeConversion(attribute) {
                 let instanceName = attribute.type.replace(/\s/g, '');
                 let prototype = eval(`new ${instanceName}`);
-                
+
                 attribute = Object.setPrototypeOf(attribute, Object.getPrototypeOf(prototype));
 
                 if (instanceName == 'AttributeVector2') {

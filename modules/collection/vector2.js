@@ -26,6 +26,14 @@ export class Vector2 {
                 );
         }
 
+        // return this vector with a given length
+        lengthen(length) {
+                return new Vector2(
+                        this.x * length / this.magnitude,
+                        this.y * length / this.magnitude
+                );
+        }
+
         // get direction of this vector in radians
         getDirectionAsRadians() {
                 return Math.atan2(this.y - 0, this.x - 0);
@@ -35,7 +43,7 @@ export class Vector2 {
         getDirectionAsAngle() {
                 return this.getDirectionAsRadians() * (180 / Math.PI);
         }
-        
+
         /*
          * calculate the cross product between two vectors
          * @param Vector2 v1: first point
@@ -62,7 +70,7 @@ export class Vector2 {
                 if (typeof value === 'number') {
                         value = new Vector2(value, value);
                 }
-                
+
                 if (!value instanceof Vector2) {
                         return new TypeError('The value needs to be either a number or a Vector2');
                 }
@@ -79,7 +87,7 @@ export class Vector2 {
                 if (typeof value === 'number') {
                         value = new Vector2(value, value);
                 }
-                
+
                 if (!value instanceof Vector2) {
                         return new TypeError('The value needs to be either a number or a Vector2');
                 }
@@ -96,7 +104,7 @@ export class Vector2 {
                 if (typeof value === 'number') {
                         value = new Vector2(value, value);
                 }
-                
+
                 if (!value instanceof Vector2) {
                         return new TypeError('The value needs to be either a number or a Vector2');
                 }
@@ -113,7 +121,7 @@ export class Vector2 {
                 if (typeof value === 'number') {
                         value = new Vector2(value, value);
                 }
-                
+
                 if (!value instanceof Vector2) {
                         return new TypeError('The value needs to be either a number or a Vector2');
                 }

@@ -2,12 +2,8 @@
 import { HtmlElement } from './html_element.js';
 
 export class Popup {
-        html;
-        title;
-        content;
-        id;
-
         /*
+         * constructor
          * @param string title: title that is displayed on top of the popup
          * @param HTMLNode content: html that is displayed inside the popup
          */

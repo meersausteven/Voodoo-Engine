@@ -1,18 +1,20 @@
 
 import { AttributeText } from './attribute_text.js';
 
+import { HtmlElement } from '../html_helpers/html_element.js';
+
 export class AttributeBoolean extends AttributeText {
         type = 'Attribute Boolean';
-        
-        /*
-         * @param string name: name of this attribute
-         * @param bool value: value of this attribute
-         * @param string event: event name that should be dispatched when the value changed
-         */
+
+        // constructor
+        // @param string name: name of this attribute
+        // @param bool value: value of this attribute
+        // @param string event: event name that should be dispatched when the value changed
         constructor(name, value, event = null) {
                 super(name, value, event);
         }
 
+        // called to check whether the new value is of the correct type
         validate(newValue) {
                 if (typeof newValue === "boolean") {
                         this.change(newValue);
@@ -23,6 +25,7 @@ export class AttributeBoolean extends AttributeText {
                 return false;
         }
 
+        // called when the value changes
         eventCall(event) {
                 let newValue = event.target.checked;
 
@@ -31,25 +34,34 @@ export class AttributeBoolean extends AttributeText {
                 }
         }
 
+        // generates the HTML element for the editor
         createWidget() {
-                let wrapper = document.createElement('div');
-                wrapper.classList.add('attribute', 'boolean');
-                
-                let label = document.createElement('label');
-                label.innerHTML = this.name;
+                let wrapper = new HtmlElement('div', null, {class: 'attribute boolean'});
 
-                let input = document.createElement('input');
-                input.setAttribute("type", "checkbox");
-                input.title = this.name;
+                let label = new HtmlElement('label', this.name);
+
+                let uncheckedBox = new HtmlElement('i', null, {class: 'fa fa-square'});
+                let checkedBox = new HtmlElement('i', null, {class: 'fa fa-square-check'});
+
+                wrapper.appendChild(label);
+                wrapper.appendChild(this.createWidgetInput());
+                wrapper.appendChild(uncheckedBox);
+                wrapper.appendChild(checkedBox);
+
+                return wrapper;
+        }
+
+        // generates the HTML element for the input
+        createWidgetInput() {
+                let input = new HtmlElement('input', null, {
+                        type: 'checkbox',
+                        title: this.name
+                });
                 input.checked = this.value;
-
                 input.addEventListener('change', function(e) {
                         this.eventCall(e);
                 }.bind(this));
 
-                wrapper.appendChild(label);
-                wrapper.appendChild(input);
-                
-                return wrapper;
+                return input;
         }
 }

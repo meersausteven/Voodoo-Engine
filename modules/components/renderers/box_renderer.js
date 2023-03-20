@@ -3,34 +3,38 @@ import { AttributeNumber } from './../../editor/attributes/attribute_number.js';
 import { AttributeColor } from './../../editor/attributes/attribute_color.js';
 
 import { Vector2 } from './../../collection/vector2.js';
+import { Range } from './../../collection/range.js';
 
 import { ComponentRenderer } from './component_renderer.js';
 
 export class BoxRenderer extends ComponentRenderer {
         type = "Box Renderer";
-        
+
+        /* 
+         * constructor
+         * @param number width: width of the box
+         * @param number height: height of the box
+         * @param string fillColor: fill color
+         * @param number borderWidth: width of border
+         * @param string borderColor: color of border
+         * @param Vector2 offset: offset relative to this gameObject's position
+         */
         constructor(width = 50, height = 50, fillColor = '#ffffff', borderWidth = 0, borderColor = '#000000', offset = new Vector2()) {
-                // int width: width of the box
-                // int height: height of the box
-                // color fillColor: fill color
-                // int borderWidth: width of border
-                // color borderColor: color of border
-                // Vector2 offset: offset relative to this gameObject's position
-                
                 super(offset);
 
-                this.attributes['width'] = new AttributeNumber('Width', width);
-                this.attributes['height'] = new AttributeNumber('Height', height);
+                this.attributes['width'] = new AttributeNumber('Width', width, null, new Range());
+                this.attributes['height'] = new AttributeNumber('Height', height, null, new Range());
                 this.attributes['fillColor'] = new AttributeColor('Fill Color', fillColor);
-                this.attributes['borderWidth'] = new AttributeNumber('Border Width', borderWidth);
+                this.attributes['borderWidth'] = new AttributeNumber('Border Width', borderWidth, null, new Range());
                 this.attributes['borderColor'] = new AttributeColor('Border Color', borderColor);
         }
 
+        /*
+         * renders a box to a camera
+         * @param Camera camera
+         */
         render(camera) {
-                camera.canvasContext.save();
-
-                camera.canvasContext.translate(this.worldPos.x - camera.worldPos.x, this.worldPos.y - camera.worldPos.y);
-                camera.canvasContext.rotate(Math.degreesToRadians(this.gameObject.transform.attributes['rotation'].value));
+                this.renderDefault(camera);
 
                 // border
                 if (this.attributes['borderWidth'].value > 0) {

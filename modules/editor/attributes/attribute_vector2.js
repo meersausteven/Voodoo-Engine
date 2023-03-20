@@ -3,9 +3,12 @@ import { Vector2 } from '../../collection/vector2.js';
 
 import { AttributeText } from './attribute_text.js';
 
+import { HtmlElement } from '../html_helpers/html_element.js';
+
 export class AttributeVector2 extends AttributeText {
         type = 'Attribute Vector2';
-        
+
+        // called to check whether the new value is of the correct type
         validate(newValue) {
                 if (!isNaN(newValue.x) &&
                     !isNaN(newValue.y)) {
@@ -15,10 +18,11 @@ export class AttributeVector2 extends AttributeText {
                 return false;
         }
 
+        // called when the value changes
         eventCall(event) {
                 let parent = event.target.parentElement;
                 let newValue = event.target.value;
-                
+
                 if ((event.type == 'change') &&
                     (newValue == '')) {
                         if (parent.classList[0].includes('x')) {
@@ -45,62 +49,39 @@ export class AttributeVector2 extends AttributeText {
                 }
         }
 
+        // generates the HTML element for the editor
         createWidget() {
-                let wrapper = document.createElement('div');
-                wrapper.classList.add('attribute', 'vector2');
-                
-                let title = document.createElement('div');
-                title.classList.add('title');
-                title.innerHTML = this.name;
+                let wrapper = new HtmlElement('div', null, {class: 'attribute vector2'});
 
-                // offset x
-                let wrapperX = document.createElement('div');
-                wrapperX.classList.add('offset_x');
-
-                let labelX = document.createElement('label');
-                labelX.innerHTML = 'X';
-                
-                let inputX = document.createElement('input');
-                inputX.setAttribute("type", "text");
-                inputX.value = this.value.x;
-
-                inputX.addEventListener('keyup', function(e) {
-                        this.eventCall(e);
-                }.bind(this));
-
-                inputX.addEventListener('change', function(e) {
-                        this.eventCall(e);
-                }.bind(this));
-
-                wrapperX.appendChild(labelX);
-                wrapperX.appendChild(inputX);
-
-                // offset y
-                let wrapperY = document.createElement('div');
-                wrapperY.classList.add('offset_y');
-
-                let labelY = document.createElement('label');
-                labelY.innerHTML = 'Y';
-
-                let inputY = document.createElement('input');
-                inputY.setAttribute("type", "text");
-                inputY.value = this.value.y;
-
-                inputY.addEventListener('keyup', function(e) {
-                        this.eventCall(e);
-                }.bind(this));
-
-                inputY.addEventListener('change', function(e) {
-                        this.eventCall(e);
-                }.bind(this));
-
-                wrapperY.appendChild(labelY);
-                wrapperY.appendChild(inputY);
+                let title = new HtmlElement('div', this.name, {class: 'title'});
 
                 wrapper.appendChild(title);
-                wrapper.appendChild(wrapperX);
-                wrapper.appendChild(wrapperY);
-                
+                wrapper.appendChild(this.createWidgetInput('x'));
+                wrapper.appendChild(this.createWidgetInput('y'));
+
                 return wrapper;
+        }
+
+        // generates the HTML element for the input
+        createWidgetInput(value) {
+                let inputWrapper = new HtmlElement('div', null, {class: value});
+
+                let label = new HtmlElement('label', value.toUpperCase());
+
+                let input = new HtmlElement('input', null, {
+                        type: 'text',
+                        value: this.value[value]
+                });
+                input.addEventListener('keyup', function(e) {
+                        this.eventCall(e);
+                }.bind(this));
+                input.addEventListener('change', function(e) {
+                        this.eventCall(e);
+                }.bind(this));
+
+                inputWrapper.appendChild(label);
+                inputWrapper.appendChild(input);
+
+                return inputWrapper;
         }
 }

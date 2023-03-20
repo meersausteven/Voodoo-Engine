@@ -1,8 +1,9 @@
 
 export class HtmlElement {
         /*
+         * constructor
          * @param string tag: html tag that is to be created
-         * @param string|HTMLNode content: innerHTML for this tag
+         * @param string content: innerHTML for this tag
          * @param string attributes: html attributes for this element - multiple classes are separated by spaces
          */
         constructor(tag, content = null, attributes = {}) {

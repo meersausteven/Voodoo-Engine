@@ -10,7 +10,6 @@ import { AttributeBoolean } from '../editor/attributes/attribute_boolean.js';
 export class GameObject {
         type = "Game Object";
         components = [];
-        transform;
         attributes = {};
 
         constructor(x = 0, y = 0, rotation = 0) {
@@ -45,7 +44,7 @@ export class GameObject {
                         if (this.components[i].attributes['enabled'].value === true) {
                                 this.components[i].update();
                         }
-                        
+
                         ++i;
                 }
         }
@@ -59,7 +58,7 @@ export class GameObject {
                         if (this.components[i].attributes['enabled'].value === true) {
                                 this.components[i].fixedUpdate();
                         }
-                        
+
                         ++i;
                 }
         }
@@ -73,11 +72,11 @@ export class GameObject {
                         if (this.components[i].attributes['enabled'].value === true) {
                                 this.components[i].lateUpdate();
                         }
-                        
+
                         ++i;
                 }
         }
-        
+
         /*
          * adds a component to this gameObject
          * @param Component component: a component
@@ -99,7 +98,7 @@ export class GameObject {
                 if (component instanceof Component) {
                         let i = 0;
                         let l = this.components.length;
-                        
+
                         while (i < l) {
                                 if (this.components[i] === component) {
                                         this.components.splice(i, 1);
@@ -111,11 +110,30 @@ export class GameObject {
                         new Error('Component could not be removed as it is not part of this gameObject');
                 }
         }
-        
+
+        /*
+         * get the first component of a given type
+         * @param string type: type of the component
+         * @return: Component | false
+         */
+        getComponent(name) {
+                let i = 0;
+                let l = this.components.length;
+
+                while (i < l) {
+                        if (this.components[i].type === name) {
+                                return this.components[i];
+                        }
+
+                        ++i;
+                }
+
+                return false;
+        }
+
         /*
          * get the transform component of this gameObject
-         * @param Component component: a component
-         * @return: this gameObject's transform component
+         * @return: Transform
          */
         getTransform() {
                 let i = 0;

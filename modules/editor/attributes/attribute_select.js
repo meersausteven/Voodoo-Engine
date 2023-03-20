@@ -1,27 +1,26 @@
 
 import { AttributeText } from './attribute_text.js';
 
-import { HtmlElement } from '../html_helpers/html_element.js';
+import { HtmlElement } from './../html_helpers/html_element.js';
 
-export class AttributeColor extends AttributeText {
-        type = 'Attribute Color';
-        
+export class AttributeSelect extends AttributeText {
+        type = 'Attribute Select';
+
         /*
          * @param string name: name of the attribute
          * @param string value: value of the attribute
+         * @param string[] options: array of options
          * @param string event: event name that should be dispatched when the value changed
          */
-        constructor(name, value, event) {
+        constructor(name, value, options = [], event = null) {
                 super(name, value, event);
+
+                this.options = options;
         }
 
         // called to check whether the new value is of the correct type
         validate(newValue) {
-                if (newValue.match(/^#[a-fA-F0-9]{6}$/)) {
-                        return true;
-                }
-
-                return false;
+                return this.options.includes(newValue);
         }
 
         // called when the value changes
@@ -34,7 +33,7 @@ export class AttributeColor extends AttributeText {
 
         // generates the HTML element for the editor
         createWidget() {
-                let wrapper = new HtmlElement('div', null, {class: 'attribute color'});
+                let wrapper = new HtmlElement('div', null, {class: 'attribute select'});
 
                 let label = new HtmlElement('label', this.name);
 
@@ -46,14 +45,24 @@ export class AttributeColor extends AttributeText {
 
         // generates the HTML element for the input
         createWidgetInput() {
-                let input = new HtmlElement('input', null, {
-                        type: 'color',
-                        value: this.value
-                });
-                input.addEventListener('change', function(e) {
+                let select = new HtmlElement('select', null);
+                select.addEventListener('change', function(e) {
                         this.eventCall(e);
                 }.bind(this));
 
-                return input;
+                let i = 0;
+                let l = this.options.length;
+                while (i < l) {
+                        let option = new HtmlElement('option', this.options[i], {value: this.options[i]});
+                        if (this.options[i] === this.value) {
+                                option.selected = true;
+                        }
+
+                        select.appendChild(option);
+
+                        ++i;
+                }
+
+                return select;
         }
 }

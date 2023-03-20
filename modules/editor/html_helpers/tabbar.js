@@ -7,10 +7,10 @@ export const TABBAR_POSITION_CENTER = 'center';
 export const TABBAR_POSITION_END = 'end';
 
 export class Tabbar {
-        html;
-        parent;
-        tabs;
-
+        /*
+         * constructor
+         * @param string parentSelect: HTML selector for the parent element
+         */
         constructor(parentSelector) {
                 this.parent = document.querySelector(parentSelector);
                 this.tabs = [];
@@ -21,6 +21,14 @@ export class Tabbar {
                 this.parent.appendChild(this.html);
         }
 
+        /*
+         * adds a tab to this tabbar
+         * @param string id: id for this tab - used to identify this tab (should be unique)
+         * @param string title: title that is displayed inside tab
+         * @param string icon: FontAwesome icon name that is displayed next to the title
+         * @param HTMLNode[] dropdown: array of dropdown items - tag, content, attributes
+         * @param string position: position of the tab
+         */
         addTab(id, title, icon = null, dropdown = null, position = TABBAR_POSITION_START) {
                 let tab = new TabbarTab(id, title, icon, dropdown, position);
 

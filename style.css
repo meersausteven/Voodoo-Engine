@@ -139,8 +139,7 @@ body {
 }
 
 .container .container_content .component:not(.open) .content {
-        max-height: 0px;
-        overflow: hidden;
+        display: none;
 }
 
 .container .container_content .component:not(.open) > .title {
@@ -180,15 +179,18 @@ body {
 
 .container .container_content .component > .title .dropdown .dropdown_content .dropdown_content_item label,
 .container .container_content .component > .title .dropdown .dropdown_content .dropdown_content_item span {
+        order: 2;
         flex: 1 1 auto;
         font-size: 14px;
         line-height: 16px;
+        margin: 0px;
 }
 
 .container .container_content .component > .title .dropdown .dropdown_content .dropdown_content_item label + *,
 .container .container_content .component > .title .dropdown .dropdown_content .dropdown_content_item span + * {
+        order: 1;
         flex: 0 0 auto;
-        margin-left: 10px;
+        margin-right: 10px;
         font-size: 16px;
         line-height: 16px;
 }
@@ -285,7 +287,7 @@ body {
 }
 
 .card .card_title .content .attribute.boolean {
-        margin-left: 5px;
+        margin-left: 10px;
         margin-top: 0px !important;
 }
 
@@ -323,6 +325,7 @@ body {
 .attribute.vector2 .offset_y {
         display: flex;
         flex-direction: row;
+        align-items: center;
         padding: 5px 0px;
 }
 
@@ -344,27 +347,60 @@ body {
 
 .attribute.color input[type="color"] {
         -webkit-appearance: none;
-        padding: 0px;
+        background-color: transparent;
+        border: 1px solid var(--gray);
+        border-radius: 5px;
+        padding: 2px 4px;
         height: 20px;
         width: 100%;
         cursor: pointer;
 }
 
+.attribute.color input[type="color"]::-webkit-color-swatch-wrapper {
+        padding: 0px;
+}
+
+.attribute.color input[type="color"]::-webkit-color-swatch {
+        border: none;
+}
+
 .attribute.boolean {
         flex-direction: row;
+        align-items: center;
+        position: relative;
 }
 
 .attribute.boolean label {
+        order: 2;
         margin-bottom: 0px;
-        margin-right: 10px;
+        margin-left: 10px;
         line-height: 16px;
 }
 
 .attribute.boolean input[type="checkbox"] {
-        margin: 0px;
+        order: 1;
         width: 16px;
         height: 16px;
+        margin: 0px;
+        position: relative;
+        z-index: 1;
+        opacity: 0;
         cursor: pointer;
+}
+
+.attribute.boolean input[type="checkbox"] ~ .fa {
+        position: absolute;
+        font-size: 18px;
+}
+
+.attribute.boolean input[type="checkbox"]:not(:checked) ~ .fa-square-check,
+.attribute.boolean input[type="checkbox"]:checked ~ .fa-square {
+        opacity: 0;
+}
+
+.attribute.boolean input[type="checkbox"]:not(:checked) ~ .fa-square,
+.attribute.boolean input[type="checkbox"]:checked ~ .fa-square-check {
+        opacity: 1;
 }
 
 .attribute label {
@@ -377,8 +413,80 @@ body {
 .attribute input[type="text"],
 .attribute input[type="number"] {
         flex: 1 1 auto;
+        background-color: transparent;
+        border: 1px solid var(--gray);
+        border-radius: 5px;
+        padding: 5px 10px;
         font-size: 12px;
         line-height: 14px;
+        color: var(--gray);
+        transition: 0.2s;
+}
+
+.attribute input[type="text"]:focus,
+.attribute input[type="text"]:focus-visible,
+.attribute input[type="text"]:focus-within,
+.attribute input[type="number"]:focus,
+.attribute input[type="number"]:focus-visible,
+.attribute input[type="number"]:focus-within {
+        border-color: var(--lightgray);
+        box-shadow: 0px 0px 2px 1px var(--lightgray);
+        outline: none;
+        color: var(--lightgray);
+}
+
+.attribute input[type="number"] {
+        -webkit-appearance: textfield;
+        -moz-appearance: textfield;
+        appearance: textfield;
+}
+
+.attribute input[type="number"]::-webkit-inner-spin-button, 
+.attribute input[type="number"]::-webkit-outer-spin-button { 
+        -webkit-appearance: none;
+}
+
+.attribute.number .input_wrapper {
+        position: relative;
+}
+
+.attribute.number .input_wrapper input {
+        width: 100%;
+}
+
+.attribute.number .input_wrapper button {
+        position: absolute;
+        right: 0px;
+        height: 13.5px;
+        background-color: transparent;
+        border: none;
+        border-left: 1px solid var(--gray);
+        padding: 0px 5px;
+        color: var(--gray);
+        cursor: pointer;
+}
+
+.attribute.number button::before {
+        font-family: "FontAwesome";
+        font-size: 14px;
+        line-height: 10px;
+}
+
+.attribute.number button.step_up {
+        top: 0px;
+        border-bottom: 1px solid var(--gray);
+}
+
+.attribute.number button.step_up::before {
+        content: '\f0d8';
+}
+
+.attribute.number button.step_down {
+        bottom: 0px;
+}
+
+.attribute.number button.step_down::before {
+        content: '\f0d7';
 }
 
 .attribute.hidden_text {
@@ -400,8 +508,38 @@ body {
         color: var(--lightgray);
 }
 
-.container.max_height {
+.attribute.select select {
+        background-color: var(--black);
+        border: 1px solid var(--gray);
+        border-radius: 5px;
+        padding: 5px 10px;
+        font-size: 12px;
+        line-height: 14px;
+        color: var(--gray);
+        cursor: pointer;
+        transition: 0.2s;
+}
+
+.attribute.select select:focus,
+.attribute.select select:focus-visible,
+.attribute.select select:focus-within {
+        border-color: var(--lightgray);
+        box-shadow: 0px 0px 2px 1px var(--lightgray);
+        color: var(--lightgray);
+}
+
+.attribute.array .attribute_array_item {
+        display: flex;
+        align-items: center;
+}
+
+.attribute.array .attribute_array_item + .attribute_array_item {
+        margin-top: 5px;
+}
+
+.attribute.array .attribute_array_item input {
         flex: 1 1 auto;
+        margin-right: 10px;
 }
 
 /* tabbar */
@@ -518,6 +656,43 @@ body {
 
 .dropdown .dropdown_content .dropdown_content_item .content {
         color: var(--lightgray);
+}
+
+/* foldout */
+.foldout {
+        display: flex;
+        flex-direction: column;
+}
+
+.foldout .foldout_title {
+        flex: 0 0 auto;
+        display: flex;
+        align-items: center;
+        font-size: 12px;
+        line-height: 14px;
+        color: var(--gray);
+        cursor: pointer;
+}
+
+.foldout .foldout_title label {
+        flex: 1 1 auto;
+        margin-right: 10px;
+        margin-bottom: 0px;
+}
+
+.foldout .foldout_title .fa {
+        flex: 0 0 auto;
+        font-size: 14px;
+}
+
+.foldout:not(.open) .foldout_title .fa-caret-down,
+.foldout.open .foldout_title .fa-caret-left,
+.foldout:not(.open) .foldout_title ~ * {
+        display: none;
+}
+
+.foldout .foldout_content {
+        padding: 5px 0px;
 }
 
 /* popup windows */

@@ -1,5 +1,6 @@
 import { Vector2 } from './collection/vector2.js';
 
+import { AttributeBoolean } from './editor/attributes/attribute_boolean.js';
 import { AttributeVector2 } from './editor/attributes/attribute_vector2.js';
 
 export class Physics {
@@ -8,7 +9,14 @@ export class Physics {
         constructor() {
                 this.attributes['gravity'] = new AttributeVector2('Gravity', new Vector2(0, 9.81));
                 this.attributes['airResistance'] = new AttributeVector2('Air Resistance', new Vector2(1.02, 1.02));
+                this.attributes['massGravity'] = new AttributeBoolean('Mass creates gravity', false);
         }
+
+
+        // todo: add better general collision calculation -> e.g. separated axis theorem or something
+        // todo: add proper collision calculation -> impulse
+        // todo: p = m * v
+        // todo: impulse/force = mass * velocity
 
         // check if a circle and a square are overlapping
         // takes in a circles x, y and radius and a box colliders' x, y, width and height
@@ -24,10 +32,10 @@ export class Physics {
                                         box.worldPos.y = checkPos.y;
                                 }
                         };
-        
+
                         colliderLookup[checkingType];
                 }
-                
+
                 // temporary variables to set edges for testing
                 let testX = circle.worldPos.x;
                 let testY = circle.worldPos.y;
@@ -48,7 +56,7 @@ export class Physics {
                         // bottom edge
                         testY = box.worldPos.y;
                 }
-        
+
                 // get distance from closest edges
                 let distX = circle.worldPos.x - testX;
                 let distY = circle.worldPos.y - testY;
@@ -73,7 +81,7 @@ export class Physics {
                 let b1RightEdge = box1.worldPos.x + (box1.width / 2);
                 let b1BottomEdge = box1.worldPos.y;
                 let b1TopEdge = box1.worldPos.y - box1.height;
-                
+
                 let b2LeftEdge = box2.worldPos.x - (box2.width / 2);
                 let b2RightEdge = box2.worldPos.x + (box2.width / 2);
                 let b2BottomEdge = box2.worldPos.y;
@@ -109,5 +117,4 @@ export class Physics {
 
                 return false;
         }
-
 }

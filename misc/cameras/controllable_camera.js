@@ -13,7 +13,7 @@ class ControllableCamera extends Camera {
         }
 
         lateUpdate() {
-                let speed = this.moveSpeed * time.deltaTime;
+                let speed = this.moveSpeed * time.delta;
 
                 simple8DirMovement(this, speed);
         }

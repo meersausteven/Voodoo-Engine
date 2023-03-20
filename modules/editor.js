@@ -10,6 +10,7 @@ import { GameObject } from './game_objects/game_object.js';
 
 // import collection
 import { Vector2 } from './collection/vector2.js';
+import { Range } from './collection/range.js';
 
 // import components
 import { Component } from './components/component.js';
@@ -22,6 +23,8 @@ import { ComponentRenderer } from './components/renderers/component_renderer.js'
 import { BoxRenderer } from './components/renderers/box_renderer.js';
 import { CircleRenderer } from './components/renderers/circle_renderer.js';
 import { SpriteRenderer } from './components/renderers/sprite_renderer.js';
+import { TextRenderer } from './components/renderers/text_renderer.js';
+import { LineRenderer } from './components/renderers/line_renderer.js';
 
 import { Collider } from './components/colliders/collider.js';
 import { BoxCollider } from './components/colliders/box_collider.js';
@@ -36,6 +39,8 @@ import { AttributeImage } from './editor/attributes/attribute_image.js';
 import { AttributeNumber } from './editor/attributes/attribute_number.js';
 import { AttributeText } from './editor/attributes/attribute_text.js';
 import { AttributeVector2 } from './editor/attributes/attribute_vector2.js';
+import { AttributeSelect } from './editor/attributes/attribute_select.js';
+import { AttributeArrayText } from './editor/attributes/attribute_array_text.js';
 
 // import gizmos
 import { TransformUpArrowGizmo } from './editor/gizmos/transform_up_arrow_gizmo.js';
@@ -81,15 +86,13 @@ export class Editor {
                 'Camera',
                 'Box Renderer',
                 'Circle Renderer',
-                'Sprite Renderer',
-                //'Polygon Renderer',
-                //'Polygon Circle Renderer',
-                //'Polygon Capsule Renderer',
+                //'Sprite Renderer',
+                'Text Renderer',
+                'Line Renderer',
                 'Box Collider',
                 'Circle Collider',
-                //'Capsule Collider',
                 'Rigidbody',
-                'Animation'
+                //'Animation'
         ];
         // settings
         settings = {
@@ -97,7 +100,7 @@ export class Editor {
                 'canvasSelector': new AttributeText('Canvas Selector', '#gameArea'),
                 'displayGrid': new AttributeBoolean('Display Grid', true),
                 'gridSize': new AttributeVector2('Grid Size', new Vector2(100, 100)),
-                'gridLineWidth': new AttributeNumber('Grid Line Width', 0.25),
+                'gridLineWidth': new AttributeNumber('Grid Line Width', 0.25, null, new Range()),
                 'gridLineColor': new AttributeColor('Grid Line Color', '#ffffff')
         };
         // tabbar
@@ -144,7 +147,7 @@ export class Editor {
                 // build editor object
                 // prepare canvas
                 this.canvas = document.querySelector(this.settings.canvasSelector.value);
-                // create new project @todo: add check if save is found in storage - otherwise load new project
+                // create new project todo: add check if save is found in storage - otherwise load new project
                 this.project = new Project();
 
                 // add a basic renderer
@@ -188,7 +191,8 @@ export class Editor {
                 this.animationFrame = window.requestAnimationFrame(this.processFrame.bind(this));
         }
 
-        // @todo: this is ugly - make it more readable!
+        // process all necessary steps for the current frame
+        // e.g. calculations, rendering, etc.
         processFrame() {
                 if ((this.currentScene !== null) &&
                     (typeof this.currentScene !== 'undefined'))
@@ -232,8 +236,8 @@ export class Editor {
                                 ++i;
                         }
 
-                        // @todo: improve the gizmo display - add cursor checks to this as well
-                        // @todo: differentiate between components - currently only transform gizmos
+                        // todo: improve the gizmo display - add cursor checks to this as well
+                        // todo: differentiate between components - currently only transform gizmos -> provide a general solution
                         if (gameObject === this.currentGameObject) {
                                 // transform.up arrow
                                 let upArrow = new TransformUpArrowGizmo(gameObject.transform);
@@ -298,11 +302,12 @@ export class Editor {
                 }
         }
 
+        // stops everything
         stop() {
                 window.cancelAnimationFrame(this.animationFrame);
         }
 
-        /* LOCAL STORAGE */
+        // == LOCAL STORAGE ==
         // save current project to localStorage
         saveProjectToStorage() {
                 localStorage.setItem('project', this.project.convertToJson());
@@ -322,7 +327,7 @@ export class Editor {
                 }
         }
 
-        /* CUSTOM HTML BUTTON ELEMENTS */
+        // == CUSTOM HTML BUTTON ELEMENTS ==
         // create editor HTML Element for loading a project from an uploaded file
         createUploadProjectFileButton() {
                 let wrapper = new HtmlElement('div', null, {class: 'upload_file'});
@@ -717,7 +722,7 @@ export class Editor {
         createAboutPopupContent() {
                 let wrapper = new HtmlElement('div', null, {});
 
-                let engineName = new HtmlElement('div', 'Voodoo', {class: 'engine_name mt_10 text_bold text_center'});
+                let engineName = new HtmlElement('div', 'Voodoo Game-Engine', {class: 'engine_name mt_10 text_bold text_center'});
                 wrapper.appendChild(engineName);
 
                 let version = new HtmlElement('div', 'v1.0a', {class: 'version text_center'});
@@ -747,7 +752,7 @@ export class Editor {
                 return wrapper;
         }
 
-        // PLAY MODE
+        // == PLAY MODE ==
         startPlayMode() {
                 new Snackbar('Starting Play-Mode...', SNACKBAR_NEUTRAL);
 
@@ -757,7 +762,7 @@ export class Editor {
                 window.open(currentUrl.replace('edit_mode', 'play_mode'), '_blank').focus();
         }
 
-        // SCENES
+        // == SCENES ==
         // create editor HTML element for the scene list
         createScenesListElement() {
                 let i = 0;
@@ -777,7 +782,7 @@ export class Editor {
                 button.addEventListener('click', function() {
                         this.project.addScene(new Scene(this.project));
                         this.reloadEditorElements();
-                        
+
                         new Snackbar('New Scene successfully added', SNACKBAR_SUCCESS);
                 }.bind(this));
 
@@ -820,7 +825,7 @@ export class Editor {
                 listNode.appendChild(wrapper);
         }
 
-        // GAMEOBJECTS
+        // == GAMEOBJECTS ==
         // create editor HTML for all gameObjects
         createGameObjectsListElement() {
                 let i = 0;
@@ -927,7 +932,7 @@ export class Editor {
                 listNode.appendChild(wrapper);
         }
 
-        // COMPONENTS
+        // == COMPONENTS ==
         // create editor HTML element containing all components
         createComponentsListElement(gameObject) {
                 // create info card
@@ -943,7 +948,7 @@ export class Editor {
                 let i = 0;
                 let l = gameObject.components.length;
                 while (i < l) {
-                        content.appendChild(this.createComponentCardElement(gameObject.components[i]));
+                        content.appendChild(gameObject.components[i].createEditorCard());
 
                         ++i;
                 }
@@ -962,18 +967,18 @@ export class Editor {
 
                         ++i;
                 }
-                
+
                 select.addEventListener('change', function(e) {
                         let selectedOption = e.target.children[e.target.selectedIndex].value;
                         if (selectedOption !== 0) {
                                 let newComponent = eval(`new ${selectedOption.replace(' ', '')}()`);
-
                                 gameObject.addComponent(newComponent);
+                                console.log(newComponent);
 
-                                let componentCardElement = this.createComponentCardElement(newComponent);
+                                let componentCardElement = newComponent.createEditorCard();
                                 let parent = document.querySelector('.components_list .card_content');
                                 let nextSibling = document.getElementById('add-component-dropdown');
-                                
+
                                 parent.insertBefore(componentCardElement, nextSibling);
                         }
 
@@ -993,9 +998,9 @@ export class Editor {
         // remove all editor HTML elements for the components
         removeComponentsListElement() {
                 let componentsListNode = document.querySelector(this.project.settings.componentListWrapper);
+
                 let i = 0;
                 let l = componentsListNode.children.length;
-
                 while (i < l) {
                         componentsListNode.lastElementChild.remove();
 
@@ -1003,94 +1008,8 @@ export class Editor {
                 }
         }
 
-        // create editor HTML element for a component
-        createComponentCardElement(component) {
-                let wrapper = new HtmlElement('div', null, {class: 'component'});
-                // transform components are open by default
-                if (component instanceof Transform) {
-                        wrapper.classList.add('open');
-                }
-
-                // title wrapper
-                let title = new HtmlElement('div', null, {class: 'title'});
-
-                // collapse component
-                let collapse = new HtmlElement('div', null, {class: 'collapse', title: 'Collapse/Expand this component'});
-                collapse.addEventListener('click', function() {
-                        this.closest('.component').classList.toggle('open');
-                });
-
-                let collapseIcon = new HtmlElement('i', null, {class: 'fa fa-angle-down'});
-                collapse.appendChild(collapseIcon);
-
-                title.appendChild(collapse);
-
-                // component name
-                let titleContent = new HtmlElement('div', component.type, {class: 'component_name'});
-                title.appendChild(titleContent);
-
-                // component settings dropdown menu
-                let dropdown = new HtmlElement('div', null, {class: 'dropdown'});
-
-                let dropdownButton = new HtmlElement('div', null, {class: 'dropdown_button', title: 'Component settings'});
-
-                let icon = new HtmlElement('i', null, {class: 'fa fa-gear'});
-                dropdownButton.appendChild(icon);
-
-                dropdown.appendChild(dropdownButton);
-
-                let dropdownContent = new HtmlElement('div', null, {class: 'dropdown_content'});
-
-                if (!(component instanceof Transform)) {
-                        // enable / disable component widget
-                        let enableComponent = component.attributes['enabled'].createWidget();
-                        enableComponent.classList.add('dropdown_content_item');
-                        dropdownContent.appendChild(enableComponent);
-
-                        // remove component button
-                        // @todo: fix renderer component removal - removed component renderers are still passed to play mode
-                        let removeComponent = new HtmlElement('div', null, {class: 'remove_component dropdown_content_item', title: 'Remove this component'});
-                        removeComponent.addEventListener('click', function() {
-                                component.gameObject.removeComponent(component);
-                                wrapper.remove();
-                        }.bind(this));
-
-                        let removeText = new HtmlElement('span', 'Remove Component');
-                        removeComponent.appendChild(removeText);
-
-                        let removeIcon = new HtmlElement('i', null, {class: 'fa fa-xmark'});
-                        removeComponent.appendChild(removeIcon);
-
-                        dropdownContent.appendChild(removeComponent);
-                }
-
-                dropdown.appendChild(dropdownContent);
-                if (dropdownContent.children.length > 0) {
-                        title.appendChild(dropdown);
-                }
-
-                // content
-                let content = new HtmlElement('div', null, {class: 'content'});
-
-                for (let key in component.attributes) {
-                        if (key === 'enabled') {
-                                // skip 'enabled' attribute because we already added it in the title
-                                continue;
-                        }
-
-                        if (component.attributes[key] instanceof AttributeText) {
-                                content.appendChild(component.attributes[key].createWidget());
-                        }
-                }
-
-                wrapper.appendChild(title);
-                wrapper.appendChild(content);
-
-                return wrapper;
-        }
-
-        // TRANSFORM WIDGET
-        // @todo: add widget
+        // == TRANSFORM WIDGET ==
+        // todo: add widget -> gizmo
 
         // create editor HTML for the current project
         generateEditorElements() {
@@ -1119,7 +1038,7 @@ export class Editor {
                 this.generateEditorElements();
         }
 
-        /* HTML ELEMENTS */
+        // == HTML ELEMENTS ==
         // dropdown functions
         closeAllDropdowns(tabbar = null) {
                 let dropdowns = document.querySelectorAll('.dropdown');
@@ -1137,7 +1056,7 @@ export class Editor {
                 }
         }
 
-        /* EVENTS */
+        // == EVENTS ==
         // event handler function
         handleEvent(e) {
                 let eventLookup = {
@@ -1172,7 +1091,7 @@ export class Editor {
 
                 return (eventLookup[e.type] || eventLookup['default'])(e);
         }
-        
+
         // event function that is called on 'mousedown' event on canvas
         onMousedown(e) {
                 if (e.which == 1) {
@@ -1222,7 +1141,7 @@ export class Editor {
                             (this.hovering === this.canvas))
                         {
                                 let mouseMovement = new Vector2(e.movementX, e.movementY);
-                                this.camera.worldPos.subtract(mouseMovement);
+                                this.camera.worldPos = Vector2.subtract(this.camera.worldPos, mouseMovement);
                         }
 
                         // move popup if one is being dragged
@@ -1235,8 +1154,8 @@ export class Editor {
 
         // event function that is called on 'click' event on document
         onClick(e) {
+                // dropdown
                 let dropdownButton = e.target.closest('.dropdown_button');
-
                 if (dropdownButton !== null) {
                         let closestDropdown = dropdownButton.closest('.dropdown');
 
@@ -1246,11 +1165,19 @@ export class Editor {
                 } else {
                         this.closeAllDropdowns();
                 }
+
+                // foldout
+                let foldoutTitle = e.target.closest('.foldout_title');
+                if (foldoutTitle !== null) {
+                        let closestFoldout = foldoutTitle.closest('.foldout');
+                        closestFoldout.classList.toggle('open');
+                }
         }
 
         // event function that is called on 'wheel' event on canvas
         onWheel(e) {
-                // @todo: fix the scaling !!!
+                // todo: fix the scaling !!! -> currently miscalculates zoom level and canvas needs to be stretched / shrunken to be fully visible
+                /*
                 if (e.wheelDelta > 0) {
                         this.canvasZoom += 0.5;
                 } else {
@@ -1261,6 +1188,7 @@ export class Editor {
                 this.canvasZoom = Math.clamp(this.canvasZoom, 0.5, 1.5);
 
                 this.camera.canvasContext.scale(this.canvasZoom, this.canvasZoom);
+                */
         }
 
         onCurrentGameObjectNameChanged(e) {

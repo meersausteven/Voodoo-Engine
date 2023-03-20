@@ -1,12 +1,11 @@
 
+import { HtmlElement } from './../html_helpers/html_element.js';
+
 export class AttributeText {
         type = 'Attribute Text';
-        
-        name;
-        value;
-        startValue;
 
         /*
+         * constructor
          * @param string name: name of the attribute
          * @param string value: value of the attribute
          * @param string event: event name that should be dispatched when the value changed
@@ -18,20 +17,18 @@ export class AttributeText {
                 this.startValue = value;
         }
 
+        // called to check whether the new value is of the correct type
         validate(newValue) {
-                if (typeof newValue === "string") {
-                        return true;
-                }
-
-                return false;
+                return typeof newValue === "string";
         }
 
+        // called when the value changes
         eventCall(event) {
                 let newValue = event.target.value;
-                
+
                 if (newValue == '') {
                         newValue = this.startValue;
-                        event.target.value = newValue;console.log(newValue);
+                        event.target.value = newValue;
                 }
 
                 if (this.validate(newValue)) {
@@ -43,21 +40,29 @@ export class AttributeText {
                 }
         }
 
+        // called after validation was successful to update the object value
         change(newValue) {
                 this.value = newValue;
         }
 
+        // generates the HTML element for the editor
         createWidget() {
-                let wrapper = document.createElement('div');
-                wrapper.classList.add('attribute');
-                
-                let label = document.createElement('label');
-                label.innerHTML = this.name;
+                let wrapper = new HtmlElement('div', null, {class: 'attribute'});
 
-                let input = document.createElement('input');
-                input.setAttribute("type", "text");
-                input.value = this.value;
-                
+                let label = new HtmlElement('label', this.name);
+
+                wrapper.appendChild(label);
+                wrapper.appendChild(this.createWidgetInput());
+
+                return wrapper;
+        }
+
+        // generates the HTML element for the input
+        createWidgetInput() {
+                let input = new HtmlElement('input', null, {
+                        type: 'text',
+                        value: this.value
+                });
                 input.addEventListener('keyup', function(e) {
                         this.eventCall(e);
                 }.bind(this));
@@ -65,9 +70,6 @@ export class AttributeText {
                         this.eventCall(e);
                 }.bind(this));
 
-                wrapper.appendChild(label);
-                wrapper.appendChild(input);
-                
-                return wrapper;
+                return input;
         }
 }

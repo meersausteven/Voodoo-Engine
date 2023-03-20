@@ -8,12 +8,8 @@ export const SNACKBAR_DANGER = 'snackbar_danger';
 export const SNACKBAR_SUCCESS = 'snackbar_success';
 
 export class Snackbar {
-        html;
-        text;
-        type;
-        displayTime;
-
         /*
+         * constructor
          * @param string text: text that is displayed inside the snackbar
          * @param int displayTime: time in miliseconds how long the snackbar will be displayed
          */

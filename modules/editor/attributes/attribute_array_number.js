@@ -1,35 +1,31 @@
 
-import { AttributeText } from './attribute_text.js';
+import { AttributeArrayText } from './attribute_array_text.js';
 
 import { HtmlElement } from '../html_helpers/html_element.js';
 
-export class AttributeNumber extends AttributeText {
-        type = 'Attribute Number';
+export class AttributeArrayNumber extends AttributeArrayText {
+        type = 'Attribute Array Number';
+        widgetType = 'number';
 
         /*
+         * constructor
          * @param string name: name of the attribute
-         * @param Number value: value of the attribute
+         * @param array value: array of values
          * @param string event: event name that should be dispatched when the value changed
-         * @param Range range: range with min, max and step size
          */
-        constructor(name, value, event = null, range = null) {
+        constructor(name, value = [], event = null, range = null) {
                 super(name, value, event);
 
                 this.range = range;
-        }
-
-        // called to check whether the new value is of the correct type
-        validate(newValue) {
-                return !isNaN(newValue);
+                this.prototype = Number.prototype;
         }
 
         // called when the value changes
         eventCall(event) {
                 let newValue = event.target.value;
 
-                if ((event.type == 'change') &&
-                    (newValue == '')) {
-                        newValue = this.startValue;
+                if (newValue == '') {
+                        newValue = this.startValue[index];
                         event.target.value = newValue;
                 }
 
@@ -38,35 +34,26 @@ export class AttributeNumber extends AttributeText {
                                 newValue = Math.clamp(newValue, this.range.min, this.range.max);
                         }
 
-                        this.change(Number(newValue));
+                        this.value[index] = Number(newValue);
+
+                        if (this.event !== null) {
+                                document.dispatchEvent(new Event(this.event));
+                        }
                 }
         }
 
-        // generates the HTML element for the editor
-        createWidget() {
-                let wrapper = new HtmlElement('div', null, {class: 'attribute number'});
-
-                let label = new HtmlElement('label', this.name);
-
-                wrapper.appendChild(label);
-                wrapper.appendChild(this.createWidgetInput());
-
-                return wrapper;
-        }
-
-        // generates the HTML element for the input
-        createWidgetInput() {
-                let inputWrapper = new HtmlElement('div', null, {class: 'input_wrapper'});
+        createNewItemInput(itemValue, index) {
+                let inputWrapper = new HtmlElement('div', null, {class: 'item_wrapper'});
 
                 let input = new HtmlElement('input', null, {
                         type: 'text',
-                        value: this.value
+                        value: itemValue
                 });
                 input.addEventListener('keyup', function(e) {
-                        this.eventCall(e);
+                        this.eventCall(e, index);
                 }.bind(this));
                 input.addEventListener('change', function(e) {
-                        this.eventCall(e);
+                        this.eventCall(e, index);
                 }.bind(this));
 
                 // for range fields add custom buttons and additional attributes

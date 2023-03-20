@@ -8,7 +8,7 @@ import { Component } from './component.js';
 export class Animation extends Component {
         type = "Animation";
         
-        // @todo: this needs a rework after image renderer is working again
+        // todo: this needs a rework after image renderer is working again
         constructor(imageRenderer, animationName, numberOfFrames = 1, timePerFrame = 100, looping = true) {
                 // imageRenderer: an image renderer as GameObject.renderer
                 // string animationName: directory named after the animation /images (contains all frames named after position in animation starting with 0)
@@ -46,7 +46,7 @@ export class Animation extends Component {
                                         this.attributes['currentFrame'] = 0;
                                 }
                         } else {
-                                this.attributes['currentFrameTime'] += time.deltaTime;
+                                this.attributes['currentFrameTime'] += time.delta;
                         }
 
                         this.attributes['imagePath'].value = this.attributes['animationSources'][this.attributes['currentFrame']];

@@ -9,9 +9,14 @@ import { Component } from './../component.js';
 export class Collider extends Component {
         type = "Collider";
 
+        /*
+         * constructor
+         * @param boolean isTrigger: turns this collider into a trigger (no collision will be possible)
+         * @param Vector2 offset: offset relative to this gameObject's position
+         */
         constructor(isTrigger = false, offset = new Vector2()) {
                 super();
-                
+
                 this.attributes['displayBounds'] = new AttributeBoolean('Display Bounds', false);
                 this.attributes['isTrigger'] = new AttributeBoolean('Is Trigger', isTrigger);
                 this.attributes['inverted'] = new AttributeBoolean('Inverted', false);
@@ -25,12 +30,12 @@ export class Collider extends Component {
                         this.gameObject.transform.attributes['position'].value.x + this.attributes['offset'].value.x,
                         this.gameObject.transform.attributes['position'].value.y + this.attributes['offset'].value.y
                 );
-                
+
                 if (this.attributes['displayBounds'].value === true) {
                         this.displayBounds();
                 }
         }
-        
+
         displayBounds() {
                 return;
         }

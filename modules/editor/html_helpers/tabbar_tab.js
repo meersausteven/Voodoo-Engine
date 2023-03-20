@@ -3,18 +3,12 @@ import { HtmlElement } from './html_element.js';
 import { TABBAR_POSITION_START, TABBAR_POSITION_CENTER, TABBAR_POSITION_END } from './tabbar.js';
 
 export class TabbarTab {
-        html;
-        title;
-        dropdown;
-        dropdownContent;
-        dropdownItems;
-        position;
-
         /*
+         * constructor
          * @param string id: id for this tab - used to identify this tab (should be unique)
          * @param string title: title that is displayed inside tab
          * @param string icon: FontAwesome icon name that is displayed next to the title
-         * @param array dropdown: array of dropdown items(object) - tag, content, attributes
+         * @param HTMLNode[] dropdown: array of dropdown items - tag, content, attributes
          */
         constructor(id, title, icon = null, dropdown = false, position = TABBAR_POSITION_START) {
                 this.id = id;
@@ -29,7 +23,7 @@ export class TabbarTab {
 
                 // create wrapper element
                 this.html = new HtmlElement('div', null, {class: 'tabbar_tab ' + this.position, id: this.id});
-                
+
                 let iconElement = null;
                 if (this.icon !== null) {
                         iconElement = new HtmlElement('i', null, {class: 'fa fa-' + this.icon});
@@ -40,7 +34,7 @@ export class TabbarTab {
 
                         // create dropdown button
                         let button = new HtmlElement('div', null, {class: 'dropdown_button row'});
-                        
+
                         let buttonLabel = new HtmlElement('div', this.title, {class: 'title'});
 
                         if (iconElement !== null) {
@@ -62,7 +56,7 @@ export class TabbarTab {
 
                         // add simple text element with icon
                         let title = new HtmlElement('div', this.title, {class: 'title'});
-                        
+
                         if (iconElement !== null) {
                                 this.html.appendChild(iconElement);
                         }
@@ -71,12 +65,16 @@ export class TabbarTab {
                 }
         }
 
+        /*
+         * add a dropdown item to this tabs' dropdown
+         * @param HTMLNode element: html element that is to be added
+         */
         addDropdownItem(element) {
                 let dropdownItem = element;
                 dropdownItem.classList.add('dropdown_content_item');
 
                 this.dropdownItems.push(dropdownItem);
-                
+
                 this.dropdownContent.appendChild(dropdownItem);
         }
 }

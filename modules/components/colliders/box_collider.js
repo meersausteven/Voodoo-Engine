@@ -8,14 +8,14 @@ import { Collider } from './collider.js';
 export class BoxCollider extends Collider {
         type = "Box Collider";
 
+        /*
+         * constructor
+         * @param number width: width of the rectangle
+         * @param number height: height of the rectangle
+         * @param boolean isTrigger: turns this collider into a trigger (no collision will be possible)
+         * @param Vector2 offset: offset relative to this gameObject's position
+         */
         constructor(width = 0, height = 0, isTrigger = false, offset = new Vector2()) {
-                // gameObject: the gameObject this component belongs to
-                // camera active game camera
-                // width: width of the rectangle
-                // height: height of the rectangle
-                // offset.x: offset on the x axis (starting from center of gameObject)
-                // offset.y: offset on the y axis (starting from bottom of gameObject)
-
                 super(isTrigger, offset);
 
                 this.attributes['width'] = new AttributeNumber('Width', width);
@@ -28,7 +28,7 @@ export class BoxCollider extends Collider {
                      valueBetween(y, this.attributes['worldPos'].y - this.attributes['height'].value, this.attributes['worldPos'].y) ) {
                         return true;
                 }
-                
+
                 return false;
         }
 

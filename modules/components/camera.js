@@ -2,6 +2,7 @@
 import { AttributeNumber } from '../editor/attributes/attribute_number.js';
 
 import { Vector2 } from '../collection/vector2.js';
+import { Range } from '../collection/range.js';
 
 import { Component } from './component.js';
 
@@ -15,14 +16,15 @@ export class Camera extends Component {
         // debugContext;
 
         /*
-         * @param Number width: width of the camera view (canvas)
-         * @param Number height: height of the camera view (canvas)
+         * constructor
+         * @param number width: width of the camera view (canvas)
+         * @param number height: height of the camera view (canvas)
          */
         constructor(width, height) {
                 super();
 
-                this.attributes['viewWidth'] = new AttributeNumber('View Width', width);
-                this.attributes['viewHeight'] = new AttributeNumber('View Height', height);
+                this.attributes['viewWidth'] = new AttributeNumber('View Width', width, null, new Range());
+                this.attributes['viewHeight'] = new AttributeNumber('View Height', height, null, new Range());
 
                 this.worldPos = new Vector2();
 
@@ -78,7 +80,7 @@ export class Camera extends Component {
 
                 this.canvas.width = this.attributes['viewWidth'].value;
                 this.canvas.height = this.attributes['viewHeight'].value;
-                
+
                 this.canvasContext = this.canvas.getContext("2d");
         }
 }
