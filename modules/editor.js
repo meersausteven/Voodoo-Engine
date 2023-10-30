@@ -42,11 +42,6 @@ import { AttributeVector2 } from './editor/attributes/attribute_vector2.js';
 import { AttributeSelect } from './editor/attributes/attribute_select.js';
 import { AttributeArrayText } from './editor/attributes/attribute_array_text.js';
 
-// import gizmos
-import { TransformUpArrowGizmo } from './editor/gizmos/transform_up_arrow_gizmo.js';
-import { TransformRightArrowGizmo } from './editor/gizmos/transform_right_arrow_gizmo.js';
-import { TransformCenterBoxGizmo } from './editor/gizmos/transform_center_box_gizmo.js';
-
 // import html_helpers
 import { HtmlElement } from './editor/html_helpers/html_element.js';
 import { Popup } from './editor/html_helpers/popup.js';
@@ -65,9 +60,7 @@ export class Editor {
         currentGameObject;
         currentGameObjectHTML;
         // currently selected component
-        currentComponent;
-        currentComponentHTML;
-        currentComponentGizmos = [];
+        currentGizmo = null;
         // renderer
         renderer;
         // canvas
@@ -91,6 +84,7 @@ export class Editor {
                 'Line Renderer',
                 'Box Collider',
                 'Circle Collider',
+                'Capsule Collider',
                 'Rigidbody',
                 //'Animation'
         ];
@@ -203,6 +197,9 @@ export class Editor {
 
                         // process scene frame and draw grid
                         this.processCurrentSceneFrame();
+                        if (this.currentGizmo !== null) {
+                                this.currentGizmo.renderGizmo(this.camera);
+                        }
                         this.drawGrid();
 
                         // get view of editor camera
@@ -215,7 +212,8 @@ export class Editor {
         // process frame for current scene
         processCurrentSceneFrame() {
                 let i = 0;
-                let l = this.currentScene.gameObjects.length;
+                const l = this.currentScene.gameObjects.length;
+
                 while (i < l) {
                         this.processGameObjectFrame(this.currentScene.gameObjects[i]);
 
@@ -229,31 +227,12 @@ export class Editor {
                 if (gameObject.attributes['enabled'].value === true) {
                         // loop through all components in the current gameObject
                         let i = 0;
-                        let l = gameObject.components.length;
+                        const l = gameObject.components.length;
+
                         while (i < l) {
                                 this.processComponentFrame(gameObject.components[i]);
 
                                 ++i;
-                        }
-
-                        // todo: improve the gizmo display - add cursor checks to this as well
-                        // todo: differentiate between components - currently only transform gizmos -> provide a general solution
-                        if (gameObject === this.currentGameObject) {
-                                // transform.up arrow
-                                let upArrow = new TransformUpArrowGizmo(gameObject.transform);
-                                // transform.right arrow
-                                let rightArrow = new TransformRightArrowGizmo(gameObject.transform);
-                                // center box - transform position
-                                let centerBox = new TransformCenterBoxGizmo(gameObject.transform);
-                                this.currentComponentGizmos = [upArrow, rightArrow, centerBox];
-
-                                let g = 0;
-                                let gl = this.currentComponentGizmos.length;
-                                while (g < gl) {
-                                        this.currentComponentGizmos[g].render(this.camera);
-
-                                        ++g;
-                                }
                         }
                 }
         }
@@ -278,7 +257,7 @@ export class Editor {
                         this.canvasContext.lineWidth = this.settings['gridLineWidth'].value;
                         this.canvasContext.strokeStyle = this.settings['gridLineColor'].value;
 
-                        let gridOffsetX = -(this.camera.worldPos.x % this.settings['gridSize'].value.x);
+                        const gridOffsetX = -(this.camera.worldPos.x % this.settings['gridSize'].value.x);
                         for (let i = gridOffsetX; i < this.canvas.width; i += this.settings['gridSize'].value.x) {
                                 this.canvasContext.beginPath();
 
@@ -288,7 +267,7 @@ export class Editor {
                                 this.canvasContext.stroke();
                         }
 
-                        let gridOffsetY = -(this.camera.worldPos.y % this.settings['gridSize'].value.y);
+                        const gridOffsetY = -(this.camera.worldPos.y % this.settings['gridSize'].value.y);
                         for (let j = gridOffsetY; j < this.canvas.height; j += this.settings['gridSize'].value.y) {
                                 this.canvasContext.beginPath();
 
@@ -315,7 +294,7 @@ export class Editor {
 
         // load a project from the localStorage
         loadProjectFromStorage() {
-                let json = localStorage.getItem('project');
+                const json = localStorage.getItem('project');
 
                 if ((json !== null) &&
                     (typeof json !== 'undefined'))
@@ -330,24 +309,24 @@ export class Editor {
         // == CUSTOM HTML BUTTON ELEMENTS ==
         // create editor HTML Element for loading a project from an uploaded file
         createUploadProjectFileButton() {
-                let wrapper = new HtmlElement('div', null, {class: 'upload_file'});
+                const wrapper = new HtmlElement('div', null, {class: 'upload_file'});
 
                 // create file input element
-                let input = new HtmlElement('input', null, {
+                const input = new HtmlElement('input', null, {
                         class: 'content hidden',
                         type: 'file',
                         accept: 'application/json',
                         id: 'load-project-from-file'
                 });
                 input.addEventListener('change', function(e) {
-                        let file = e.target.files[0];
+                        const file = e.target.files[0];
 
                         if (file.type !== 'application/json') {
                                 console.warn("only .json files are accepted!");
                                 return false;
                         }
 
-                        let reader = new FileReader();
+                        const reader = new FileReader();
 
                         reader.addEventListener('load', function() {
                                 this.project = this.project.convertToProject(reader.result);
@@ -359,14 +338,14 @@ export class Editor {
                 }.bind(this));
 
                 // create label for input element
-                let label = new HtmlElement('label', 'Load Project From File', {
+                const label = new HtmlElement('label', 'Load Project From File', {
                         class: 'button_link',
                         title: 'Upload a JSON file to import a project',
                         for: input.id
                 });
 
                 // add font awesome icon
-                let icon = new HtmlElement('i', null, {class: 'fa fa-file-export'});
+                const icon = new HtmlElement('i', null, {class: 'fa fa-file-export'});
 
                 label.prepend(icon);
 
@@ -378,16 +357,16 @@ export class Editor {
 
         // create editor HTML element for turning the current project into a .json file and downloading it
         createDownloadProjectButton() {
-                let fileDownload = new HtmlElement('div', null, {class: 'download_file'});
+                const fileDownload = new HtmlElement('div', null, {class: 'download_file'});
 
                 // create fake link
-                let label = new HtmlElement('div', 'Save Project As File', {
+                const label = new HtmlElement('div', 'Save Project As File', {
                         class: 'button_link',
                         title: 'Export the project as a JSON file'
                 });
                 label.addEventListener('click', function() {
                         // create invisible link element when clicked
-                        let link = new HtmlElement('a', null, {
+                        const link = new HtmlElement('a', null, {
                                 class: 'button_link',
                                 href: 'data:text/json;charset=utf-8,' + encodeURIComponent(this.project.convertToJson()),
                                 download: `${this.project.settings['name']}-${Date.now()} .json`
@@ -398,7 +377,7 @@ export class Editor {
                 }.bind(this));
 
                 // add font awesome icon
-                let icon = new HtmlElement('i', null, {class: 'fa fa-file-import'});
+                const icon = new HtmlElement('i', null, {class: 'fa fa-file-import'});
 
                 label.prepend(icon);
                 fileDownload.appendChild(label);
@@ -408,10 +387,10 @@ export class Editor {
 
         // create editor HTML element for saving the current project in the localStorage
         createSaveStorageButton() {
-                let saveStorage = new HtmlElement('div', null, {class: 'save_storage'});
+                const saveStorage = new HtmlElement('div', null, {class: 'save_storage'});
 
                 // create link
-                let link = new HtmlElement('a', 'Save Project To Storage', {
+                const link = new HtmlElement('a', 'Save Project To Storage', {
                         class: 'button_link',
                         title: 'Save the project to the browser`s local storage'
                 });
@@ -422,7 +401,7 @@ export class Editor {
                 }.bind(this));
 
                 // add font awesome icon
-                let icon = new HtmlElement('i', null, {class: 'fa fa-download'});
+                const icon = new HtmlElement('i', null, {class: 'fa fa-download'});
 
                 link.prepend(icon);
                 saveStorage.appendChild(link);
@@ -432,10 +411,10 @@ export class Editor {
 
         // create editor HTML element for loading a project from the localStorage
         createLoadStorageButton() {
-                let loadStorage = new HtmlElement('div', null, {class: 'save_storage'});
+                const loadStorage = new HtmlElement('div', null, {class: 'save_storage'});
 
                 // create link
-                let link = new HtmlElement('a', 'Load Project From Storage', {
+                const link = new HtmlElement('a', 'Load Project From Storage', {
                         class: 'button_link',
                         title: 'Load the project currently in the browser`s local storage'
                 });
@@ -444,7 +423,7 @@ export class Editor {
                 }.bind(this));
 
                 // add font awesome icon
-                let icon = new HtmlElement('i', null, {class: 'fa fa-upload'});
+                const icon = new HtmlElement('i', null, {class: 'fa fa-upload'});
 
                 link.prepend(icon);
                 loadStorage.appendChild(link);
@@ -454,10 +433,10 @@ export class Editor {
 
         // create editor HTML element for opening the project settings popup
         createOpenEditorSettingsButton() {
-                let openSettings = new HtmlElement('div', null, {class: 'editor_settings'});
+                const openSettings = new HtmlElement('div', null, {class: 'editor_settings'});
 
                 // create button
-                let button = new HtmlElement('div', 'Editor Settings', {
+                const button = new HtmlElement('div', 'Editor Settings', {
                         class: 'button_link',
                         title: 'Change the editor settings'
                 });
@@ -466,7 +445,7 @@ export class Editor {
                 }.bind(this));
 
                 // add font awesome icon
-                let icon = new HtmlElement('i', null, {class: 'fa fa-sliders'});
+                const icon = new HtmlElement('i', null, {class: 'fa fa-sliders'});
 
                 button.prepend(icon);
                 openSettings.appendChild(button);
@@ -475,11 +454,11 @@ export class Editor {
         }
 
         createEditorSettingsForm() {
-                let form = new HtmlElement('form', null, {id: 'editor-settings-form'});
+                const form = new HtmlElement('form', null, {id: 'editor-settings-form'});
 
                 // create widgets for all attributes
                 for (let key in this.settings) {
-                        let widget = this.settings[key].createWidget();
+                        const widget = this.settings[key].createWidget();
 
                         form.appendChild(widget);
                 }
@@ -501,10 +480,10 @@ export class Editor {
 
         // create editor HTML element for opening the project settings popup
         createOpenProjectSettingsButton() {
-                let openSettings = new HtmlElement('div', null, {class: 'project_settings'});
+                const openSettings = new HtmlElement('div', null, {class: 'project_settings'});
 
                 // create button
-                let button = new HtmlElement('div', 'Project Settings', {
+                const button = new HtmlElement('div', 'Project Settings', {
                         class: 'button_link',
                         title: 'Edit the project settings'
                 });
@@ -513,7 +492,7 @@ export class Editor {
                 }.bind(this));
 
                 // add font awesome icon
-                let icon = new HtmlElement('i', null, {class: 'fa fa-sliders'});
+                const icon = new HtmlElement('i', null, {class: 'fa fa-sliders'});
 
                 button.prepend(icon);
                 openSettings.appendChild(button);
@@ -523,15 +502,15 @@ export class Editor {
 
         // create HTML form with this project's settings
         createProjectSettingsForm() {
-                let form = new HtmlElement('form', null, {id: 'project-settings-form'});
+                const form = new HtmlElement('form', null, {id: 'project-settings-form'});
 
                 // create an input field for each setting
                 for (let key in this.project.settings) {
-                        let formItem = new HtmlElement('div', null, {class: 'form_item'});
+                        const formItem = new HtmlElement('div', null, {class: 'form_item'});
 
-                        let label = new HtmlElement('label', key, {for: `item-${key}`});
+                        const label = new HtmlElement('label', key, {for: `item-${key}`});
 
-                        let input = new HtmlElement('input', null, {
+                        const input = new HtmlElement('input', null, {
                                 id: `item-${key}`,
                                 type: 'text',
                                 value: this.project.settings[key]
@@ -544,9 +523,9 @@ export class Editor {
                 }
 
                 // add a submit button
-                let submitItem = new HtmlElement('div', null, {class: 'form_item'});
+                const submitItem = new HtmlElement('div', null, {class: 'form_item'});
 
-                let submitButton = new HtmlElement('input', null, {
+                const submitButton = new HtmlElement('input', null, {
                         class: 'fake_button',
                         type: 'submit',
                         value: 'Save Changes'
@@ -559,16 +538,16 @@ export class Editor {
                         e.preventDefault();
 
                         let i = 0;
-                        let l = form.children.length;
+                        const l = form.children.length;
                         // loop all form items and update this project's settings
                         while (i < l) {
-                                let item = form.children[i];
-                                let itemInput = item.querySelector('input');
-                                let itemLabel = item.querySelector('label');
+                                const item = form.children[i];
+                                const itemInput = item.querySelector('input');
+                                const itemLabel = item.querySelector('label');
 
                                 if (itemInput.type !== 'submit') {
-                                        let setting = itemLabel.innerHTML;
-                                        let newValue = itemInput.value;
+                                        const setting = itemLabel.innerHTML;
+                                        const newValue = itemInput.value;
 
                                         this.project.settings[setting] = newValue;
                                 }
@@ -586,10 +565,10 @@ export class Editor {
 
         // create HTML form with this project's renderer settings
         createOpenRendererSettingsButton() {
-                let openSettings = new HtmlElement('div', null, {class: 'renderer_settings'});
+                const openSettings = new HtmlElement('div', null, {class: 'renderer_settings'});
 
                 // create button
-                let button = new HtmlElement('div', 'Renderer Settings', {
+                const button = new HtmlElement('div', 'Renderer Settings', {
                         class: 'button_link',
                         title: 'Edit the project`s renderer settings'
                 });
@@ -598,7 +577,7 @@ export class Editor {
                 }.bind(this));
 
                 // add font awesome icon
-                let icon = new HtmlElement('i', null, {class: 'fa fa-image'});
+                const icon = new HtmlElement('i', null, {class: 'fa fa-image'});
 
                 button.prepend(icon);
                 openSettings.appendChild(button);
@@ -608,7 +587,7 @@ export class Editor {
 
         // create HTML form with this project's renderer settings
         createRendererSettingsForm() {
-                let form = new HtmlElement('form', null, {id: 'renderer-settings-form'});
+                const form = new HtmlElement('form', null, {id: 'renderer-settings-form'});
 
                 // create an input field for each setting
                 /*
@@ -631,9 +610,9 @@ export class Editor {
                 */
 
                 // add a submit button
-                let submitItem = new HtmlElement('div', null, {class: 'form_item'});
+                const submitItem = new HtmlElement('div', null, {class: 'form_item'});
 
-                let submitButton = new HtmlElement('input', null, {
+                const submitButton = new HtmlElement('input', null, {
                         class: 'fake_button',
                         type: 'submit',
                         value: 'Save Changes'
@@ -673,10 +652,10 @@ export class Editor {
 
         // create HTML form with this project's physics settings
         createOpenPhysicsSettingsButton() {
-                let openSettings = new HtmlElement('div', null, {class: 'physics_settings'});
+                const openSettings = new HtmlElement('div', null, {class: 'physics_settings'});
 
                 // create button
-                let button = new HtmlElement('div', 'Physics Settings', {
+                const button = new HtmlElement('div', 'Physics Settings', {
                         class: 'button_link',
                         title: 'Edit the project`s physics settings'
                 });
@@ -685,7 +664,7 @@ export class Editor {
                 }.bind(this));
 
                 // add font awesome icon
-                let icon = new HtmlElement('i', null, {class: 'fa fa-explosion'});
+                const icon = new HtmlElement('i', null, {class: 'fa fa-explosion'});
 
                 button.prepend(icon);
                 openSettings.appendChild(button);
@@ -694,11 +673,11 @@ export class Editor {
         }
 
         createPhysicsSettingsForm() {
-                let form = new HtmlElement('form', null, {id: 'physics-settings-form'});
+                const form = new HtmlElement('form', null, {id: 'physics-settings-form'});
 
                 // create widgets for all attributes
                 for (let key in this.project.physics.attributes) {
-                        let widget = this.project.physics.attributes[key].createWidget();
+                        const widget = this.project.physics.attributes[key].createWidget();
 
                         form.appendChild(widget);
                 }
@@ -720,33 +699,33 @@ export class Editor {
 
         // create editor HTML element the about popup
         createAboutPopupContent() {
-                let wrapper = new HtmlElement('div', null, {});
+                const wrapper = new HtmlElement('div', null, {});
 
-                let engineName = new HtmlElement('div', 'Voodoo Game-Engine', {class: 'engine_name mt_10 text_bold text_center'});
+                const engineName = new HtmlElement('div', 'Voodoo Game-Engine', {class: 'engine_name mt_10 text_bold text_center'});
                 wrapper.appendChild(engineName);
 
-                let version = new HtmlElement('div', 'v1.0a', {class: 'version text_center'});
+                const version = new HtmlElement('div', 'v1.0a', {class: 'version text_center'});
                 wrapper.appendChild(version);
 
-                let infoText = new HtmlElement('div', 'Voodoo is an open source JavaScript based in-browser game engine and is free to use.<br>Please report any that try to sell this engine for profit!<br><br>Feel free to experiment with the different components and the editor.<br>Thank you for using Voodoo!', {class: 'engine_info mx_20 text_center'});
+                const infoText = new HtmlElement('div', 'Voodoo is an open source JavaScript based in-browser game engine and is free to use.<br>Please report any that try to sell this engine for profit!<br><br>Feel free to experiment with the different components and the editor.<br>Thank you for using Voodoo!', {class: 'engine_info mx_20 text_center'});
                 wrapper.appendChild(infoText);
 
-                let creator = new HtmlElement('div', 'Created by Sven May', {class: 'creator'});
+                const creator = new HtmlElement('div', 'Created by Sven May', {class: 'creator'});
                 wrapper.appendChild(creator);
 
-                let supportButton = new HtmlElement('a', 'Support the creator', {class: 'fake_button button_link support py_5 px_10', href: '#'});
+                const supportButton = new HtmlElement('a', 'Support the creator', {class: 'fake_button button_link support py_5 px_10', href: '#'});
                 wrapper.appendChild(supportButton);
 
                 return wrapper;
         }
 
         createPlayButton() {
-                let wrapper = new HtmlElement('div', '', {id: 'play-button', title: 'Start Play-Mode', class: 'py_10 px_20'});
+                const wrapper = new HtmlElement('div', '', {id: 'play-button', title: 'Start Play-Mode', class: 'py_10 px_20'});
                 wrapper.addEventListener('click', function() {
                         this.startPlayMode();
                 }.bind(this));
 
-                let icon = new HtmlElement('i', '', {class: 'fa fa-play'});
+                const icon = new HtmlElement('i', '', {class: 'fa fa-play'});
                 wrapper.appendChild(icon);
 
                 return wrapper;
@@ -758,7 +737,7 @@ export class Editor {
 
                 this.saveProjectToStorage();
 
-                let currentUrl = window.location.origin + window.location.pathname;
+                const currentUrl = window.location.origin + window.location.pathname;
                 window.open(currentUrl.replace('edit_mode', 'play_mode'), '_blank').focus();
         }
 
@@ -766,7 +745,8 @@ export class Editor {
         // create editor HTML element for the scene list
         createScenesListElement() {
                 let i = 0;
-                let l = this.project.sceneList.length;
+                const l = this.project.sceneList.length;
+
                 while (i < l) {
                         // loop all scenes in project and add scene card HTML
                         this.createSceneCardElement(this.project.sceneList[i]);
@@ -791,10 +771,11 @@ export class Editor {
 
         // remove all editor HTML elements for the scenes list
         removeScenesListElement() {
-                let sceneListNode = document.querySelector(this.project.settings.sceneListWrapper);
+                const sceneListNode = document.querySelector(this.project.settings.sceneListWrapper);
 
                 let i = 0;
-                let l = sceneListNode.children.length;
+                const l = sceneListNode.children.length;
+
                 while (i < l) {
                         sceneListNode.lastElementChild.remove();
 
@@ -804,14 +785,14 @@ export class Editor {
 
         // create editor HTML element for the scene
         createSceneCardElement(scene) {
-                let wrapper = new HtmlElement('div', null, {class: 'scene'});
+                const wrapper = new HtmlElement('div', null, {class: 'scene'});
 
-                let name = scene.attributes['name'].createWidget();
+                const name = scene.attributes['name'].createWidget();
 
                 wrapper.appendChild(name);
 
                 if (scene !== this.currentScene) {
-                        let button = new HtmlElement('div', 'Select', {class: 'fake_button'});
+                        const button = new HtmlElement('div', 'Select', {class: 'fake_button'});
                         button.addEventListener('click', function() {
                                 this.project.loadScene(this.project.getSceneIndex(scene));
 
@@ -821,7 +802,7 @@ export class Editor {
                         wrapper.appendChild(button);
                 }
 
-                let listNode = document.querySelector(this.project.settings.sceneListWrapper);
+                const listNode = document.querySelector(this.project.settings.sceneListWrapper);
                 listNode.appendChild(wrapper);
         }
 
@@ -830,6 +811,7 @@ export class Editor {
         createGameObjectsListElement() {
                 let i = 0;
                 let l = this.currentScene.gameObjects.length;
+
                 while (i < l) {
                         // loop all game objects in the current scene
                         this.createGameObjectCardElement(this.currentScene.gameObjects[i]);
@@ -838,17 +820,18 @@ export class Editor {
                 }
 
                 // "add new gameObject" form
-                let select = new HtmlElement('select', 'Adds a new Game Object to the selected scene', {class: 'add_gameObject'});
+                const select = new HtmlElement('select', 'Adds a new Game Object to the selected scene', {class: 'add_gameObject'});
 
-                let defaultOption = new HtmlElement('option', '&#x2b; Add new Game Object', {value: 0});
+                const defaultOption = new HtmlElement('option', '&#x2b; Add new Game Object', {value: 0});
 
                 select.appendChild(defaultOption);
 
                 i = 0;
                 l = this.availableGameObjects.length;
+
                 while (i < l) {
                         // loop all available game objects for the dropdown
-                        let option = new HtmlElement('option', this.availableGameObjects[i], {value: this.availableGameObjects[i]});
+                        const option = new HtmlElement('option', this.availableGameObjects[i], {value: this.availableGameObjects[i]});
 
                         select.appendChild(option);
 
@@ -856,7 +839,8 @@ export class Editor {
                 }
 
                 select.addEventListener('change', function(e) {
-                        let selectedOption = e.target.children[e.target.selectedIndex].value;
+                        const selectedOption = e.target.children[e.target.selectedIndex].value;
+
                         if (selectedOption !== 0) {
                                 let newObject = eval(`new ${selectedOption.replace(' ', '')}()`);
 
@@ -871,11 +855,11 @@ export class Editor {
 
         // create editor HTML element for the gameObject title
         createGameObjectTitleElement(gameObject) {
-                let content = new HtmlElement('div', null, {class: 'content'});
+                const content = new HtmlElement('div', null, {class: 'content'});
 
                 for (let key in gameObject.attributes) {
                         if (gameObject.attributes[key] instanceof AttributeText) {
-                                let widget = gameObject.attributes[key].createWidget();
+                                const widget = gameObject.attributes[key].createWidget();
 
                                 content.appendChild(widget);
                         }
@@ -886,10 +870,11 @@ export class Editor {
 
         // remove all editor HTML elements in the game objects list
         removeGameObjectsListElement() {
-                let gameObjectsNode = document.querySelector(this.project.settings.gameObjectListWrapper);
+                const gameObjectsNode = document.querySelector(this.project.settings.gameObjectListWrapper);
 
                 let i = 0;
-                let l = gameObjectsNode.children.length;
+                const l = gameObjectsNode.children.length;
+
                 while (i < l) {
                         gameObjectsNode.lastElementChild.remove();
 
@@ -899,12 +884,13 @@ export class Editor {
 
         // create editor HTML element per game object
         createGameObjectCardElement(gameObject) {
-                let wrapper = new HtmlElement('div', null, {class: 'game_object'});
+                const wrapper = new HtmlElement('div', null, {class: 'game_object'});
+
                 wrapper.addEventListener('click', function(e) {
-                        let thisElement = e.target.closest('.game_object');
+                        const thisElement = e.target.closest('.game_object');
 
                         if (!thisElement.classList.contains('selected')) {
-                                let selected = thisElement.parentElement.querySelector('.selected');
+                                const selected = thisElement.parentElement.querySelector('.selected');
                                 if ((selected !== null) &&
                                     (selected !== thisElement))
                                 {
@@ -916,19 +902,21 @@ export class Editor {
                                 thisElement.classList.add('selected');
                                 this.currentGameObject = gameObject;
                                 this.currentGameObjectHTML = thisElement;
+                                this.currentGizmo = gameObject.transform;
                         } else {
                                 thisElement.classList.remove('selected');
                                 this.removeComponentsListElement();
                                 this.currentGameObject = null;
                                 this.currentGameObjectHTML = null;
+                                this.currentGizmo = null;
                         }
                 }.bind(this));
 
-                let title = new HtmlElement('div', gameObject.attributes['name'].value, {class: 'title'});
+                const title = new HtmlElement('div', gameObject.attributes['name'].value, {class: 'title'});
 
                 wrapper.appendChild(title);
 
-                let listNode = document.querySelector(this.project.settings.gameObjectListWrapper);
+                const listNode = document.querySelector(this.project.settings.gameObjectListWrapper);
                 listNode.appendChild(wrapper);
         }
 
@@ -936,48 +924,79 @@ export class Editor {
         // create editor HTML element containing all components
         createComponentsListElement(gameObject) {
                 // create info card
-                let card = new HtmlElement('div', null, {class: 'card components_list'});
-
-                let title = new HtmlElement('div', null, {class: 'card_title'});
-
+                const card = new HtmlElement('div', null, {class: 'card components_list'});
+                const title = new HtmlElement('div', null, {class: 'card_title'});
                 title.appendChild(this.createGameObjectTitleElement(gameObject));
 
-                let content = new HtmlElement('div', null, {class: 'card_content'});
+                const content = new HtmlElement('div', null, {class: 'card_content'});
 
                 // add component cards to card content
                 let i = 0;
                 let l = gameObject.components.length;
+
                 while (i < l) {
-                        content.appendChild(gameObject.components[i].createEditorCard());
+                        const component = gameObject.components[i];
+                        let additionalContent = null;
+
+                        if (component instanceof Collider) {
+                                const showGizmoButton = new HtmlElement('div', 'Toggle Gizmo', {class: 'fake_button'});
+                                showGizmoButton.addEventListener('click', function() {
+                                        if (this.currentGizmo === component) {
+                                                this.currentGizmo = component.gameObject.transform;
+                                        } else {
+                                                this.currentGizmo = component;
+                                        }
+                                }.bind(this));
+
+                                additionalContent = showGizmoButton;
+                        }
+
+                        content.appendChild(component.createEditorCard(additionalContent));
 
                         ++i;
                 }
 
                 // add new component select to card content
-                let select = new HtmlElement('select', null, {id: 'add-component-dropdown', title: 'Adds a new component to the selected GameObject'});
+                const select = new HtmlElement('select', null, {id: 'add-component-dropdown', title: 'Adds a new component to the selected GameObject'});
 
-                let defaultOption = new HtmlElement('option', '&#x2b; Add New Component', {value: 0});
+                const defaultOption = new HtmlElement('option', '&#x2b; Add New Component', {value: 0});
                 select.appendChild(defaultOption);
 
                 i = 0;
                 l = this.availableComponents.length;
+
                 while (i < l) {
-                        let option = new HtmlElement('option', this.availableComponents[i], {value: this.availableComponents[i]});
+                        const option = new HtmlElement('option', this.availableComponents[i], {value: this.availableComponents[i]});
                         select.appendChild(option);
 
                         ++i;
                 }
 
                 select.addEventListener('change', function(e) {
-                        let selectedOption = e.target.children[e.target.selectedIndex].value;
-                        if (selectedOption !== 0) {
-                                let newComponent = eval(`new ${selectedOption.replace(' ', '')}()`);
-                                gameObject.addComponent(newComponent);
-                                console.log(newComponent);
+                        const selectedOption = e.target.children[e.target.selectedIndex].value;
 
-                                let componentCardElement = newComponent.createEditorCard();
-                                let parent = document.querySelector('.components_list .card_content');
-                                let nextSibling = document.getElementById('add-component-dropdown');
+                        if (selectedOption !== 0) {
+                                const newComponent = eval(`new ${selectedOption.replace(' ', '')}()`);
+                                gameObject.addComponent(newComponent);
+
+                                let additionalContent = null;
+
+                                if (newComponent instanceof Collider) {
+                                        const showGizmoButton = new HtmlElement('div', 'Toggle Gizmo', {class: 'fake_button'});
+                                        showGizmoButton.addEventListener('click', function() {
+                                                if (this.currentGizmo === newComponent) {
+                                                        this.currentGizmo = newComponent.gameObject.transform;
+                                                } else {
+                                                        this.currentGizmo = newComponent;
+                                                }
+                                        }.bind(this));
+
+                                        additionalContent = showGizmoButton;
+                                }
+
+                                const componentCardElement = newComponent.createEditorCard(additionalContent);
+                                const parent = document.querySelector('.components_list .card_content');
+                                const nextSibling = document.getElementById('add-component-dropdown');
 
                                 parent.insertBefore(componentCardElement, nextSibling);
                         }
@@ -991,25 +1010,23 @@ export class Editor {
                 card.appendChild(title);
                 card.appendChild(content);
 
-                let listNode = document.querySelector(this.project.settings.componentListWrapper);
+                const listNode = document.querySelector(this.project.settings.componentListWrapper);
                 listNode.appendChild(card);
         }
 
         // remove all editor HTML elements for the components
         removeComponentsListElement() {
-                let componentsListNode = document.querySelector(this.project.settings.componentListWrapper);
+                const componentsListNode = document.querySelector(this.project.settings.componentListWrapper);
 
                 let i = 0;
-                let l = componentsListNode.children.length;
+                const l = componentsListNode.children.length;
+
                 while (i < l) {
                         componentsListNode.lastElementChild.remove();
 
                         ++i;
                 }
         }
-
-        // == TRANSFORM WIDGET ==
-        // todo: add widget -> gizmo
 
         // create editor HTML for the current project
         generateEditorElements() {
@@ -1048,7 +1065,8 @@ export class Editor {
                 }
 
                 let i = 0;
-                let l = dropdowns.length;
+                const l = dropdowns.length;
+
                 while (i < l) {
                         dropdowns[i].classList.remove('open');
 
@@ -1059,7 +1077,7 @@ export class Editor {
         // == EVENTS ==
         // event handler function
         handleEvent(e) {
-                let eventLookup = {
+                const eventLookup = {
                         project_settings_changed: function(e) {
                                 this.onProjectSettingsChanged(e);
                         }.bind(this),
@@ -1155,9 +1173,10 @@ export class Editor {
         // event function that is called on 'click' event on document
         onClick(e) {
                 // dropdown
-                let dropdownButton = e.target.closest('.dropdown_button');
+                const dropdownButton = e.target.closest('.dropdown_button');
+
                 if (dropdownButton !== null) {
-                        let closestDropdown = dropdownButton.closest('.dropdown');
+                        const closestDropdown = dropdownButton.closest('.dropdown');
 
                         this.closeAllDropdowns(dropdownButton.closest('.tabbar'));
 
@@ -1167,9 +1186,10 @@ export class Editor {
                 }
 
                 // foldout
-                let foldoutTitle = e.target.closest('.foldout_title');
+                const foldoutTitle = e.target.closest('.foldout_title');
+
                 if (foldoutTitle !== null) {
-                        let closestFoldout = foldoutTitle.closest('.foldout');
+                        const closestFoldout = foldoutTitle.closest('.foldout');
                         closestFoldout.classList.toggle('open');
                 }
         }
@@ -1192,7 +1212,7 @@ export class Editor {
         }
 
         onCurrentGameObjectNameChanged(e) {
-                let gameObjectTitle = this.currentGameObjectHTML.querySelector('.title');
+                const gameObjectTitle = this.currentGameObjectHTML.querySelector('.title');
                 gameObjectTitle.innerHTML = this.currentGameObject.attributes['name'].value;
         }
 

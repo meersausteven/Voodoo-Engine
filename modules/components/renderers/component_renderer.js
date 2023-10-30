@@ -30,8 +30,8 @@ export class ComponentRenderer extends Component {
                 }
         }
 
-        passToRenderer() {
-                this.gameObject.scene.project.renderer.addComponentRenderer(this);
+        render(camera) {
+                return;
         }
 
         renderDefault(camera) {
@@ -43,5 +43,9 @@ export class ComponentRenderer extends Component {
 
                 // alpha
                 camera.canvasContext.globalAlpha = this.attributes['alpha'].value;
+        }
+
+        passToRenderer() {
+                this.gameObject.scene.project.renderer.addComponentRenderer(this);
         }
 }

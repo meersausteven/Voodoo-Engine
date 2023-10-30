@@ -1,6 +1,8 @@
 
+import { HtmlElement } from '../../editor/html_helpers/html_element.js';
 import { Vector2 } from './../../collection/vector2.js';
 
+import { AttributeText } from './../../editor/attributes/attribute_text.js';
 import { AttributeBoolean } from './../../editor/attributes/attribute_boolean.js';
 import { AttributeVector2 } from './../../editor/attributes/attribute_vector2.js';
 
@@ -17,26 +19,36 @@ export class Collider extends Component {
         constructor(isTrigger = false, offset = new Vector2()) {
                 super();
 
-                this.attributes['displayBounds'] = new AttributeBoolean('Display Bounds', false);
                 this.attributes['isTrigger'] = new AttributeBoolean('Is Trigger', isTrigger);
-                this.attributes['inverted'] = new AttributeBoolean('Inverted', false);
+                // this.attributes['inverted'] = new AttributeBoolean('Inverted', false);
                 this.attributes['offset'] = new AttributeVector2('Offset', offset);
 
-                this.attributes['worldPos'] = new Vector2();
+                this.worldPos = new Vector2();
+                this.bounds = {
+                        top: 0,
+                        right: 0,
+                        bottom: 0,
+                        left: 0
+                };
         }
 
-        update() {
-                this.attributes['worldPos'] = new Vector2(
+        updateWorldPos() {
+                this.worldPos = new Vector2(
                         this.gameObject.transform.attributes['position'].value.x + this.attributes['offset'].value.x,
                         this.gameObject.transform.attributes['position'].value.y + this.attributes['offset'].value.y
                 );
-
-                if (this.attributes['displayBounds'].value === true) {
-                        this.displayBounds();
-                }
         }
 
-        displayBounds() {
+        updateBounds() {
+                return;
+        }
+
+        update() {
+                this.updateWorldPos();
+                this.updateBounds();
+        }
+
+        renderGizmo() {
                 return;
         }
 }

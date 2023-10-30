@@ -33,17 +33,19 @@ export class Component {
                 return;
         }
 
-        // called when something is to be rendered
-        render() {
+        renderGizmo(camera) {
                 return;
         }
 
         // create HTML element for the editor
-        createEditorCard() {
-                let wrapper = new HtmlElement('div', null, {class: 'component'});
+        createEditorCard(additionalContent = null) {
+                const wrapper = new HtmlElement('div', null, {class: 'component ' + this.type.toLowerCase().replace(" ", "_")});
 
-                let title = this.editorCardTitle();
-                let content = this.editorCardContent();
+                const title = this.editorCardTitle();
+                const content = this.editorCardContent();
+                if (additionalContent !== null) {
+                        content.appendChild(additionalContent);
+                }
 
                 wrapper.appendChild(title);
                 wrapper.appendChild(content);
@@ -112,7 +114,7 @@ export class Component {
 
         // create HTML for the content in the editor card
         editorCardContent() {
-                let content = new HtmlElement('div', null, {class: 'content'});
+                const content = new HtmlElement('div', null, {class: 'content'});
 
                 for (let key in this.attributes) {
                         if (key !== 'enabled') {

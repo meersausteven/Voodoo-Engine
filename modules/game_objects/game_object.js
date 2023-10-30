@@ -26,7 +26,7 @@ export class GameObject {
         start() {
                 // start all components
                 let i = 0;
-                let l = this.components.length;
+                const l = this.components.length;
 
                 while (i < l) {
                         this.components[i].start();
@@ -38,7 +38,7 @@ export class GameObject {
         update() {
                 // update is called every frame
                 let i = 0;
-                let l = this.components.length;
+                const l = this.components.length;
 
                 while (i < l) {
                         if (this.components[i].attributes['enabled'].value === true) {
@@ -52,7 +52,7 @@ export class GameObject {
         fixedUpdate() {
                 // fixed update is called in a certain interval (default: 10ms)
                 let i = 0;
-                let l = this.components.length;
+                const l = this.components.length;
 
                 while (i < l) {
                         if (this.components[i].attributes['enabled'].value === true) {
@@ -66,7 +66,7 @@ export class GameObject {
         lateUpdate() {
                 // late update is called after update()
                 let i = 0;
-                let l = this.components.length;
+                const l = this.components.length;
 
                 while (i < l) {
                         if (this.components[i].attributes['enabled'].value === true) {
@@ -97,7 +97,7 @@ export class GameObject {
         removeComponent(component) {
                 if (component instanceof Component) {
                         let i = 0;
-                        let l = this.components.length;
+                        const l = this.components.length;
 
                         while (i < l) {
                                 if (this.components[i] === component) {
@@ -118,10 +118,10 @@ export class GameObject {
          */
         getComponent(name) {
                 let i = 0;
-                let l = this.components.length;
+                const l = this.components.length;
 
                 while (i < l) {
-                        if (this.components[i].type === name) {
+                        if (this.components[i] instanceof name) {
                                 return this.components[i];
                         }
 
@@ -137,7 +137,7 @@ export class GameObject {
          */
         getTransform() {
                 let i = 0;
-                let l = this.components.length;
+                const l = this.components.length;
 
                 while (i < l) {
                         if (this.components[i] instanceof Transform) {

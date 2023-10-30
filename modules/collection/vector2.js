@@ -5,6 +5,9 @@ export class Vector2 {
         y;
         magnitude;
 
+        static up = new Vector2(0, 1);
+        static right = new Vector2(1, 0);
+
         constructor(x = 0, y = 0) {
                 this.x = x;
                 this.y = y;

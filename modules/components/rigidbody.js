@@ -35,7 +35,7 @@ export class Rigidbody extends Component {
                                 let l = this.gameObject.scene.gameObjects.length;
 
                                 while (i < l) {
-                                        let otherObject = this.gameObject.scene.gameObjects[i];
+                                        const otherObject = this.gameObject.scene.gameObjects[i];
 
                                         // exclude self from calculations
                                         if (otherObject === this.gameObject) {
@@ -45,15 +45,15 @@ export class Rigidbody extends Component {
                                         }
 
                                         if (otherObject.getComponent('Rigidbody') !== false) {
-                                                let otherBody = otherObject.getComponent('Rigidbody');
+                                                const otherBody = otherObject.getComponent('Rigidbody');
 
-                                                let toOtherObject = Vector2.subtract(otherObject.transform.attributes['position'].value, this.gameObject.transform.attributes['position'].value);
-                                                let distance = toOtherObject.magnitude;
+                                                const toOtherObject = Vector2.subtract(otherObject.transform.attributes['position'].value, this.gameObject.transform.attributes['position'].value);
+                                                const distance = toOtherObject.magnitude;
 
-                                                let force = Math.G * Math.pow(10, 11) * ((this.attributes['mass'].value * otherBody.attributes['mass'].value) / (distance * distance));
-                                                let acceleration = force / this.attributes['mass'].value;
+                                                const force = Math.G * Math.pow(10, 11) * ((this.attributes['mass'].value * otherBody.attributes['mass'].value) / (distance * distance));
+                                                const acceleration = force / this.attributes['mass'].value;
 
-                                                let vectorTowardsOtherObject = Vector2.multiply(toOtherObject.lengthen(acceleration), time.delta);
+                                                const vectorTowardsOtherObject = Vector2.multiply(toOtherObject.lengthen(acceleration), time.delta);
 
                                                 this.attributes['velocity'] = Vector2.add(this.attributes['velocity'], vectorTowardsOtherObject);
                                         }
@@ -64,7 +64,7 @@ export class Rigidbody extends Component {
                                 // mass is set to not create gravity - use default gravity vector
 
                                 // add the gravity (multiplied by the time since the last frame) to this Rigidbody's velocity
-                                let physicsGravity = this.gameObject.scene.project.physics.attributes['gravity'].value;
+                                const physicsGravity = this.gameObject.scene.project.physics.attributes['gravity'].value;
                                 this.attributes['velocity'] = Vector2.add(this.attributes['velocity'], Vector2.multiply(physicsGravity, time.delta));
 
                                 // decrease velocity according to friction
@@ -84,9 +84,29 @@ export class Rigidbody extends Component {
                 this.gameObject.transform.attributes['position'].value = Vector2.add(this.gameObject.transform.attributes['position'].value, this.attributes['velocity']);
         }
 
-        // adds a given force to this Rigidbody
-        // todo: properly implement a force calculation -> F = m * a
-        addForce(force) {
-                this.attributes['velocity'] = Vector2.add(this.attributes['velocity'], force);
+        fixedUpdate() {
+                let i = 0;
+                const l = this.gameObject.scene.gameObjects.length;
+
+                while (i < l) {
+                        const otherObject = this.gameObject.scene.gameObjects[i];
+                        if (otherObject.getComponent('Collider') !== false) {
+                                const otherCollider = otherObject.getComponent('Collider');
+
+                                // todo: check for collisions
+                        }
+
+                        ++i;
+                }
+        }
+
+        /*
+        * @param number force: force that is to be added
+        * @param number height: height of the rectangle
+        * @param boolean isTrigger: turns this collider into a trigger (no collision will be possible)
+        * @param Vector2 offset: offset relative to this gameObject's position
+        */
+        addForce(force, direction = Vector2.up) {
+                this.attributes['velocity'] += Vector2.multiply(direction, force / this.attributes['mass']);
         }
 }

@@ -1,8 +1,9 @@
 
 import { Vector2 } from './../../collection/vector2.js';
+import { Range } from './../../collection/range.js';
 
 import { AttributeNumber } from './../../editor/attributes/attribute_number.js';
-import { AttributeText } from './../../editor/attributes/attribute_text.js';
+import { AttributeSelect } from './../../editor/attributes/attribute_select.js';
 
 import { BoxCollider } from './box_collider.js';
 import { CircleCollider } from './circle_collider.js';
@@ -11,72 +12,64 @@ import { Collider } from './collider.js';
 export class CapsuleCollider extends Collider {
         type = "Capsule Collider";
 
-        constructor(radius, distance, isTrigger = false, offset = new Vector2(), direction = "horizontal") {
-                // GameObject gameObject: the gameObject this component belongs to
-                // int radius: radius of the circles on the ends
-                // int distance: distance between the circles' centers
-                // string direction: direction of the capsule ("horizontal" or "vertical")
-                // Vector2 offset: offset from bottom center of this gameObject
+        /*
+         * constructor
+         * @param number radius: radius of the capsule
+         * @param number distance: distance between the circles' centers
+         * @param nstring direction: direction of the capsule (vertical/horizontal)
+         * @param boolean isTrigger: turns this collider into a trigger (no collision will be possible)
+         * @param Vector2 offset: offset relative to this gameObject's position
+         */
+        constructor(radius = 25, distance = 50, direction = "vertical", isTrigger = false, offset = new Vector2()) {
                 super(isTrigger, offset);
 
-                this.attributes['radius'] = new AttributeNumber('Radius', radius);
-                this.attributes['distance'] = new AttributeNumber('Distance', distance);
-                this.attributes['direction'] = new AttributeText('Direction', direction);
+                this.attributes['radius'] = new AttributeNumber('Radius', radius, null, new Range());
+                this.attributes['distance'] = new AttributeNumber('Distance', distance, null, new Range());
+                this.attributes['direction'] = new AttributeSelect('Direction', direction, ["vertical", "horizontal"]);
         }
 
-        start() {
-                // arrange the colliders making up the capsule depending on the direction it's going
-                let boxWidth, boxHeight = 0;
-                let boxOff, firstCircleOff, secondCircleOff = new Vector2();
-                
-                if (this.attributes['direction'].value == "horizontal") {
-                        boxWidth = this.attributes['distance'].value;
-                        boxHeight = this.attributes['radius'].value * 2;
-                        boxOff = new Vector2(
-                                this.attributes['offset'].value.x,
-                                this.attributes['offset'].value.y
-                        );
-                        // left circle
-                        firstCircleOff = new Vector2(
-                                this.attributes['offset'].value.x - (boxWidth / 2),
-                                this.attributes['offset'].value.y - this.attributes['radius'].value
-                        );
-                        // right circle
-                        secondCircleOff = new Vector2(
-                                this.attributes['offset'].value.x + (boxWidth / 2),
-                                this.attributes['offset'].value.y - this.attributes['radius'].value
-                        );
+        updateBounds() {
+                if (this.attributes['direction'].value === "vertical") {
+                        this.bounds = {
+                                top: this.worldPos.y - this.distance / 2 - this.attributes['radius'].value,
+                                right: this.worldPos.x + this.attributes['radius'].value,
+                                bottom: this.worldPos.y + this.distance / 2 + this.attributes['radius'].value,
+                                left: this.worldPos.x - this.attributes['radius'].value
+                        };
                 } else {
-                        boxWidth = this.attributes['radius'].value * 2;
-                        boxHeight = this.attributes['distance'].value;
-                        boxOff = new Vector2(
-                                this.attributes['offset'].value.x,
-                                this.attributes['offset'].value.y
-                        );
-                        // top circle
-                        firstCircleOff = new Vector2(
-                                this.attributes['offset'].value.x,
-                                this.attributes['offset'].value.y - boxHeight - this.attributes['radius'].value
-                        );
-                        // bottom circle
-                        secondCircleOff = new Vector2(
-                                this.attributes['offset'].value.x,
-                                this.attributes['offset'].value.y + this.attributes['radius'].value
-                        );
+                        this.bounds = {
+                                top: this.worldPos.y - this.attributes['radius'].value,
+                                right: this.worldPos.x + this.distance / 2 + this.attributes['radius'].value,
+                                bottom: this.worldPos.y + this.attributes['radius'].value,
+                                left: this.worldPos.x - this.distance / 2 - this.attributes['radius'].value
+                        };
+                }
+        }
+
+        renderGizmo(camera) {
+                camera.canvasContext.save();
+                camera.canvasContext.translate(this.worldPos.x - camera.worldPos.x, this.worldPos.y - camera.worldPos.y);
+
+                camera.canvasContext.beginPath();
+
+                if (this.attributes['direction'].value === "vertical") {
+                        // top half circle
+                        camera.canvasContext.arc(0, -this.attributes['distance'].value / 2, this.attributes['radius'].value, Math.PI, 2 * Math.PI);
+                        // bottom half circle
+                        camera.canvasContext.arc(0, this.attributes['distance'].value / 2, this.attributes['radius'].value, 0, Math.PI);
+                        camera.canvasContext.lineTo(-this.attributes['radius'].value, -this.attributes['distance'].value + this.attributes['radius'].value);
+                } else {
+                        // left half circle
+                        camera.canvasContext.arc(-this.attributes['distance'].value / 2, 0, this.attributes['radius'].value, 0.5 * Math.PI, 1.5 * Math.PI);
+                        // right half circle
+                        camera.canvasContext.arc(this.attributes['distance'].value / 2, 0, this.attributes['radius'].value, -0.5 * Math.PI, 0.5 * Math.PI);
+                        camera.canvasContext.lineTo(-this.attributes['distance'].value + this.attributes['radius'].value, this.attributes['radius'].value );
                 }
 
-                // build a capsule using two circle- and one box-collider
-                this.gameObject.addComponent(
-                        new CircleCollider(this.attributes['radius'].value, this.attributes['isTrigger'].value, firstCircleOff.x, firstCircleOff.y)
-                );
-                this.gameObject.addComponent(       
-                        new BoxCollider(boxWidth, boxHeight, this.attributes['isTrigger'].value, boxOff.x, boxOff.y)
-                ); 
-                this.gameObject.addComponent(
-                        new CircleCollider(this.attributes['radius'].value, this.attributes['isTrigger'].value, secondCircleOff.x, secondCircleOff.y)
-                );
-                
-                // remove this fake collider from this parents colliders
-                this.gameObject.components = this.gameObject.components.filter(el => el.type !== this.type);
+                camera.canvasContext.lineWidth = 1;
+                camera.canvasContext.strokeStyle = '#cc1133';
+                camera.canvasContext.stroke();
+
+                camera.canvasContext.restore();
         }
 }

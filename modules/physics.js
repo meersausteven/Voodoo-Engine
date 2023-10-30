@@ -12,109 +12,121 @@ export class Physics {
                 this.attributes['massGravity'] = new AttributeBoolean('Mass creates gravity', false);
         }
 
+        // todo: differenciate between roguh collision detection and precise collision detection
+        //      rough detection: only take the bounding boxes of colliders for faster calculation
+        //      precise detection: take exact bounds of circles / polygons for precise calculation
+        //      precise calculations take more time so they should only be done if the rough detection in the previous frame returned true
 
-        // todo: add better general collision calculation -> e.g. separated axis theorem or something
-        // todo: add proper collision calculation -> impulse
-        // todo: p = m * v
-        // todo: impulse/force = mass * velocity
-
-        // check if a circle and a square are overlapping
-        // takes in a circles x, y and radius and a box colliders' x, y, width and height
-        circleBoxOverlapping(circle, box, checkPos = null, checkingType = null) {
-                if (checkPos != null) {
-                        let colliderLookup = {
-                                "Circle Collider": function() {
-                                        circle.worldPos.x = checkPos.x;
-                                        circle.worldPos.y = checkPos.y;
-                                },
-                                "Box Collider": function() {
-                                        box.worldPos.x = checkPos.x;
-                                        box.worldPos.y = checkPos.y;
-                                }
-                        };
-
-                        colliderLookup[checkingType];
-                }
-
-                // temporary variables to set edges for testing
-                let testX = circle.worldPos.x;
-                let testY = circle.worldPos.y;
-
-                // which edge is closest?
-                if (circle.worldPos.x < box.worldPos.x - (box.width / 2)) {
-                        // left edge
-                        testX = box.worldPos.x - (box.width / 2);
-                } else if (circle.worldPos.x > box.worldPos.x + (box.width / 2)) {
-                        // right edge
-                        testX = box.worldPos.x + (box.width / 2);
-                }
-
-                if (circle.worldPos.y < box.worldPos.y - box.height) {
-                        // top edge
-                        testY = box.worldPos.y - box.height;
-                } else if (circle.worldPos.y > box.worldPos.y) {
-                        // bottom edge
-                        testY = box.worldPos.y;
-                }
-
-                // get distance from closest edges
-                let distX = circle.worldPos.x - testX;
-                let distY = circle.worldPos.y - testY;
-                let dist = Math.sqrt((distX * distX) + (distY * distY));
-
-                if (dist <= circle.radius) {
+        /*
+         * Check if a given point is inside a box collider
+         * @param BoxCollider box: the box collider
+         * @param Vector2 point: the point to check
+         * @return boolean: true if point is inside box; false if not
+         */
+        checkPointInBox(box, point) {
+                if ((point.x > box.bounds.left) &&
+                    (point.x < box.bounds.right) &&
+                    (point.y > box.bounds.top) &&
+                    (point.y < box.bounds.bottom)
+                ) {
                         return true;
                 }
 
                 return false;
         }
 
-        // check if two squares are overlapping
-        // takes in the two squares' x and y from their sides
-        boxesOverlapping(box1, box2, checkPos = null) {
-                if (checkPos != null) {
-                        box1.worldPos.x = checkPos.x;
-                        box1.worldPos.y = checkPos.y;
-                }
-
-                let b1LeftEdge = box1.worldPos.x - (box1.width / 2);
-                let b1RightEdge = box1.worldPos.x + (box1.width / 2);
-                let b1BottomEdge = box1.worldPos.y;
-                let b1TopEdge = box1.worldPos.y - box1.height;
-
-                let b2LeftEdge = box2.worldPos.x - (box2.width / 2);
-                let b2RightEdge = box2.worldPos.x + (box2.width / 2);
-                let b2BottomEdge = box2.worldPos.y;
-                let b2TopEdge = box2.worldPos.y - box2.height;
-
-                let b1_leftOf_b2 = b1RightEdge < b2LeftEdge;
-                let b1_rightOf_b2 = b1LeftEdge > b2RightEdge;
-                let b1_above_b2 = b1BottomEdge > b2TopEdge;
-                let b1_below_b2 = b1TopEdge < b2BottomEdge;
-
-                if (!b1_leftOf_b2 || !b1_rightOf_b2 || !b1_above_b2 || !b1_below_b2) {
+        /*
+         * Check if a given point is inside a circle collider
+         * @param CircleCollider circle: the circle collider
+         * @param Vector2 point: the point to check
+         * @return boolean: true if point is inside circle; false if not
+         */
+        checkPointInCircle(circle, point) {
+                const distance = Vector2.subtract(point, circle.worldPos);
+                if (distance.magnitude <= circle.attributes['radius']) {
                         return true;
                 }
 
                 return false;
         }
 
-        // check if two cirlces are overlapping
-        // takes in the two circles' x, y and radius
-        circlesOverlapping(circle1, circle2, checkPos = null) {
-                if (checkPos != null) {
-                        circle1.worldPos.x = checkPos.x;
-                        circle1.worldPos.y = checkPos.y;
-                }
-
-                let distX = circle1.worldPos.x - circle2.worldPos.x;
-                let distY = circle1.worldPos.y - circle2.worldPos.y;
-                let dist = Math.sqrt((distX * distX) + (distY * distY));
-
-                if (dist <= circle1.radius + circle2.radius) {
+        /*
+         * Check if the bounds of two colliders of any kind are touching/overlapping
+         * Should only be used for box colliders or for rough collision detection
+         * @param Collider collider1: first collider
+         * @param Collider collider2: second collider
+         * @return boolean: true if touching/overlapping; false if not
+         */
+        checkBoundsOverlap(collider1, collider2) {
+                if ((collider1.bounds.right > collider2.bounds.left) &&
+                    (collider1.bounds.left < collider2.bounds.right) &&
+                    (collider1.bounds.bottom > collider2.bounds.top) &&
+                    (collider1.bounds.top < collider2.bounds.bottom)
+                ) {
                         return true;
                 }
 
                 return false;
+        }
+
+        /*
+         * Check if two box colliders are touching/overlapping
+         * @param BoxCollider box1: first box collider
+         * @param BoxCollider box2: second box collider
+         * @return boolean: true if touching/overlapping; false if not
+         */
+        checkBoxesOverlap(box1, box2) {
+                // boxes only use their bounds to check for collision
+                return this.checkBoundsOverlap(box1, box2);
+        }
+
+        /*
+         * Check if two circle colliders are touching/overlapping
+         * @param CircleCollider circle1: first circle collider
+         * @param CircleCollider circle2: second circle collider
+         * @return boolean: true if touching/overlapping; false if not
+         */
+        checkCirclesOverlap(circle1, circle2) {
+                const distance = Vector2.subtract(circle1.worldPos, circle2.worldPos);
+                if (distance.magnitude <= circle1.attributes['radius'] + circle2.attributes['radius']) {
+                        return true;
+                }
+
+                return false;
+        }
+
+        /*
+         * Check if a circle and a box collider are touching/overlapping
+         * @param BoxCollider box: the box collider
+         * @param CircleCollider circle: the circle collider
+         * @return boolean: true if touching/overlapping; false if not
+         */
+        checkCircleBoxOverlap(box, circle) {
+                const topDist = Math.abs(box.bounds.top - circle.worldPos.y);
+                const leftDist = Math.abs(box.bounds.left - circle.worldPos.x);
+                const bottomDist = Math.abs(box.bounds.bottom - circle.worldPos.y);
+                const rightDist = Math.abs(box.bounds.right - circle.worldPos.x);
+
+                const min = Math.min([topDist, leftDist, bottomDist, rightDist]);
+
+                if (min <= circle.radius) {
+                        return true;
+                }
+
+                return false;
+        }
+
+        /*
+         * Calculate the velocities of two colliding rigidbodies after a collision - for elastic collisions
+         *      note: this currently ignores angle and direction of the collision
+         * @param Rigidbody body1: first rigidbody
+         * @param Rigidbody body2: second rigidbody
+         */
+        calculateElasticCollision(body1, body2) {
+                const vFinal1 = ((body1.mass - body2.mass) * body1.velocity.magnitude) / (body1.mass + body2.mass);
+                const vFinal2 = (2 * body1.mass * body1.velocity.magnitude) / (body1.mass + body2.mass);
+
+                body1.velocity = Vector2.multiply(body1.velocity.normalized, vFinal1);
+                body2.velocity = Vector2.multiply(body2.velocity.normalized, vFinal2);
         }
 }
