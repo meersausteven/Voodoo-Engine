@@ -11,7 +11,7 @@ import { Camera } from './components/camera.js';
 import { Rigidbody } from './components/rigidbody.js';
 import { Transform } from './components/transform.js';
 
-import { ComponentRenderer } from './components/renderers/component_renderer.js';
+import { Renderer } from './components/renderers/renderer.js';
 import { BoxRenderer } from './components/renderers/box_renderer.js';
 import { CircleRenderer } from './components/renderers/circle_renderer.js';
 import { SpriteRenderer } from './components/renderers/sprite_renderer.js';
@@ -37,14 +37,12 @@ import { AttributeArrayNumber } from './editor/attributes/attribute_array_number
 import { AttributeArrayVector2 } from './editor/attributes/attribute_array_vector2.js';
 
 // other classes
-import { Renderer } from './renderer.js';
-import { Physics } from './physics.js';
-
+import { RendererEngine } from './renderer_engine.js';
+import { PhysicsEngine } from './physics_engine.js';
 import { Scene } from './scene.js';
-
 import { Time } from './time.js';
 
-const time = new Time();
+window.time = new Time();
 
 export class Project {
         // canvas
@@ -53,13 +51,13 @@ export class Project {
 
         // scenes
         sceneList = [];
-        activeScene;
+        activeScene = null;
 
         // renderer
-        renderer;
+        rendererEngine;
 
         // physics
-        physics;
+        physicsEngine;
 
         // settings
         settings = {
@@ -75,8 +73,6 @@ export class Project {
                 canvasHideCursor: false,
                 // fixed update interval in ms
                 fixedUpdateInterval: 10,
-                // rendering
-                renderByYPosition: false,
                 // editor dom elements for game objects and their components
                 sceneListWrapper: '#scenes-container .container_content',
                 gameObjectListWrapper: '#game-objects-container .container_content',
@@ -87,8 +83,9 @@ export class Project {
         };
 
         // update cycles
-        animationFrame;
-        fixedUpdate;
+        paused = false;
+        animationFrame = null;
+        fixedUpdate = null;
 
         // input manager
         input = {
@@ -106,15 +103,16 @@ export class Project {
                 }
 
                 // add renderer
-                this.renderer = new Renderer();
+                this.rendererEngine = new RendererEngine();
 
                 // add physics
-                this.physics = new Physics();
+                this.physicsEngine = new PhysicsEngine();
 
                 // prepare canvas
                 this.prepareCanvas();
         }
 
+        // start the simulation
         start() {
                 this.prepareCanvas();
                 this.canvas.style.backgroundColor = this.settings['canvasBackgroundColor'];
@@ -122,49 +120,59 @@ export class Project {
                 // add event listeners for input
                 this.addInputListeners();
 
-                // add a new renderer if none is given
-                if (this.renderer === null) {
-                        this.renderer = new Renderer();
+                // add a new rendererEngine if none is given
+                if (this.rendererEngine === null) {
+                        this.rendererEngine = new RendererEngine();
                 }
 
                 // start first scene if no active scene is given
-                if ((this.activeScene === null) ||
-                    (typeof this.activeScene === 'undefined')
-                ) {
+                if (this.activeScene === null) {
                         this.loadScene(this.settings['defaultScene']);
                 }
 
-                // start update cycles
+                window.focus();
                 this.fixedUpdate = setInterval(this.processFixedUpdateFrame.bind(this), this.settings.fixedUpdateInterval);
                 this.animationFrame = window.requestAnimationFrame(this.processFrame.bind(this));
         }
 
-        stop() {
-                this.removeInputListeners();
+        resume() {
+                this.paused = false;
+                window.time.lastFrame = performance.now() / 1000;
+
+                this.fixedUpdate = setInterval(this.processFixedUpdateFrame.bind(this), this.settings.fixedUpdateInterval);
+                this.animationFrame = window.requestAnimationFrame(this.processFrame.bind(this));
+        }
+
+        pause() {
+                this.paused = true;
 
                 clearInterval(this.fixedUpdate);
                 window.cancelAnimationFrame(this.animationFrame);
         }
 
-        processFrame(currentTime) {
-                // track time
-                time.update(currentTime);
-
-                // process update frame in scene
-                if ((this.activeScene !== null) &&
-                    (typeof this.activeScene !== 'undefined')
-                ) {
-                        this.activeScene.processUpdateFrame();
-                }
-
-                window.requestAnimationFrame(this.processFrame.bind(this));
+        // completely stop the simulation
+        stop() {
+                this.removeInputListeners();
+                this.pause();
         }
 
+        // process regular update frame of scene
+        processFrame(currentTime) {
+                window.time.update(currentTime);
+
+                if ((this.paused == false) && (this.activeScene !== null)) {
+                        this.activeScene.processUpdateFrame();
+
+                        this.animationFrame = window.requestAnimationFrame(this.processFrame.bind(this));
+                }
+        }
+
+        // process fixed update frame of scene
         processFixedUpdateFrame() {
-                // process fixed update frame in scene
-                if ((this.activeScene !== null) &&
-                    (typeof this.activeScene !== 'undefined')
-                ) {
+                if ((this.paused == false) && (this.activeScene !== null)) {
+                        // always calculate the physics before anything else
+                        this.physicsEngine.calculateCollisions();
+
                         this.activeScene.processFixedUpdateFrame();
                 }
         }
@@ -180,77 +188,51 @@ export class Project {
         }
 
         addScene(scene) {
-                if (scene instanceof Scene) {
-                        if (scene.project === null) {
-                                scene.project = this;
-                        }
-
-                        this.sceneList.push(scene);
-
-                        return true;
+                if (scene.project === null) {
+                        scene.project = this;
                 }
+
+                this.sceneList.push(scene);
+
+                return true;
         }
 
-        removeScene(index) {
-                if ((typeof index == "number") &&
-                    ((this.sceneList[index] !== null) &&
-                     (typeof this.sceneList[index] !== 'undefined'))
-                ) {
-                        this.sceneList[index] = null;
+        removeScene(scene) {
+                const index = this.sceneList.indexOf(scene);
+                this.sceneList.splice(index, 1);
 
-                        dispatchEvent(new Event('scene_list_changed'));
-                }
+                dispatchEvent(new Event('scene_list_changed'));
         }
 
         loadScene(index) {
-                if ((typeof this.sceneList[index] !== 'undefined') &&
-                    (this.sceneList[index] !== null)
-                ) {
-                        // unload old scene
-                        if ((typeof this.activeScene !== 'undefined') && 
-                            (this.activeScene !== null)
-                        ) {
-                                this.activeScene.isCurrentScene = false;
-                        }
-
-                        // load new scene
-                        this.activeScene = this.sceneList[index];
-                        this.activeScene.isCurrentScene = true;
-                        this.activeScene.start();
+                // unload old scene
+                if (this.activeScene !== null) {
+                        this.activeScene.isCurrentScene = false;
                 }
+
+                // load new scene
+                this.activeScene = this.sceneList[index];
+                this.activeScene.isCurrentScene = true;
+                this.activeScene.start();
         }
 
         getSceneIndex(scene) {
-                if (!(scene instanceof Scene)) {
-                        let i = 0;
-                        let l = this.sceneList.length;
+                const index = this.sceneList.indexOf(scene);
 
-                        while (i < l) {
-                                if (this.sceneList[i] === scene) {
-                                        return i;
-                                }
-
-                                ++i;
-                        }
-                }
+                return index;
         }
 
         getActiveSceneIndex() {
-                for (let i = 0; i < this.sceneList.length; i++) {
-                        if (this.activeScene === this.sceneList[i]) {
-                                return i;
-                        }
-                }
+                const index = this.sceneList.indexOf(this.activeScene);
 
-                console.warn("ERROR: active scene not found in sceneList");
+                return index;
         }
 
         /* JSON IMPORT */
         // turn a passed json object into a project object
         convertToProject(json) {
-                let jsonProject = JSON.parse(json);
-
-                let convertedProject = this.projectConversion(jsonProject);
+                const jsonProject = JSON.parse(json);
+                const convertedProject = this.projectConversion(jsonProject);
 
                 return convertedProject;
         }
@@ -258,12 +240,13 @@ export class Project {
         projectConversion(project) {
                 project = Object.setPrototypeOf(project, Project.prototype);
 
-                project.renderer = Object.setPrototypeOf(project.renderer, Renderer.prototype);
+                project.rendererEngine = Object.setPrototypeOf(project.rendererEngine, RendererEngine.prototype);
 
-                this.physicsConversion(project.physics);
+                this.physicsConversion(project.physicsEngine);
 
                 let i = 0;
-                let l = project.sceneList.length;
+                const l = project.sceneList.length;
+
                 while (i < l) {
                         project.sceneList[i].project = project;
                         this.sceneConversion(project.sceneList[i]);
@@ -275,7 +258,7 @@ export class Project {
         }
 
         physicsConversion(physics) {
-                physics = Object.setPrototypeOf(physics, Physics.prototype);
+                physics = Object.setPrototypeOf(physics, PhysicsEngine.prototype);
 
                 // convert this physics' attributes
                 for (let key in physics.attributes) {
@@ -292,7 +275,8 @@ export class Project {
                 }
 
                 let i = 0;
-                let l = scene.gameObjects.length;
+                const l = scene.gameObjects.length;
+
                 while (i < l) {
                         // convert this scene's gameObjects
                         scene.gameObjects[i].scene = scene;
@@ -300,8 +284,6 @@ export class Project {
 
                         ++i;
                 }
-
-                return scene;
         }
 
         gameObjectConversion(gameObject) {
@@ -313,7 +295,8 @@ export class Project {
                 }
 
                 let i = 0;
-                let l = gameObject.components.length;
+                const l = gameObject.components.length;
+
                 while (i < l) {
                         // convert this gameObject's components
                         gameObject.components[i].gameObject = gameObject;
@@ -324,36 +307,38 @@ export class Project {
 
                 // get transform component
                 gameObject.transform = gameObject.getTransform();
-
-                return gameObject;
         }
 
         componentConversion(component) {
-                let instanceName = component.type.replace(/\s/g, '');
-                let prototype = eval(`new ${instanceName}`);
+                const instanceName = component.type.replace(/\s/g, '');
+                const prototype = eval(`new ${instanceName}`);
 
                 component = Object.setPrototypeOf(component, Object.getPrototypeOf(prototype));
+
+                if (component instanceof Collider) {
+                        component.gameObject.scene.project.physicsEngine.addCollider(component);
+                }
+
+                if (component instanceof Rigidbody) {
+                        component.gameObject.scene.project.physicsEngine.addRigidbody(component);
+                }
 
                 // convert this component's attributes
                 for (let key in component.attributes) {
                         this.attributeConversion(component.attributes[key]);
                 }
-
-                return component;
         }
 
         attributeConversion(attribute) {
-                let instanceName = attribute.type.replace(/\s/g, '');
-                let prototype = eval(`new ${instanceName}`);
+                const instanceName = attribute.type.replace(/\s/g, '');
+                const prototype = eval(`new ${instanceName}`);
 
                 attribute = Object.setPrototypeOf(attribute, Object.getPrototypeOf(prototype));
 
-                if (instanceName == 'AttributeVector2') {
+                if (instanceName === 'AttributeVector2') {
                         attribute.value = Object.setPrototypeOf(attribute.value, Vector2.prototype);
                         attribute.startValue = Object.setPrototypeOf(attribute.startValue, Vector2.prototype);
                 }
-
-                return attribute;
         }
 
         /* JSON EXPORT */
@@ -361,11 +346,9 @@ export class Project {
         convertToJson() {
                 this.projectPreCloningCleanup(this);
 
-                let dummyProject = structuredClone(this);
-
+                const dummyProject = structuredClone(this);
                 this.projectPostCloningCleanup(dummyProject);
-
-                let json = JSON.stringify(dummyProject);
+                const json = JSON.stringify(dummyProject);
 
                 return json;
         }
@@ -375,7 +358,8 @@ export class Project {
                 project.canvas = null;
 
                 let i = 0;
-                let l = project.sceneList.length;
+                const l = project.sceneList.length;
+
                 while (i < l) {
                         this.scenePostCloningCleanup(project.sceneList[i]);
 
@@ -390,7 +374,8 @@ export class Project {
                 scene.project = null;
 
                 let i = 0;
-                let l = scene.gameObjects.length;
+                const l = scene.gameObjects.length;
+
                 while (i < l) {
                         this.gameObjectPostCloningCleanup(scene.gameObjects[i]);
 
@@ -405,7 +390,8 @@ export class Project {
                 gameObject.scene = null;
 
                 let i = 0;
-                let l = gameObject.components.length;
+                const l = gameObject.components.length;
+
                 while (i < l) {
                         this.componentPostCloningCleanup(gameObject.components[i]);
 
@@ -431,7 +417,8 @@ export class Project {
                 project.canvasContext = null;
 
                 let i = 0;
-                let l = project.sceneList.length;
+                const l = project.sceneList.length;
+
                 while (i < l) {
                         this.scenePreCloningCleanup(project.sceneList[i]);
 
@@ -443,7 +430,8 @@ export class Project {
 
         scenePreCloningCleanup(scene) {
                 let i = 0;
-                let l = scene.gameObjects.length;
+                const l = scene.gameObjects.length;
+
                 while (i < l) {
                         this.gameObjectPreCloningCleanup(scene.gameObjects[i]);
 
@@ -455,7 +443,8 @@ export class Project {
 
         gameObjectPreCloningCleanup(gameObject) {
                 let i = 0;
-                let l = gameObject.components.length;
+                const l = gameObject.components.length;
+
                 while (i < l) {
                         this.componentPreCloningCleanup(gameObject.components[i]);
 
@@ -466,7 +455,7 @@ export class Project {
         }
 
         componentPreCloningCleanup(component) {
-                if (component.type === 'Camera') {
+                if (component.type === "Camera") {
                         component.canvas = null;
                         component.canvasContext = null;
                 }
@@ -476,6 +465,8 @@ export class Project {
 
         /* INPUT HANDLING */
         addInputListeners() {
+                window.addEventListener("focus", this);
+                window.addEventListener("blur", this);
                 document.addEventListener("keydown", this);
                 document.addEventListener("keyup", this);
                 this.canvas.addEventListener("mousedown", this);
@@ -484,6 +475,8 @@ export class Project {
         }
 
         removeInputListeners() {
+                window.removeEventListener("focus", this);
+                window.removeEventListener("blur", this);
                 document.removeEventListener("keydown", this);
                 document.removeEventListener("keyup", this);
                 this.canvas.removeEventListener("mousedown", this);
@@ -492,7 +485,7 @@ export class Project {
         }
 
         handleEvent(e) {
-                let eventLookup = {
+                const eventLookup = {
                         mousedown: function(e) {
                                 this.onMouseDown(e);
                         }.bind(this),
@@ -508,12 +501,26 @@ export class Project {
                         keyup: function(e) {
                                 this.onKeyUp(e);
                         }.bind(this),
+                        focus: function(e) {
+                                this.onFocus(e);
+                        }.bind(this),
+                        blur: function(e) {
+                                this.onBlur(e);
+                        }.bind(this),
                         default: function(e) {
                                 console.warn(`Unexpected event: ${e.type}`);
                         }.bind(this)
                 };
 
                 return (eventLookup[e.type] || eventLookup['default'])(e);
+        }
+
+        onFocus(e) {
+                this.resume();
+        }
+
+        onBlur(e) {
+                this.pause();
         }
 
         onKeyDown(e) {

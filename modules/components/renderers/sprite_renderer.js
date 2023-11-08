@@ -4,9 +4,9 @@ import { AttributeImage } from './../../editor/attributes/attribute_image.js';
 
 import { Vector2 } from './../../collection/vector2.js';
 
-import { ComponentRenderer } from './component_renderer.js';
+import { Renderer } from './renderer.js';
 
-export class SpriteRenderer extends ComponentRenderer {
+export class SpriteRenderer extends Renderer {
         type = "Sprite Renderer";
 
         /*

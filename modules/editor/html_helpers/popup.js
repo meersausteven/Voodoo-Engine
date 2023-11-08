@@ -15,13 +15,13 @@ export class Popup {
                 this.html = new HtmlElement('div', null, {class: 'popup', id: this.id});
 
                 // title
-                let popupTitle = new HtmlElement('div', null, {class: 'popup_title'});
+                const popupTitle = new HtmlElement('div', null, {class: 'popup_title'});
 
                 // title text
-                let label = new HtmlElement('div', this.title, {class: 'title'});
+                const label = new HtmlElement('div', this.title, {class: 'title'});
 
                 // close button
-                let closeButton = new HtmlElement('i', null, {class: 'close fa fa-xmark'});
+                const closeButton = new HtmlElement('i', null, {class: 'close fa fa-xmark'});
                 closeButton.addEventListener('click', function(e) {
                         e.target.closest('.popup').remove();
                 });
@@ -30,7 +30,7 @@ export class Popup {
                 popupTitle.appendChild(closeButton);
 
                 // content
-                let popupContent = new HtmlElement('div', null, {class: 'popup_content'});
+                const popupContent = new HtmlElement('div', null, {class: 'popup_content'});
                 popupContent.appendChild(this.content);
 
                 this.html.appendChild(popupTitle);
@@ -39,8 +39,8 @@ export class Popup {
                 document.body.appendChild(this.html);
 
                 // position popup in center of page
-                let leftPos = (document.body.clientWidth / 2) - (this.html.clientWidth / 2);
-                let topPos = (document.body.clientHeight / 2) - (this.html.clientHeight / 2);
+                const leftPos = (document.body.clientWidth / 2) - (this.html.clientWidth / 2);
+                const topPos = (document.body.clientHeight / 2) - (this.html.clientHeight / 2);
 
                 this.html.style.top = topPos + 'px';
                 this.html.style.left = leftPos + 'px';

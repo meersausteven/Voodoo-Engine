@@ -27,7 +27,7 @@ export class AttributeBoolean extends AttributeText {
 
         // called when the value changes
         eventCall(event) {
-                let newValue = event.target.checked;
+                const newValue = event.target.checked;
 
                 if (this.validate(newValue)) {
                         this.change(newValue);
@@ -36,12 +36,12 @@ export class AttributeBoolean extends AttributeText {
 
         // generates the HTML element for the editor
         createWidget() {
-                let wrapper = new HtmlElement('div', null, {class: 'attribute boolean'});
+                const wrapper = new HtmlElement('div', null, {class: 'attribute boolean'});
 
-                let label = new HtmlElement('label', this.name);
+                const label = new HtmlElement('label', this.name);
 
-                let uncheckedBox = new HtmlElement('i', null, {class: 'fa fa-square'});
-                let checkedBox = new HtmlElement('i', null, {class: 'fa fa-square-check'});
+                const uncheckedBox = new HtmlElement('i', null, {class: 'fa fa-square'});
+                const checkedBox = new HtmlElement('i', null, {class: 'fa fa-square-check'});
 
                 wrapper.appendChild(label);
                 wrapper.appendChild(this.createWidgetInput());
@@ -53,7 +53,7 @@ export class AttributeBoolean extends AttributeText {
 
         // generates the HTML element for the input
         createWidgetInput() {
-                let input = new HtmlElement('input', null, {
+                const input = new HtmlElement('input', null, {
                         type: 'checkbox',
                         title: this.name
                 });

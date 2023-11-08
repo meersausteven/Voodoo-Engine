@@ -25,7 +25,8 @@ export class AttributeSelect extends AttributeText {
 
         // called when the value changes
         eventCall(event) {
-                let newValue = event.target.value;
+                const newValue = event.target.value;
+
                 if (this.validate(newValue)) {
                         this.change(newValue);
                 }

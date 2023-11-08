@@ -9,7 +9,7 @@ if (localStorage['project'] !== null) {
         project.start();
 } else if (loadFile()) {
         // if no file was found in localStorage try loading from the server
-        var xmlhttp = new XMLHttpRequest();
+        const xmlhttp = new XMLHttpRequest();
         xmlhttp.open("GET", '/project_file/project.json', false);
         xmlhttp.send();
 

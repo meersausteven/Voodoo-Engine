@@ -44,9 +44,9 @@ export class AttributeNumber extends AttributeText {
 
         // generates the HTML element for the editor
         createWidget() {
-                let wrapper = new HtmlElement('div', null, {class: 'attribute number'});
+                const wrapper = new HtmlElement('div', null, {class: 'attribute number'});
 
-                let label = new HtmlElement('label', this.name);
+                const label = new HtmlElement('label', this.name);
 
                 wrapper.appendChild(label);
                 wrapper.appendChild(this.createWidgetInput());
@@ -56,9 +56,9 @@ export class AttributeNumber extends AttributeText {
 
         // generates the HTML element for the input
         createWidgetInput() {
-                let inputWrapper = new HtmlElement('div', null, {class: 'input_wrapper'});
+                const inputWrapper = new HtmlElement('div', null, {class: 'input_wrapper'});
 
-                let input = new HtmlElement('input', null, {
+                const input = new HtmlElement('input', null, {
                         type: 'text',
                         value: this.value
                 });
@@ -76,16 +76,16 @@ export class AttributeNumber extends AttributeText {
                         input.setAttribute('max', this.range.max);
                         input.setAttribute('step', this.range.step);
 
-                        let stepUpButton = new HtmlElement('button', null, {class: 'step_up'});
+                        const stepUpButton = new HtmlElement('button', null, {class: 'step_up'});
                         stepUpButton.addEventListener('click', function(e) {
-                                let input = e.target.nextElementSibling;
+                                const input = e.target.nextElementSibling;
 
                                 input.stepUp();
                                 input.dispatchEvent(new Event('change'));
                         });
-                        let stepDownButton = new HtmlElement('button', null, {class: 'step_down'});
+                        const stepDownButton = new HtmlElement('button', null, {class: 'step_down'});
                         stepDownButton.addEventListener('click', function(e) {
-                                let input = e.target.previousElementSibling;
+                                const input = e.target.previousElementSibling;
 
                                 input.stepDown();
                                 input.dispatchEvent(new Event('change'));

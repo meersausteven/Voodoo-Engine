@@ -33,9 +33,9 @@ export class TabbarTab {
                         this.html.classList.add('dropdown');
 
                         // create dropdown button
-                        let button = new HtmlElement('div', null, {class: 'dropdown_button row'});
+                        const button = new HtmlElement('div', null, {class: 'dropdown_button row'});
 
-                        let buttonLabel = new HtmlElement('div', this.title, {class: 'title'});
+                        const buttonLabel = new HtmlElement('div', this.title, {class: 'title'});
 
                         if (iconElement !== null) {
                                 // add icon if defined
@@ -47,7 +47,7 @@ export class TabbarTab {
                         this.html.appendChild(button);
 
                         // create dropdown content wrapper
-                        let content = new HtmlElement('div', null, {class: 'dropdown_content'});
+                        const content = new HtmlElement('div', null, {class: 'dropdown_content'});
                         this.dropdownContent = content;
 
                         this.html.appendChild(content);
@@ -55,7 +55,7 @@ export class TabbarTab {
                         this.html.classList.add('row');
 
                         // add simple text element with icon
-                        let title = new HtmlElement('div', this.title, {class: 'title'});
+                        const title = new HtmlElement('div', this.title, {class: 'title'});
 
                         if (iconElement !== null) {
                                 this.html.appendChild(iconElement);
@@ -70,7 +70,7 @@ export class TabbarTab {
          * @param HTMLNode element: html element that is to be added
          */
         addDropdownItem(element) {
-                let dropdownItem = element;
+                const dropdownItem = element;
                 dropdownItem.classList.add('dropdown_content_item');
 
                 this.dropdownItems.push(dropdownItem);

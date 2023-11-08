@@ -2,7 +2,7 @@
 // import base modules
 import { Project } from './project.js';
 import { Scene } from './scene.js';
-import { Renderer } from './renderer.js';
+import { RendererEngine } from './renderer_engine.js';
 import { Cursor } from './cursor.js';
 
 // import game objects
@@ -19,7 +19,7 @@ import { Camera } from './components/camera.js';
 import { Rigidbody } from './components/rigidbody.js';
 import { Transform } from './components/transform.js';
 
-import { ComponentRenderer } from './components/renderers/component_renderer.js';
+import { Renderer } from './components/renderers/renderer.js';
 import { BoxRenderer } from './components/renderers/box_renderer.js';
 import { CircleRenderer } from './components/renderers/circle_renderer.js';
 import { SpriteRenderer } from './components/renderers/sprite_renderer.js';
@@ -75,19 +75,25 @@ export class Editor {
                 'Game Object'
         ];
         // add new component options
-        availableComponents = [
-                'Camera',
-                'Box Renderer',
-                'Circle Renderer',
-                //'Sprite Renderer',
-                'Text Renderer',
-                'Line Renderer',
-                'Box Collider',
-                'Circle Collider',
-                'Capsule Collider',
-                'Rigidbody',
-                //'Animation'
-        ];
+        availableComponents = {
+                Renderers: [
+                        'Box Renderer',
+                        'Circle Renderer',
+                        //'Sprite Renderer',
+                        'Text Renderer',
+                        'Line Renderer',
+                ],
+                Colliders: [
+                        'Box Collider',
+                        'Circle Collider',
+                        'Capsule Collider',
+                ],
+                Others: [
+                        'Camera',
+                        'Rigidbody',
+                        //'Animation'
+                ]
+        };
         // settings
         settings = {
                 'tabbarSelector': new AttributeText('Tabbar Selector', '#editor-tabbar'),
@@ -145,7 +151,7 @@ export class Editor {
                 this.project = new Project();
 
                 // add a basic renderer
-                this.renderer = new Renderer();
+                this.renderer = new RendererEngine();
 
                 // choose first scene in project as current scene
                 this.currentScene = this.project.sceneList[0];
@@ -241,11 +247,15 @@ export class Editor {
         processComponentFrame(component) {
                 // skip all components that are disabled
                 if (component.attributes['enabled'].value === true) {
-                        // component renderer components
-                        if (component instanceof ComponentRenderer) {
+                        // Renderer components
+                        if (component instanceof Renderer) {
                                 // we need to update the renderer components to get the correct world position
                                 component.update();
                                 component.render(this.camera);
+                        }
+
+                        if (component instanceof Collider) {
+                                component.updateWorldPos();
                         }
                 }
         }
@@ -462,19 +472,7 @@ export class Editor {
 
                         form.appendChild(widget);
                 }
-/* 
-                // add a submit button
-                let submitItem = new HtmlElement('div', null, {class: 'form_item'});
 
-                let submitButton = new HtmlElement('input', null, {
-                        class: 'fake_button',
-                        type: 'submit',
-                        value: 'Save Changes'
-                });
-
-                submitItem.appendChild(submitButton);
-                form.appendChild(submitItem);
-*/
                 return form;
         }
 
@@ -590,63 +588,12 @@ export class Editor {
                 const form = new HtmlElement('form', null, {id: 'renderer-settings-form'});
 
                 // create an input field for each setting
-                /*
-                for (let key in this.project.settings) {
-                        let formItem = new HtmlElement('div', null, {class: 'form_item'});
+                for (let key in this.project.rendererEngine.settings) {
+                        const widget = this.project.rendererEngine.settings[key].createWidget();
 
-                        let label = new HtmlElement('label', key, {for: `item-${key}`});
-
-                        let input = new HtmlElement('input', null, {
-                                id: `item-${key}`,
-                                type: 'text',
-                                value: this.project.settings[key]
-                        });
-
-                        formItem.append(label);
-                        formItem.append(input);
-
-                        form.appendChild(formItem);
+                        form.appendChild(widget);
                 }
-                */
 
-                // add a submit button
-                const submitItem = new HtmlElement('div', null, {class: 'form_item'});
-
-                const submitButton = new HtmlElement('input', null, {
-                        class: 'fake_button',
-                        type: 'submit',
-                        value: 'Save Changes'
-                });
-
-                submitItem.appendChild(submitButton);
-                form.appendChild(submitItem);
-/*
-                form.addEventListener('submit', function(e) {
-                        e.preventDefault();
-
-                        let i = 0;
-                        let l = form.children.length;
-                        // loop all form items and update this project's settings
-                        while (i < l) {
-                                let item = form.children[i];
-                                let itemInput = item.querySelector('input');
-                                let itemLabel = item.querySelector('label');
-
-                                if (itemInput.type !== 'submit') {
-                                        let setting = itemLabel.innerHTML;
-                                        let newValue = itemInput.value;
-
-                                        this.project.settings[setting] = newValue;
-                                }
-
-                                ++i;
-                        }
-
-                        window.dispatchEvent(new Event('project_settings_changed'));
-                        // remove popup after submitting
-                        e.target.closest('.popup').remove();
-                }.bind(this));
-*/
                 return form;
         }
 
@@ -676,24 +623,12 @@ export class Editor {
                 const form = new HtmlElement('form', null, {id: 'physics-settings-form'});
 
                 // create widgets for all attributes
-                for (let key in this.project.physics.attributes) {
-                        const widget = this.project.physics.attributes[key].createWidget();
+                for (let key in this.project.physicsEngine.attributes) {
+                        const widget = this.project.physicsEngine.attributes[key].createWidget();
 
                         form.appendChild(widget);
                 }
-/* 
-                // add a submit button
-                let submitItem = new HtmlElement('div', null, {class: 'form_item'});
 
-                let submitButton = new HtmlElement('input', null, {
-                        class: 'fake_button',
-                        type: 'submit',
-                        value: 'Save Changes'
-                });
-
-                submitItem.appendChild(submitButton);
-                form.appendChild(submitItem);
-*/
                 return form;
         }
 
@@ -755,7 +690,7 @@ export class Editor {
                 }
 
                 // "add new scene" button
-                let button = new HtmlElement('div', '&#x2b Add New Scene', {
+                const button = new HtmlElement('div', '&#x2b Add New Scene', {
                         class: 'fake_button mt_auto',
                         title: 'Adds a new scene to the project'
                 });
@@ -932,7 +867,7 @@ export class Editor {
 
                 // add component cards to card content
                 let i = 0;
-                let l = gameObject.components.length;
+                const l = gameObject.components.length;
 
                 while (i < l) {
                         const component = gameObject.components[i];
@@ -957,53 +892,7 @@ export class Editor {
                 }
 
                 // add new component select to card content
-                const select = new HtmlElement('select', null, {id: 'add-component-dropdown', title: 'Adds a new component to the selected GameObject'});
-
-                const defaultOption = new HtmlElement('option', '&#x2b; Add New Component', {value: 0});
-                select.appendChild(defaultOption);
-
-                i = 0;
-                l = this.availableComponents.length;
-
-                while (i < l) {
-                        const option = new HtmlElement('option', this.availableComponents[i], {value: this.availableComponents[i]});
-                        select.appendChild(option);
-
-                        ++i;
-                }
-
-                select.addEventListener('change', function(e) {
-                        const selectedOption = e.target.children[e.target.selectedIndex].value;
-
-                        if (selectedOption !== 0) {
-                                const newComponent = eval(`new ${selectedOption.replace(' ', '')}()`);
-                                gameObject.addComponent(newComponent);
-
-                                let additionalContent = null;
-
-                                if (newComponent instanceof Collider) {
-                                        const showGizmoButton = new HtmlElement('div', 'Toggle Gizmo', {class: 'fake_button'});
-                                        showGizmoButton.addEventListener('click', function() {
-                                                if (this.currentGizmo === newComponent) {
-                                                        this.currentGizmo = newComponent.gameObject.transform;
-                                                } else {
-                                                        this.currentGizmo = newComponent;
-                                                }
-                                        }.bind(this));
-
-                                        additionalContent = showGizmoButton;
-                                }
-
-                                const componentCardElement = newComponent.createEditorCard(additionalContent);
-                                const parent = document.querySelector('.components_list .card_content');
-                                const nextSibling = document.getElementById('add-component-dropdown');
-
-                                parent.insertBefore(componentCardElement, nextSibling);
-                        }
-
-                        // reset selected index after adding a new component
-                        select.value = 0;
-                }.bind(this));
+                const select = this.createAddComponentMenu(gameObject);
 
                 content.appendChild(select);
 
@@ -1026,6 +915,106 @@ export class Editor {
 
                         ++i;
                 }
+        }
+
+        createAddComponentMenu(gameObject) {
+                const dropdown = new HtmlElement('div', null, {id: 'add-component-dropdown', class: 'dropdown_list'});
+                const button = new HtmlElement('button', '&#x2b; Add Component', {class: 'dropdown_button'});
+                button.addEventListener('mousedown', function() {
+                        const openCategory = dropdown.querySelector('.dropdown_menu_category.open');
+                        if (openCategory !== null) {
+                                openCategory.classList.remove('open');
+                        }
+
+                        dropdown.classList.toggle('open');
+                });
+
+                const menu = new HtmlElement('div', null, {class: 'dropdown_list_menu'});
+
+                // add categories
+                for (const key in this.availableComponents) {
+                        const category = this.availableComponents[key];
+                        const categoryHtml = new HtmlElement('div', null, {class: 'dropdown_menu_category'});
+
+                        const categoryTitle = new HtmlElement('div', null, {class: 'title'});
+                        categoryTitle.addEventListener('click', function() {
+                                categoryHtml.classList.add('open');
+                                menu.classList.add('category_open');
+                        });
+
+                        const titleText = new HtmlElement('span', key);
+                        const titleIcon = new HtmlElement('i', null, {class: 'fa fa-chevron-right mr_5 float_right'});
+
+                        categoryTitle.appendChild(titleText);
+                        categoryTitle.appendChild(titleIcon);
+
+                        categoryHtml.appendChild(categoryTitle);
+
+                        const categoryBack = new HtmlElement('div', null, {class: 'back'});
+                        categoryBack.addEventListener('click', function() {
+                                categoryHtml.classList.remove('open');
+                                menu.classList.remove('category_open');
+                        });
+
+                        const backIcon = new HtmlElement('i', null, {class: 'fa fa-chevron-left mr_5'});
+                        const backText = new HtmlElement('span', 'Go Back');
+
+                        categoryBack.appendChild(backIcon);
+                        categoryBack.appendChild(backText);
+
+                        categoryHtml.appendChild(categoryBack);
+
+                        // add category items
+                        let i = 0;
+                        const l = category.length;
+
+                        while (i < l) {
+                                const item = category[i];
+                                const itemHtml = new HtmlElement('div', item, {class: 'dropdown_menu_item'});
+                                itemHtml.addEventListener('click', function() {
+                                        const newComponent = eval(`new ${item.replace(' ', '')}()`);
+                                        gameObject.addComponent(newComponent);
+
+                                        // close dropdown and category
+                                        categoryHtml.classList.remove('open');
+                                        menu.classList.remove('category_open');
+                                        dropdown.classList.remove('open');
+
+                                        // add "toggle gizmo" button for certain components
+                                        let additionalContent = null;
+
+                                        if (newComponent instanceof Collider) {
+                                                const showGizmoButton = new HtmlElement('div', 'Toggle Gizmo', {class: 'fake_button'});
+                                                showGizmoButton.addEventListener('click', function() {
+                                                        if (this.currentGizmo === newComponent) {
+                                                                this.currentGizmo = newComponent.gameObject.transform;
+                                                        } else {
+                                                                this.currentGizmo = newComponent;
+                                                        }
+                                                }.bind(this));
+
+                                                additionalContent = showGizmoButton;
+                                        }
+
+                                        const componentCardElement = newComponent.createEditorCard(additionalContent);
+                                        const parent = document.querySelector('.components_list .card_content');
+                                        const nextSibling = document.getElementById('add-component-dropdown');
+
+                                        parent.insertBefore(componentCardElement, nextSibling);
+                                }.bind(this));
+
+                                categoryHtml.appendChild(itemHtml);
+
+                                ++i;
+                        }
+
+                        menu.appendChild(categoryHtml);
+                }
+
+                dropdown.appendChild(button);
+                dropdown.appendChild(menu);
+
+                return dropdown;
         }
 
         // create editor HTML for the current project
@@ -1057,8 +1046,8 @@ export class Editor {
 
         // == HTML ELEMENTS ==
         // dropdown functions
-        closeAllDropdowns(tabbar = null) {
-                let dropdowns = document.querySelectorAll('.dropdown');
+        closeAllTabDropdowns(tabbar = null) {
+                let dropdowns = document.querySelectorAll('.tabbar .dropdown');
 
                 if (tabbar !== null) {
                         dropdowns = tabbar.querySelectorAll('.dropdown');
@@ -1178,11 +1167,13 @@ export class Editor {
                 if (dropdownButton !== null) {
                         const closestDropdown = dropdownButton.closest('.dropdown');
 
-                        this.closeAllDropdowns(dropdownButton.closest('.tabbar'));
+                        this.closeAllTabDropdowns(dropdownButton.closest('.tabbar'));
 
-                        closestDropdown.classList.add('open');
+                        if (closestDropdown !== null) {
+                                closestDropdown.classList.add('open');
+                        }
                 } else {
-                        this.closeAllDropdowns();
+                        this.closeAllTabDropdowns();
                 }
 
                 // foldout

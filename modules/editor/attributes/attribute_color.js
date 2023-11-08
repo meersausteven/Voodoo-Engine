@@ -26,7 +26,8 @@ export class AttributeColor extends AttributeText {
 
         // called when the value changes
         eventCall(event) {
-                let newValue = event.target.value;
+                const newValue = event.target.value;
+
                 if (this.validate(newValue)) {
                         this.change(newValue);
                 }
@@ -34,9 +35,9 @@ export class AttributeColor extends AttributeText {
 
         // generates the HTML element for the editor
         createWidget() {
-                let wrapper = new HtmlElement('div', null, {class: 'attribute color'});
+                const wrapper = new HtmlElement('div', null, {class: 'attribute color'});
 
-                let label = new HtmlElement('label', this.name);
+                const label = new HtmlElement('label', this.name);
 
                 wrapper.appendChild(label);
                 wrapper.appendChild(this.createWidgetInput());
@@ -46,7 +47,7 @@ export class AttributeColor extends AttributeText {
 
         // generates the HTML element for the input
         createWidgetInput() {
-                let input = new HtmlElement('input', null, {
+                const input = new HtmlElement('input', null, {
                         type: 'color',
                         value: this.value
                 });

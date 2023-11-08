@@ -17,24 +17,24 @@ export class AttributeHiddenText extends AttributeText {
 
         // todo: check if this can be made simpler
         createWidget() {
-                let wrapper = new HtmlElement('div', null, {class: 'attribute hidden_text'});
+                const wrapper = new HtmlElement('div', null, {class: 'attribute hidden_text'});
 
-                let title = new HtmlElement('div', this.value, {class: 'text'});
+                const title = new HtmlElement('div', this.value, {class: 'text'});
 
-                let editIcon = new HtmlElement('i', null, {
+                const editIcon = new HtmlElement('i', null, {
                         class: 'edit_text fa fa-pen-nib',
                         title: 'Edit'
                 });
                 editIcon.addEventListener('click', function(e) {
-                        let textElement = e.target.parentElement.querySelector('.text');
+                        const textElement = e.target.parentElement.querySelector('.text');
                         if (textElement === null) {
                                 return;
                         }
 
-                        let currentValue = textElement.innerHTML;
+                        const currentValue = textElement.innerHTML;
 
                         // create new text input field
-                        let input = new HtmlElement('input', null, {
+                        const input = new HtmlElement('input', null, {
                                 type: 'text',
                                 title: `Press 'Enter' to confirm changes`,
                                 value: currentValue

@@ -36,8 +36,9 @@ export class BoxCollider extends Collider {
                 camera.canvasContext.save();
                 camera.canvasContext.translate(this.worldPos.x - camera.worldPos.x, this.worldPos.y - camera.worldPos.y);
 
-                camera.canvasContext.lineWidth = 1;
+                camera.canvasContext.lineWidth = 3;
                 camera.canvasContext.strokeStyle = '#cc1133';
+                camera.canvasContext.setLineDash([3,6]);
                 camera.canvasContext.strokeRect(-this.attributes['width'].value / 2, -this.attributes['height'].value / 2, this.attributes['width'].value, this.attributes['height'].value);
 
                 camera.canvasContext.restore();

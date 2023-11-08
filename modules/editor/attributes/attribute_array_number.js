@@ -43,9 +43,9 @@ export class AttributeArrayNumber extends AttributeArrayText {
         }
 
         createNewItemInput(itemValue, index) {
-                let inputWrapper = new HtmlElement('div', null, {class: 'item_wrapper'});
+                const inputWrapper = new HtmlElement('div', null, {class: 'item_wrapper'});
 
-                let input = new HtmlElement('input', null, {
+                const input = new HtmlElement('input', null, {
                         type: 'text',
                         value: itemValue
                 });
@@ -63,16 +63,16 @@ export class AttributeArrayNumber extends AttributeArrayText {
                         input.setAttribute('max', this.range.max);
                         input.setAttribute('step', this.range.step);
 
-                        let stepUpButton = new HtmlElement('button', null, {class: 'step_up'});
+                        const stepUpButton = new HtmlElement('button', null, {class: 'step_up'});
                         stepUpButton.addEventListener('click', function(e) {
-                                let input = e.target.nextElementSibling;
+                                const input = e.target.nextElementSibling;
 
                                 input.stepUp();
                                 input.dispatchEvent(new Event('change'));
                         });
-                        let stepDownButton = new HtmlElement('button', null, {class: 'step_down'});
+                        const stepDownButton = new HtmlElement('button', null, {class: 'step_down'});
                         stepDownButton.addEventListener('click', function(e) {
-                                let input = e.target.previousElementSibling;
+                                const input = e.target.previousElementSibling;
 
                                 input.stepDown();
                                 input.dispatchEvent(new Event('change'));

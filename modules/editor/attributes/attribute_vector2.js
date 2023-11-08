@@ -20,7 +20,7 @@ export class AttributeVector2 extends AttributeText {
 
         // called when the value changes
         eventCall(event) {
-                let parent = event.target.parentElement;
+                const parent = event.target.parentElement;
                 let newValue = event.target.value;
 
                 if ((event.type == 'change') &&
@@ -51,9 +51,9 @@ export class AttributeVector2 extends AttributeText {
 
         // generates the HTML element for the editor
         createWidget() {
-                let wrapper = new HtmlElement('div', null, {class: 'attribute vector2'});
+                const wrapper = new HtmlElement('div', null, {class: 'attribute vector2'});
 
-                let title = new HtmlElement('div', this.name, {class: 'title'});
+                const title = new HtmlElement('div', this.name, {class: 'title'});
 
                 wrapper.appendChild(title);
                 wrapper.appendChild(this.createWidgetInput('x'));
@@ -64,11 +64,11 @@ export class AttributeVector2 extends AttributeText {
 
         // generates the HTML element for the input
         createWidgetInput(value) {
-                let inputWrapper = new HtmlElement('div', null, {class: value});
+                const inputWrapper = new HtmlElement('div', null, {class: value});
 
-                let label = new HtmlElement('label', value.toUpperCase());
+                const label = new HtmlElement('label', value.toUpperCase());
 
-                let input = new HtmlElement('input', null, {
+                const input = new HtmlElement('input', null, {
                         type: 'text',
                         value: this.value[value]
                 });

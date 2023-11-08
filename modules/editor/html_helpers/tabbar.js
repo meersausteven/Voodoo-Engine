@@ -30,7 +30,7 @@ export class Tabbar {
          * @param string position: position of the tab
          */
         addTab(id, title, icon = null, dropdown = null, position = TABBAR_POSITION_START) {
-                let tab = new TabbarTab(id, title, icon, dropdown, position);
+                const tab = new TabbarTab(id, title, icon, dropdown, position);
 
                 this.tabs[tab.id] = tab;
                 this.html.appendChild(tab.html);

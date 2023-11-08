@@ -37,8 +37,9 @@ export class CircleCollider extends Collider {
                 camera.canvasContext.beginPath();
                 camera.canvasContext.arc(0, 0, this.attributes['radius'].value, 0, 2 * Math.PI);
 
-                camera.canvasContext.lineWidth = 1;
+                camera.canvasContext.lineWidth = 3;
                 camera.canvasContext.strokeStyle = '#cc1133';
+                camera.canvasContext.setLineDash([3,6]);
                 camera.canvasContext.stroke();
 
                 camera.canvasContext.restore();

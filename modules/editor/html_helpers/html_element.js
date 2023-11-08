@@ -7,7 +7,8 @@ export class HtmlElement {
          * @param string attributes: html attributes for this element - multiple classes are separated by spaces
          */
         constructor(tag, content = null, attributes = {}) {
-                let html = document.createElement(tag);
+                const html = document.createElement(tag);
+
                 if (content !== null) {
                         html.innerHTML = content;
                 }

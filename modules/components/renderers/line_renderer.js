@@ -9,9 +9,9 @@ import { AttributeArrayVector2 } from '../../editor/attributes/attribute_array_v
 import { Vector2 } from './../../collection/vector2.js';
 import { Range } from './../../collection/range.js';
 
-import { ComponentRenderer } from './component_renderer.js';
+import { Renderer } from './renderer.js';
 
-export class LineRenderer extends ComponentRenderer {
+export class LineRenderer extends Renderer {
         type = "Line Renderer";
         defaultPoints = [
                 new Vector2(),
@@ -38,19 +38,21 @@ export class LineRenderer extends ComponentRenderer {
                 this.attributes['width'] = new AttributeNumber('Width', width, null, new Range());
                 this.attributes['color'] = new AttributeColor('Color', color);
                 this.attributes['loop'] = new AttributeBoolean('Loop', loop);
+                this.attributes['smoothing'] = new AttributeBoolean('Smoothing', false);
                 this.attributes['dash'] = new AttributeArrayNumber('Dash', [1, 0], null, new Range());
                 this.attributes['cap'] = new AttributeSelect('Cap', 'butt', ['butt', 'round', 'square']);
                 this.attributes['join'] = new AttributeSelect('Join', 'miter', ['round', 'bevel', 'miter']);
         }
 
         /*
-         * renders a line to a camera
+         * renders a line with multiple points to a camera component
          * @param Camera camera
          */
         render(camera) {
                 if (this.attributes['points'].value.length > 0) {
                         this.renderDefault(camera);
 
+                        // set line settings
                         camera.canvasContext.lineWidth = this.attributes['width'].value;
                         camera.canvasContext.strokeStyle = this.attributes['color'].value;
                         camera.canvasContext.lineCap = this.attributes['cap'].value;
@@ -59,15 +61,23 @@ export class LineRenderer extends ComponentRenderer {
 
                         camera.canvasContext.beginPath();
 
-                        // connect all points with straight lines
-                        // todo: add functionality for drawing arcs, ellipsis, bezier curves and so on
-
+                        // draw line
                         camera.canvasContext.moveTo(this.attributes['points'].value[0].x, this.attributes['points'].value[0].y);
 
                         let i = 1;
-                        let l = this.attributes['points'].value.length;
+                        const l = this.attributes['points'].value.length;
                         while (i < l) {
-                                camera.canvasContext.lineTo(this.attributes['points'].value[i].x, this.attributes['points'].value[i].y);
+                                if (this.attributes['smoothing'].value === true) {
+                                        const currPoint = this.attributes['points'].value[i];
+                                        const nextPoint = this.attributes['points'].value[i + 1];
+                                        if (typeof nextPoint !== "undefined") {
+                                                ctx.arcTo(currPoint.x, currPoint.y, nextPoint.x, nextPoint.y, 10);
+                                        } else {
+                                                ctx.lineTo(currPoint.x, currPoint.y);
+                                        }
+                                } else {
+                                        camera.canvasContext.lineTo(this.attributes['points'].value[i].x, this.attributes['points'].value[i].y);
+                                }
 
                                 ++i;
                         }

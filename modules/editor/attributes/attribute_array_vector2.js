@@ -23,7 +23,7 @@ export class AttributeArrayVector2 extends AttributeArrayText {
 
         // called when the value changes
         eventCall(event, index) {
-                let parent = event.target.parentElement;
+                const parent = event.target.parentElement;
                 let newValue = event.target.value;
 
                 if ((event.type == 'change') &&
@@ -54,27 +54,27 @@ export class AttributeArrayVector2 extends AttributeArrayText {
 
         // generates the HTML element for the editor
         createWidget() {
-                let wrapper = new HtmlElement('div', null, {class: 'attribute array'});
+                const wrapper = new HtmlElement('div', null, {class: 'attribute array'});
 
-                let foldout = new HtmlElement('div', null, {class: 'foldout open'});
+                const foldout = new HtmlElement('div', null, {class: 'foldout open'});
 
                 // title
-                let foldoutTitle = new HtmlElement('div', null, {class: 'foldout_title'});
+                const foldoutTitle = new HtmlElement('div', null, {class: 'foldout_title'});
 
-                let label = new HtmlElement('label', this.name);
-                let iconDown = new HtmlElement('i', null, {class: 'fa fa-caret-down'});
-                let iconLeft = new HtmlElement('i', null, {class: 'fa fa-caret-left'});
+                const label = new HtmlElement('label', this.name);
+                const iconDown = new HtmlElement('i', null, {class: 'fa fa-caret-down'});
+                const iconLeft = new HtmlElement('i', null, {class: 'fa fa-caret-left'});
 
                 foldoutTitle.appendChild(label);
                 foldoutTitle.appendChild(iconDown);
                 foldoutTitle.appendChild(iconLeft);
 
                 // content
-                let foldoutContent = new HtmlElement('div', null, {class: 'foldout_content'});
+                const foldoutContent = new HtmlElement('div', null, {class: 'foldout_content'});
 
                 // array items
                 let i = 0;
-                let l = this.value.length;
+                const l = this.value.length;
                 while(i < l) {
                         foldoutContent.appendChild(this.createNewItem(i));
 
@@ -85,20 +85,20 @@ export class AttributeArrayVector2 extends AttributeArrayText {
                 foldout.appendChild(foldoutContent);
 
                 // add new item button
-                let addItemButton = new HtmlElement('div', null, {class: 'button_link'});
+                const addItemButton = new HtmlElement('div', null, {class: 'button_link'});
                 addItemButton.addEventListener('click', function() {
                         // add new item to array
-                        let newItemsLength = this.value.push(null);
+                        const newItemsLength = this.value.push(null);
 
                         // create html for new item in editor
-                        let newItemHtml = this.createNewItem(newItemsLength - 1);
+                        const newItemHtml = this.createNewItem(newItemsLength - 1);
                         foldoutContent.appendChild(newItemHtml);
 
                         newItemHtml.querySelector('input').focus();
                 }.bind(this));
 
-                let addItemIcon = new HtmlElement('i', null, {class: 'fa fa-square-plus'});
-                let addItemText = new HtmlElement('span', 'Add Item');
+                const addItemIcon = new HtmlElement('i', null, {class: 'fa fa-square-plus'});
+                const addItemText = new HtmlElement('span', 'Add Item');
 
                 addItemButton.appendChild(addItemIcon);
                 addItemButton.appendChild(addItemText);
@@ -113,22 +113,22 @@ export class AttributeArrayVector2 extends AttributeArrayText {
         // create new array element and html input fields according to the specified type
         // vector2 needs 2 input fields
         createNewItem(index) {
-                let itemValue = this.value[index];
+                const itemValue = this.value[index];
 
-                let wrapper = new HtmlElement('div', null, {class: 'attribute_array_item ' + this.widgetType});
+                const wrapper = new HtmlElement('div', null, {class: 'attribute_array_item ' + this.widgetType});
 
                 // input field
                 wrapper.appendChild(this.createNewItemInput(itemValue.x, index, 'x'));
                 wrapper.appendChild(this.createNewItemInput(itemValue.y, index, 'y'));
 
                 // remove item button
-                let removeButton = new HtmlElement('div', null, {class: 'button_link'});
+                const removeButton = new HtmlElement('div', null, {class: 'button_link'});
                 removeButton.addEventListener('click', function() {
                         this.value.splice(index, 1);
                         wrapper.remove();
                 }.bind(this));
 
-                let removeIcon = new HtmlElement('i', null, {
+                const removeIcon = new HtmlElement('i', null, {
                         class: 'fa fa-delete-left',
                         title: 'Remove this item'
                 });
@@ -141,11 +141,11 @@ export class AttributeArrayVector2 extends AttributeArrayText {
         }
 
         createNewItemInput(itemValue, index, value) {
-                let inputWrapper = new HtmlElement('div', null, {class: value});
+                const inputWrapper = new HtmlElement('div', null, {class: value});
 
-                let label = new HtmlElement('label', value.toUpperCase());
+                const label = new HtmlElement('label', value.toUpperCase());
 
-                let input = new HtmlElement('input', null, {
+                const input = new HtmlElement('input', null, {
                         type: 'text',
                         value: itemValue
                 });

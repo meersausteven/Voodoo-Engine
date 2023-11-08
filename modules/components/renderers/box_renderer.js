@@ -5,9 +5,9 @@ import { AttributeColor } from './../../editor/attributes/attribute_color.js';
 import { Vector2 } from './../../collection/vector2.js';
 import { Range } from './../../collection/range.js';
 
-import { ComponentRenderer } from './component_renderer.js';
+import { Renderer } from './renderer.js';
 
-export class BoxRenderer extends ComponentRenderer {
+export class BoxRenderer extends Renderer {
         type = "Box Renderer";
 
         /* 

@@ -53,21 +53,26 @@ export class CapsuleCollider extends Collider {
                 camera.canvasContext.beginPath();
 
                 if (this.attributes['direction'].value === "vertical") {
+                        camera.canvasContext.moveTo(-this.attributes['radius'].value, -this.attributes['distance'].value / 2);
                         // top half circle
                         camera.canvasContext.arc(0, -this.attributes['distance'].value / 2, this.attributes['radius'].value, Math.PI, 2 * Math.PI);
+                        camera.canvasContext.lineTo(this.attributes['radius'].value, this.attributes['distance'].value / 2);
                         // bottom half circle
                         camera.canvasContext.arc(0, this.attributes['distance'].value / 2, this.attributes['radius'].value, 0, Math.PI);
-                        camera.canvasContext.lineTo(-this.attributes['radius'].value, -this.attributes['distance'].value + this.attributes['radius'].value);
+                        camera.canvasContext.lineTo(-this.attributes['radius'].value, -this.attributes['distance'].value / 2);
                 } else {
-                        // left half circle
-                        camera.canvasContext.arc(-this.attributes['distance'].value / 2, 0, this.attributes['radius'].value, 0.5 * Math.PI, 1.5 * Math.PI);
+                        camera.canvasContext.moveTo(-this.attributes['distance'].value / 2, -this.attributes['radius'].value);
                         // right half circle
+                        camera.canvasContext.lineTo(this.attributes['distance'].value / 2, -this.attributes['radius'].value);
                         camera.canvasContext.arc(this.attributes['distance'].value / 2, 0, this.attributes['radius'].value, -0.5 * Math.PI, 0.5 * Math.PI);
-                        camera.canvasContext.lineTo(-this.attributes['distance'].value + this.attributes['radius'].value, this.attributes['radius'].value );
+                        // left half circle
+                        camera.canvasContext.lineTo(-this.attributes['distance'].value / 2, this.attributes['radius'].value);
+                        camera.canvasContext.arc(-this.attributes['distance'].value / 2, 0, this.attributes['radius'].value, 0.5 * Math.PI, 1.5 * Math.PI);
                 }
 
-                camera.canvasContext.lineWidth = 1;
+                camera.canvasContext.lineWidth = 3;
                 camera.canvasContext.strokeStyle = '#cc1133';
+                camera.canvasContext.setLineDash([3,6]);
                 camera.canvasContext.stroke();
 
                 camera.canvasContext.restore();

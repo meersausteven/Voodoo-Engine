@@ -7,9 +7,9 @@ import { AttributeSelect } from './../../editor/attributes/attribute_select.js';
 import { Vector2 } from './../../collection/vector2.js';
 import { Range } from './../../collection/range.js';
 
-import { ComponentRenderer } from './component_renderer.js';
+import { Renderer } from './renderer.js';
 
-export class TextRenderer extends ComponentRenderer {
+export class TextRenderer extends Renderer {
         type = "Text Renderer";
 
         /*

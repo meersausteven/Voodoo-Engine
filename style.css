@@ -238,7 +238,7 @@ body {
 }
 
 .container .container_content .add_gameObject,
-.container .container_content #add-component-dropdown {
+.dropdown_list .dropdown_button {
         width: 100%;
         background-color: transparent;
         border: 1px solid var(--gray);
@@ -253,9 +253,75 @@ body {
 }
 
 .container .container_content .add_gameObject:hover,
-.container .container_content #add-component-dropdown:hover {
+.dropdown_list .dropdown_button:hover {
         color: var(--lightgray);
 }
+
+#add-component-dropdown {
+        margin-top: auto;
+        position: relative;
+}
+
+.dropdown_list .dropdown_list_menu {
+        display: none;
+
+        width: 100%;
+        position: absolute;
+        bottom: 100%;
+        border: 1px solid var(--gray);
+        padding: 10px 5px;
+}
+
+.dropdown_list.open .dropdown_list_menu {
+        display: block;
+}
+
+
+.dropdown_list .dropdown_list_menu .dropdown_menu_category .title {
+        padding: 5px 0px;
+        cursor: pointer;
+}
+
+.dropdown_list .dropdown_list_menu .dropdown_menu_category .title * {
+        transition: 0.2s;
+}
+
+.dropdown_list .dropdown_list_menu .dropdown_menu_category:hover .title * {
+        color: var(--lightgray);
+}
+
+.dropdown_list .dropdown_list_menu .dropdown_menu_category .back,
+.dropdown_list .dropdown_list_menu .dropdown_menu_category .dropdown_menu_item {
+        display: none;
+        padding: 5px 0px;
+        cursor: pointer;
+        transition: 0.2s;
+}
+
+.dropdown_list .dropdown_list_menu .dropdown_menu_category .back {
+        margin-bottom: 5px;
+}
+
+.dropdown_list .dropdown_list_menu .dropdown_menu_category:not(.open):not(:last-child),
+.dropdown_list .dropdown_list_menu .dropdown_menu_category .dropdown_menu_item:not(:last-child) {
+        border-bottom: 1px solid var(--gray);
+}
+
+.dropdown_list .dropdown_list_menu .dropdown_menu_category .back *,
+.dropdown_list .dropdown_list_menu .dropdown_menu_category .dropdown_menu_item:hover {
+        color: var(--lightgray);
+}
+
+.dropdown_list .dropdown_list_menu.category_open .dropdown_menu_category:not(.open),
+.dropdown_list .dropdown_list_menu .dropdown_menu_category.open .title {
+        display: none;
+}
+
+.dropdown_list .dropdown_list_menu .dropdown_menu_category.open .back,
+.dropdown_list .dropdown_list_menu .dropdown_menu_category.open .dropdown_menu_item {
+        display: block;
+}
+
 
 /* card */
 .card {
@@ -846,7 +912,6 @@ form input[type="submit"] {
 }
 
 .button_link {
-        cursor: pointer;
         text-decoration: none;
         transition: 0.2s;
         cursor: pointer;
@@ -1255,4 +1320,13 @@ form input[type="submit"] {
 
 .text_bold {
         font-weight: bold;
+}
+
+/* float classes */
+.float_right {
+        float: right;
+}
+
+.float_left {
+        float: left;
 }

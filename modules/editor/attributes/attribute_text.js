@@ -47,9 +47,9 @@ export class AttributeText {
 
         // generates the HTML element for the editor
         createWidget() {
-                let wrapper = new HtmlElement('div', null, {class: 'attribute'});
+                const wrapper = new HtmlElement('div', null, {class: 'attribute'});
 
-                let label = new HtmlElement('label', this.name);
+                const label = new HtmlElement('label', this.name);
 
                 wrapper.appendChild(label);
                 wrapper.appendChild(this.createWidgetInput());
@@ -59,7 +59,7 @@ export class AttributeText {
 
         // generates the HTML element for the input
         createWidgetInput() {
-                let input = new HtmlElement('input', null, {
+                const input = new HtmlElement('input', null, {
                         type: 'text',
                         value: this.value
                 });

@@ -7,18 +7,14 @@ import { AttributeHiddenText } from './editor/attributes/attribute_hidden_text.j
 
 export class Scene {
         project;
-        isCurrentScene;
-        activeCamera;
         gameObjects = [];
         attributes = {};
-        settings = {
-                sortingLayers: [],
-
-        };
+        isCurrentScene = false;
+        activeCamera = null;
 
         constructor(project) {
                 this.project = project;
-                
+
                 this.attributes['name'] = new AttributeHiddenText('Name', 'New Scene');
 
                 // add default main camera
@@ -29,14 +25,12 @@ export class Scene {
                 this.gameObjects[0].addComponent(
                         new Camera(this.project.settings['canvasWidth'], this.project.settings['canvasHeight'])
                 );
-
-                this.isCurrentScene = false;
         }
 
         start() {
                 //start all game objects
                 let i = 0;
-                let l = this.gameObjects.length;
+                const l = this.gameObjects.length;
 
                 while (i < l) {
                         if (this.gameObjects[i].attributes['enabled'].value === true) {
@@ -47,37 +41,33 @@ export class Scene {
                 }
 
                 // get default camera component
-                this.activeCamera = this.getCamera();
+                this.activeCamera = this.getMainCamera();
         }
 
         processUpdateFrame() {
-                if ((this.project !== null) &&
-                    (typeof this.project !== 'undefined'))
-                {
-                        // process all gameObjects
-                        let i = 0;
-                        let l = this.gameObjects.length;
+                // process all enabled gameObjects
+                let i = 0;
+                const l = this.gameObjects.length;
 
-                        while (i < l) {
-                                if (this.gameObjects[i].attributes['enabled'].value === true) {
-                                        this.gameObjects[i].update();
-                                        this.gameObjects[i].lateUpdate();
-                                }
-
-                                ++i;
+                while (i < l) {
+                        if (this.gameObjects[i].attributes['enabled'].value === true) {
+                                this.gameObjects[i].update();
+                                this.gameObjects[i].lateUpdate();
                         }
 
-                        // get active camera view
-                        this.project.canvasContext.clearRect(0, 0, this.project.canvas.width, this.project.canvas.height);
-
-                        this.project.canvasContext.drawImage(this.activeCamera.frameImage, 0, 0);
+                        ++i;
                 }
+
+                // get active camera view
+                this.project.canvasContext.clearRect(0, 0, this.project.canvas.width, this.project.canvas.height);
+
+                this.project.canvasContext.drawImage(this.activeCamera.frameImage, 0, 0);
         }
 
         processFixedUpdateFrame() {
-                // process all gameObjects
+                // process all enabled gameObjects
                 let i = 0;
-                let l = this.gameObjects.length;
+                const l = this.gameObjects.length;
 
                 while (i < l) {
                         if (this.gameObjects[i].attributes['enabled'].value === true) {
@@ -88,42 +78,30 @@ export class Scene {
                 }
         }
 
-        addGameObject(object) {
-                if (object instanceof GameObject) {
-                        object.scene = this;
-                        this.gameObjects.push(object);
+        addGameObject(gameObject) {
+                gameObject.scene = this;
+                this.gameObjects.push(gameObject);
 
-                        window.dispatchEvent(new Event('game_object_list_changed'));
-
-                        return true;
-                }
+                window.dispatchEvent(new Event('game_object_list_changed'));
         }
 
-        removeGameobject(index) {
-                if ((typeof index == "number") &&
-                    ((this.gameObjects[index] !== null) &&
-                    (typeof this.gameObjects[index] !== "undefined"))
-                ) {
-                        this.gameObjects[index] = null;
+        removeGameobject(gameObject) {
+                const index = this.gameObjects.indexOf(gameObject);
+                this.gameObjects.splice(index, 1);
 
-                        window.dispatchEvent(new Event('game_object_list_changed'));
-                }
+                window.dispatchEvent(new Event('game_object_list_changed'));
         }
 
         // get main camera in this scene
-        getCamera() {
+        getMainCamera() {
                 let i = 0;
-                let l = this.gameObjects.length;
+                const l = this.gameObjects.length;
+
                 while (i < l) {
-                        let j = 0;
-                        let c = this.gameObjects[i].components.length;
+                        const component = this.gameObjects[i].getComponent("Camera");
 
-                        while (j < c) {
-                                if (this.gameObjects[i].components[j] instanceof Camera) {
-                                        return this.gameObjects[i].components[j];
-                                }
-
-                                j++;
+                        if (component !== false) {
+                                return component;
                         }
 
                         ++i;

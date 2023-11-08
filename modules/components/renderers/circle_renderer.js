@@ -5,9 +5,9 @@ import { AttributeNumber } from './../../editor/attributes/attribute_number.js';
 import { Vector2 } from './../../collection/vector2.js';
 import { Range } from './../../collection/range.js';
 
-import { ComponentRenderer } from './component_renderer.js';
+import { Renderer } from './renderer.js';
 
-export class CircleRenderer extends ComponentRenderer {
+export class CircleRenderer extends Renderer {
         type = "Circle Renderer";
 
         /*

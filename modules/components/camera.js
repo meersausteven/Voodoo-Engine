@@ -12,8 +12,6 @@ export class Camera extends Component {
         canvas;
         cavnasContext;
         frameImage;
-        // debugCanvas;
-        // debugContext;
 
         /*
          * constructor
@@ -65,7 +63,7 @@ export class Camera extends Component {
                                 this.gameObject.transform.attributes['position'].value.y
                         );
 
-                        this.gameObject.scene.project.renderer.renderToCameraView(this);
+                        this.gameObject.scene.project.rendererEngine.renderToCameraView(this);
                 }
 
                 this.frameImage = this.canvas;

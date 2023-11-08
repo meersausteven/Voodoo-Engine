@@ -2,19 +2,31 @@
 import { Vector2 } from '../collection/vector2.js';
 
 import { Component } from '../components/component.js';
+import { Collider } from '../components/colliders/collider.js';
+import { BoxCollider } from '../components/colliders/box_collider.js';
+import { CircleCollider } from '../components/colliders/circle_collider.js';
+import { CapsuleCollider } from '../components/colliders/capsule_collider.js';
+import { Renderer } from '../components/renderers/renderer.js';
+import { BoxRenderer } from '../components/renderers/box_renderer.js';
+import { CircleRenderer } from '../components/renderers/circle_renderer.js';
+import { LineRenderer } from '../components/renderers/line_renderer.js';
+import { TextRenderer } from '../components/renderers/text_renderer.js';
 import { Transform } from '../components/transform.js';
+import { Camera } from '../components/camera.js';
+import { Rigidbody } from '../components/rigidbody.js';
 
 import { AttributeHiddenText } from '../editor/attributes/attribute_hidden_text.js';
 import { AttributeBoolean } from '../editor/attributes/attribute_boolean.js';
 
 export class GameObject {
         type = "Game Object";
-        components = [];
         attributes = {};
+        components = [];
+        transform = null;
 
         constructor(x = 0, y = 0, rotation = 0) {
                 // every game object is created with a transform component
-                let transform = new Transform(new Vector2(x, y), rotation);
+                const transform = new Transform(new Vector2(x, y), rotation);
                 this.addComponent(transform);
 
                 this.transform = transform;
@@ -23,8 +35,8 @@ export class GameObject {
                 this.attributes['enabled'] = new AttributeBoolean('Enabled', true);
         }
 
+        // start is called when the scene is started
         start() {
-                // start all components
                 let i = 0;
                 const l = this.components.length;
 
@@ -35,8 +47,8 @@ export class GameObject {
                 }
         }
 
+        // update is called every frame
         update() {
-                // update is called every frame
                 let i = 0;
                 const l = this.components.length;
 
@@ -49,8 +61,8 @@ export class GameObject {
                 }
         }
 
+        // fixed update is called in fixed intervals (default: 10ms)
         fixedUpdate() {
-                // fixed update is called in a certain interval (default: 10ms)
                 let i = 0;
                 const l = this.components.length;
 
@@ -63,8 +75,8 @@ export class GameObject {
                 }
         }
 
+        // late update is called after update()
         lateUpdate() {
-                // late update is called after update()
                 let i = 0;
                 const l = this.components.length;
 
@@ -82,33 +94,34 @@ export class GameObject {
          * @param Component component: a component
          */
         addComponent(component) {
-                if (component instanceof Component) {
-                        component.gameObject = this;
-                        this.components.push(component);
+                component.gameObject = this;
+                this.components.push(component);
+
+                if (component instanceof Collider) {
+                        this.scene.project.physicsEngine.addCollider(component);
                 }
 
-                new TypeError('Component could not be added as it is not an instance of the Component class');
+                if (component instanceof Rigidbody) {
+                        this.scene.project.physicsEngine.addRigidbody(component);
+                }
         }
 
         /*
          * removes a component from this gameObject
          * @param Component component: a component that is to be removed
          */
-        removeComponent(component) {
-                if (component instanceof Component) {
-                        let i = 0;
-                        const l = this.components.length;
+        removeComponent(i) {
+                const component = this.components[i];
 
-                        while (i < l) {
-                                if (this.components[i] === component) {
-                                        this.components.splice(i, 1);
-                                }
-
-                                ++i;
-                        }
-
-                        new Error('Component could not be removed as it is not part of this gameObject');
+                if (component instanceof Collider) {
+                        this.scene.project.physicsEngine.removeCollider(component);
                 }
+
+                if (component instanceof Rigidbody) {
+                        this.scene.project.physicsEngine.removeRigidbody(component);
+                }
+
+                this.components.splice(i, 1);
         }
 
         /*
@@ -121,7 +134,9 @@ export class GameObject {
                 const l = this.components.length;
 
                 while (i < l) {
-                        if (this.components[i] instanceof name) {
+                        const proto = eval(name);
+
+                        if (this.components[i] instanceof proto) {
                                 return this.components[i];
                         }
 
@@ -146,7 +161,5 @@ export class GameObject {
 
                         ++i;
                 }
-
-                new Error('This gameObject does not contain a transform component');
         }
 }
