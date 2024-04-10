@@ -32,27 +32,32 @@ export class AttributeSelect extends AttributeText {
                 }
         }
 
-        // generates the HTML element for the editor
-        createWidget() {
-                let wrapper = new HtmlElement('div', null, {class: 'attribute select'});
+        // called after validation was successful to update the object value
+        change(newValue) {
+                this.value = newValue;
 
-                let label = new HtmlElement('label', this.name);
-
-                wrapper.appendChild(label);
-                wrapper.appendChild(this.createWidgetInput());
-
-                return wrapper;
+                document.querySelector(`#enchantments .content .item select[name="${this.name}"] option[value="${this.value}"]`).selected = true;
         }
 
-        // generates the HTML element for the input
-        createWidgetInput() {
-                let select = new HtmlElement('select', null);
+        // generates the HTML element for the editor
+        createWidget() {
+                const property = new HtmlElement('div', null, {class: 'property'});
+
+                // label
+                const propertyLabel = new HtmlElement('div', this.name, {class: 'label'});
+                property.appendChild(propertyLabel);
+
+                // select
+                const propertyValue = new HtmlElement('div', null, {class: 'value'});
+                const label = new HtmlElement('label', null);
+
+                let select = new HtmlElement('select', null, { name: this.name });
                 select.addEventListener('change', function(e) {
                         this.eventCall(e);
                 }.bind(this));
 
                 let i = 0;
-                let l = this.options.length;
+                const l = this.options.length;
                 while (i < l) {
                         let option = new HtmlElement('option', this.options[i], {value: this.options[i]});
                         if (this.options[i] === this.value) {
@@ -64,6 +69,11 @@ export class AttributeSelect extends AttributeText {
                         ++i;
                 }
 
-                return select;
+                label.appendChild(select);
+                propertyValue.appendChild(label);
+
+                property.appendChild(propertyValue);
+
+                return property;
         }
 }

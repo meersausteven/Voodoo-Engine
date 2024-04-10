@@ -58,29 +58,29 @@ export class RendererEngine {
         }
 
         /*
-         * renders all renderer components in the renderer stack to a passed camera component
-         * @param Camera camera: the camera component to which it should render
+         * renders all renderer enchantments in the renderer stack to a passed ocular enchantment
+         * @param Ocular ocular: the ocular enchantment to which it should render
          */
-        renderToCameraView(camera) {
+        renderToCameraView(ocular) {
                 let i = 0;
                 const l = this.renderers.length;
 
                 while (i < l) {
-                        if (this.renderers[i].gameObject === null) {
+                        if (this.renderers[i].talisman === null) {
                                 ++i;
 
                                 continue;
                         }
 
-                        if ((this.renderers[i].gameObject.attributes['enabled'].value === true) && 
+                        if ((this.renderers[i].talisman.attributes['enabled'].value === true) && 
                             (this.renderers[i].attributes['enabled'].value === true)
                         ) {
-                                camera.canvasContext.save();
-                                camera.canvasContext.translate(camera.gameObject.scene.project.settings['canvasWidth'] / 2, camera.gameObject.scene.project.settings['canvasHeight'] / 2)
+                                ocular.canvasContext.save();
+                                ocular.canvasContext.translate(ocular.talisman.scene.project.settings['canvasWidth'] / 2, ocular.talisman.scene.project.settings['canvasHeight'] / 2)
 
-                                this.renderers[i].render(camera);
+                                this.renderers[i].render(ocular);
 
-                                camera.canvasContext.restore();
+                                ocular.canvasContext.restore();
                         }
 
                         ++i;

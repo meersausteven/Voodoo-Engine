@@ -6,6 +6,7 @@ export class Vector2 {
         magnitude;
 
         static zero = new Vector2();
+        static one = new Vector2(1, 1);
         static up = new Vector2(0, -1);
         static right = new Vector2(1, 0);
         static bottom = new Vector2(0, 1);

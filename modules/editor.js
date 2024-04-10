@@ -2,34 +2,37 @@
 // import base modules
 import { Project } from './project.js';
 import { Scene } from './scene.js';
+import { Fizzle } from './fizzle.js';
 import { RendererEngine } from './renderer_engine.js';
 import { Cursor } from './cursor.js';
 
 // import game objects
-import { GameObject } from './game_objects/game_object.js';
+import { Talisman } from './talismans/talisman.js';
 
 // import collection
 import { Vector2 } from './collection/vector2.js';
 import { Range } from './collection/range.js';
+import { Gizmo } from './editor/gizmo.js';
+import { Bounds } from './collection/bounds.js';
 
-// import components
-import { Component } from './components/component.js';
-import { Animation } from './components/animation.js';
-import { Camera } from './components/camera.js';
-import { Rigidbody } from './components/rigidbody.js';
-import { Transform } from './components/transform.js';
+// import enchantments
+import { Enchantment } from './enchantments/enchantment.js';
+import { Animation } from './enchantments/animation.js';
+import { Ocular } from './enchantments/ocular.js';
+import { Rigidbody } from './enchantments/rigidbody.js';
+import { Transform } from './enchantments/transform.js';
 
-import { Renderer } from './components/renderers/renderer.js';
-import { BoxRenderer } from './components/renderers/box_renderer.js';
-import { CircleRenderer } from './components/renderers/circle_renderer.js';
-import { SpriteRenderer } from './components/renderers/sprite_renderer.js';
-import { TextRenderer } from './components/renderers/text_renderer.js';
-import { LineRenderer } from './components/renderers/line_renderer.js';
+import { Renderer } from './enchantments/renderers/renderer.js';
+import { BoxRenderer } from './enchantments/renderers/box_renderer.js';
+import { CircleRenderer } from './enchantments/renderers/circle_renderer.js';
+import { SpriteRenderer } from './enchantments/renderers/sprite_renderer.js';
+import { TextRenderer } from './enchantments/renderers/text_renderer.js';
+import { LineRenderer } from './enchantments/renderers/line_renderer.js';
 
-import { Collider } from './components/colliders/collider.js';
-import { BoxCollider } from './components/colliders/box_collider.js';
-import { CircleCollider } from './components/colliders/circle_collider.js';
-import { CapsuleCollider } from './components/colliders/capsule_collider.js';
+import { Collider } from './enchantments/colliders/collider.js';
+import { BoxCollider } from './enchantments/colliders/box_collider.js';
+import { CircleCollider } from './enchantments/colliders/circle_collider.js';
+import { CapsuleCollider } from './enchantments/colliders/capsule_collider.js';
 
 // import attributes
 import { AttributeBoolean } from './editor/attributes/attribute_boolean.js';
@@ -56,26 +59,41 @@ export class Editor {
         project;
         // current scene
         currentScene;
-        // currently selected game object
-        currentGameObject;
-        currentGameObjectHTML;
-        // currently selected component
+        // currently selected talisman
+        activeTalisman = null;
+        // currently selected enchantment
         currentGizmo = null;
+        mousemoveAction = null;
+        hovering = null;
         // renderer
         renderer;
         // canvas
         canvas;
         canvasContext;
+        // grid
+        gridColor;
         // canvas zoom
         canvasZoom;
-        // camera
-        camera;
+        // ocular
+        ocular;
+        // mouse controls
+        cursor;
+        // update cycle for canvas
+        animationFrame;
+        // html elements
+        talismanCollection;
+        enchantments;
+        actionsDrawer;
+        contextMenu;
+        positionDisplay;
+        zoomDisplay;
+        playButton;
         // add new game object options
         availableGameObjects = [
                 'Game Object'
         ];
-        // add new component options
-        availableComponents = {
+        // add new enchantment options
+        availableEnchantments = {
                 Renderers: [
                         'Box Renderer',
                         'Circle Renderer',
@@ -89,7 +107,7 @@ export class Editor {
                         'Capsule Collider',
                 ],
                 Others: [
-                        'Camera',
+                        'Ocular',
                         'Rigidbody',
                         //'Animation'
                 ]
@@ -99,94 +117,64 @@ export class Editor {
                 'tabbarSelector': new AttributeText('Tabbar Selector', '#editor-tabbar'),
                 'canvasSelector': new AttributeText('Canvas Selector', '#gameArea'),
                 'displayGrid': new AttributeBoolean('Display Grid', true),
-                'gridSize': new AttributeVector2('Grid Size', new Vector2(100, 100)),
-                'gridLineWidth': new AttributeNumber('Grid Line Width', 0.25, null, new Range()),
-                'gridLineColor': new AttributeColor('Grid Line Color', '#ffffff')
+                'gridSize': new AttributeVector2('Grid Size', new Vector2(100, 100))
         };
-        // tabbar
-        tabbar;
-        // moving popup
-        movePopup = null;
-        // mouse controls
-        cursor;
-        // update cycle for canvas
-        animationFrame;
 
         constructor() {
-                // build editor html
-                // TABBAR
-                this.tabbar = new Tabbar(this.settings.tabbarSelector.value);
-                // 'File' tab
-                this.tabbar.addTab('tab-file', 'File', 'file', true);
-                this.tabbar.tabs['tab-file'].addDropdownItem(this.createUploadProjectFileButton());
-                this.tabbar.tabs['tab-file'].addDropdownItem(this.createLoadStorageButton());
-                this.tabbar.tabs['tab-file'].addDropdownItem(this.createDownloadProjectButton());
-                this.tabbar.tabs['tab-file'].addDropdownItem(this.createSaveStorageButton());
-                // 'Editor' tab
-                this.tabbar.addTab('tab-editor', 'Editor', 'newspaper', true);
-                this.tabbar.tabs['tab-editor'].addDropdownItem(this.createOpenEditorSettingsButton());
-                // 'Project' tab
-                this.tabbar.addTab('tab-project', 'Project', 'box-archive', true);
-                this.tabbar.tabs['tab-project'].addDropdownItem(this.createOpenProjectSettingsButton());
-                this.tabbar.tabs['tab-project'].addDropdownItem(this.createOpenRendererSettingsButton());
-                this.tabbar.tabs['tab-project'].addDropdownItem(this.createOpenPhysicsSettingsButton());
-                // 'About' tab
-                this.tabbar.addTab('tab-about', 'About', 'circle-question', false, TABBAR_POSITION_END);
-                this.tabbar.tabs['tab-about'].html.addEventListener('click', function() {
-                        new Popup('About', this.createAboutPopupContent(), 'about_popup')
-                }.bind(this));
-                // 'Share' tab
-                this.tabbar.addTab('tab-share', 'Share', 'share-nodes', false);
-                this.tabbar.tabs['tab-share'].html.addEventListener('click', function() {
-                        new Snackbar('Sharing projects is not implemented yet!', SNACKBAR_WARNING);
-                });
+                // fetch editor html elements
+                this.talismanCollection = document.getElementById('talisman-collection');
+                this.enchantments = document.getElementById('enchantments');
+                this.actionsDrawer = document.getElementById('actions-drawer');
+                this.contextMenu = document.getElementById('context-menu');
+                this.positionDisplay = document.getElementById('editor-position');
+                this.zoomDisplay = document.getElementById('editor-zoom');
+                this.playButton = document.getElementById('editor-play');
 
-                // 'start play mode' button
-                document.body.appendChild(this.createPlayButton());
-
-                // build editor object
                 // prepare canvas
-                this.canvas = document.querySelector(this.settings.canvasSelector.value);
+                this.canvas = document.getElementById('editor-view');
+                this.gridColor = getComputedStyle(document.body).getPropertyValue('--canvas-grid-color');
                 // create new project todo: add check if save is found in storage - otherwise load new project
                 this.project = new Project();
+                this.project.loadScene(this.project.settings['defaultScene']);
 
                 // add a basic renderer
                 this.renderer = new RendererEngine();
 
                 // choose first scene in project as current scene
                 this.currentScene = this.project.sceneList[0];
-                this.currentGameObject = null;
 
                 // create cursor class instance for input tracking
                 this.cursor = new Cursor();
                 this.canvasZoom = 1;
-
-                // set canvas background color from project settings
-                this.canvas.style.backgroundColor = this.project.settings['canvasBackgroundColor'];
 
                 // ADD EVENT LISTENERS
                 document.addEventListener('mousedown', this);
                 document.addEventListener('mouseup', this);
                 document.addEventListener('mousemove', this);
                 document.addEventListener('click', this);
+                document.addEventListener('contextmenu', this);
                 document.addEventListener('wheel', this);
                 document.addEventListener('current_gameObject_name_changed', this);
+                document.addEventListener('zoom_changed', this);
+                document.addEventListener('position_changed', this);
+                document.addEventListener('active_talisman_changed', this);
                 // custom events
                 window.addEventListener('project_settings_changed', this);
-                window.addEventListener('scene_list_changed', this);
+
+                // prepare editor html
+                this.prepareEditorHtml();
         }
 
         start() {
-                this.generateEditorElements();
-
                 // prepare canvas
                 this.canvas.width = this.canvas.clientWidth;
                 this.canvas.height = this.canvas.clientHeight;
                 this.canvasContext = this.canvas.getContext('2d');
 
-                // create new camera and move it to the center (X:0, Y:0 at the center)
-                this.camera = new Camera(this.canvas.width, this.canvas.height);
-                this.camera.worldPos = new Vector2(-this.camera.canvas.width / 2, -this.camera.canvas.height / 2);
+                // create new ocular and move it to the center (X:0, Y:0 at the center)
+                this.ocular = new Ocular(this.canvas.width, this.canvas.height);
+                // this.ocular.worldPos = new Vector2(-this.ocular.canvas.width / 2, -this.ocular.canvas.height / 2);
+                this.ocular.worldPos = new Vector2(0, 0);
 
                 this.animationFrame = window.requestAnimationFrame(this.processFrame.bind(this));
         }
@@ -197,19 +185,54 @@ export class Editor {
                 if ((this.currentScene !== null) &&
                     (typeof this.currentScene !== 'undefined'))
                 {
-                        // clear canvas and camera view
+                        this.canvas.width = this.canvas.clientWidth;
+                        this.canvas.height = this.canvas.clientHeight;
+
+                        // clear canvas and ocular view
                         this.canvasContext.clearRect(0, 0, this.canvas.width, this.canvas.height);
-                        this.camera.clear();
+                        this.ocular.clear();
+
+                        this.ocular.canvasContext.save();
+                        this.ocular.canvasContext.translate(this.canvas.width / 2, this.canvas.height / 2);
+                        this.ocular.canvasContext.scale(this.canvasZoom, this.canvasZoom);
 
                         // process scene frame and draw grid
                         this.processCurrentSceneFrame();
                         if (this.currentGizmo !== null) {
-                                this.currentGizmo.renderGizmo(this.camera);
+                                this.currentGizmo.renderGizmo(this.ocular);
                         }
                         this.drawGrid();
 
-                        // get view of editor camera
-                        this.canvasContext.drawImage(this.camera.canvas, 0, 0);
+                        // get view of editor ocular
+                        this.canvasContext.drawImage(this.ocular.canvas, 0, 0);
+
+                        this.ocular.canvasContext.scale(1 / this.canvasZoom, 1 / this.canvasZoom);
+                        this.ocular.canvasContext.restore();
+                }
+
+                // if a gizmo is shown check if the cursor is hovering an interactible part of it
+                if ((this.mousemoveAction === null) && (this.currentGizmo !== null)) {
+                        let i = 0;
+                        const l = this.currentGizmo.gizmos.length;
+
+                        while (i < l) {
+                                const gizmo = this.currentGizmo.gizmos[i];
+
+                                // todo: add case for zoomed canvas
+                                const zoomedBounds = {};
+                                zoomedBounds.bounds = new Bounds(
+                                        Math.floor(gizmo.bounds.top / this.canvasZoom + this.canvas.height / 2),
+                                        Math.floor(gizmo.bounds.right / this.canvasZoom + this.canvas.width / 2),
+                                        Math.floor(gizmo.bounds.bottom / this.canvasZoom + this.canvas.height / 2),
+                                        Math.floor(gizmo.bounds.left / this.canvasZoom + this.canvas.width / 2)
+                                );
+                                if (Fizzle.checkPointInBox(zoomedBounds, this.cursor.position)) {
+                                        this.hovering = gizmo;
+                                        this.hovering.active = true;
+                                }
+
+                                ++i;
+                        }
                 }
 
                 window.requestAnimationFrame(this.processFrame.bind(this));
@@ -218,73 +241,83 @@ export class Editor {
         // process frame for current scene
         processCurrentSceneFrame() {
                 let i = 0;
-                const l = this.currentScene.gameObjects.length;
+                const l = this.currentScene.talismans.length;
 
                 while (i < l) {
-                        this.processGameObjectFrame(this.currentScene.gameObjects[i]);
+                        this.processTalismanFrame(this.currentScene.talismans[i]);
 
                         ++i;
                 }
         }
 
-        // process frame for the passed GameObject
-        processGameObjectFrame(gameObject) {
-                // skip all disabled gameObjects
-                if (gameObject.attributes['enabled'].value === true) {
-                        // loop through all components in the current gameObject
+        // process frame for the passed talisman
+        processTalismanFrame(talisman) {
+                // skip all disabled talismans
+                if (talisman.attributes['enabled'].value === true) {
+                        // loop through all enchantments in the current talisman
                         let i = 0;
-                        const l = gameObject.components.length;
+                        const l = talisman.enchantments.length;
 
                         while (i < l) {
-                                this.processComponentFrame(gameObject.components[i]);
+                                this.processEnchantmentFrame(talisman.enchantments[i]);
 
                                 ++i;
                         }
                 }
         }
 
-        // process frame for the passed component
-        processComponentFrame(component) {
-                // skip all components that are disabled
-                if (component.attributes['enabled'].value === true) {
-                        // Renderer components
-                        if (component instanceof Renderer) {
-                                // we need to update the renderer components to get the correct world position
-                                component.update();
-                                component.render(this.camera);
+        // process frame for the passed enchantment
+        processEnchantmentFrame(enchantment) {
+                // skip all enchantments that are disabled
+                if (enchantment.attributes['enabled'].value === true) {
+                        // Renderer enchantments
+                        if (enchantment instanceof Renderer) {
+                                // we need to update the renderer enchantments to get the correct world position
+                                enchantment.update();
+                                enchantment.render(this.ocular);
                         }
 
-                        if (component instanceof Collider) {
-                                component.updateWorldPos();
+                        if (enchantment instanceof Collider) {
+                                enchantment.updateWorldPos();
                         }
                 }
         }
 
-        // draw editor grid
+        // draw grid
         drawGrid() {
                 if (this.settings['displayGrid'].value === true) {
                         this.canvasContext.save();
-                        this.canvasContext.lineWidth = this.settings['gridLineWidth'].value;
-                        this.canvasContext.strokeStyle = this.settings['gridLineColor'].value;
+                        this.canvasContext.lineWidth = 0.5 * this.canvasZoom;
+                        this.canvasContext.strokeStyle = this.gridColor;
 
-                        const gridOffsetX = -(this.camera.worldPos.x % this.settings['gridSize'].value.x);
-                        for (let i = gridOffsetX; i < this.canvas.width; i += this.settings['gridSize'].value.x) {
+                        // vertical lines
+                        const gridOffsetX = -((this.ocular.worldPos.x - this.canvas.width / 2) % (this.settings['gridSize'].value.x * this.canvasZoom));
+                        let x = gridOffsetX;
+                        const w = this.canvas.width;
+                        while (x < w) {
                                 this.canvasContext.beginPath();
 
-                                this.canvasContext.moveTo(i, 0);
-                                this.canvasContext.lineTo(i, this.canvas.height);
+                                this.canvasContext.moveTo(x, 0);
+                                this.canvasContext.lineTo(x, this.canvas.height);
 
                                 this.canvasContext.stroke();
+
+                                x += this.settings['gridSize'].value.x * this.canvasZoom;
                         }
 
-                        const gridOffsetY = -(this.camera.worldPos.y % this.settings['gridSize'].value.y);
-                        for (let j = gridOffsetY; j < this.canvas.height; j += this.settings['gridSize'].value.y) {
+                        // horizontal lines
+                        const gridOffsetY = -((this.ocular.worldPos.y - this.canvas.height / 2) % (this.settings['gridSize'].value.y * this.canvasZoom));
+                        let y = gridOffsetY;
+                        const h = this.canvas.height;
+                        while (y < h) {
                                 this.canvasContext.beginPath();
 
-                                this.canvasContext.moveTo(0, j);
-                                this.canvasContext.lineTo(this.canvas.width, j);
+                                this.canvasContext.moveTo(0, y);
+                                this.canvasContext.lineTo(this.canvas.width, y);
 
                                 this.canvasContext.stroke();
+
+                                y += this.settings['gridSize'].value.y * this.canvasZoom;
                         }
 
                         this.canvasContext.restore();
@@ -310,29 +343,329 @@ export class Editor {
                     (typeof json !== 'undefined'))
                 {
                         this.project = this.project.convertToProject(json);
-                        new Snackbar('Project successfully loaded from storage.', SNACKBAR_SUCCESS);
+                        // new Snackbar('Project successfully loaded from storage.', SNACKBAR_SUCCESS);
                 } else {
-                        new Snackbar('No Project in storage. Try saving one first.', SNACKBAR_WARNING);
+                        // new Snackbar('No Project in storage. Try saving one first.', SNACKBAR_WARNING);
                 }
         }
 
-        // == CUSTOM HTML BUTTON ELEMENTS ==
-        // create editor HTML Element for loading a project from an uploaded file
-        createUploadProjectFileButton() {
-                const wrapper = new HtmlElement('div', null, {class: 'upload_file'});
+        // prepare the html for the editor controls
+        prepareEditorHtml() {
+                this.prepareWelcomeScreen();
 
-                // create file input element
-                const input = new HtmlElement('input', null, {
-                        class: 'content hidden',
+                this.prepareEditorUI();
+
+                this.renderTalismanCollection();
+        }
+
+        // add events and functionality to all welcome screen elements
+        prepareWelcomeScreen() {
+                // skip welcome screen entirely
+                const welcomeScreen = document.getElementById('welcome-screen');
+                const loadingScreen = document.getElementById('loading-screen');
+
+                if ((localStorage.getItem('skip_splash_screen') !== null) && (localStorage.getItem('skip_splash_screen') == 1)) {
+                        document.body.removeChild(welcomeScreen);
+                        document.body.removeChild(loadingScreen);
+
+                        this.loadProjectFromStorage();
+                        this.start();
+
+                        return;
+                } else {
+                        welcomeScreen.classList.remove('hidden');
+                        loadingScreen.classList.remove('hidden');
+                }
+
+                // add functionality to buttons on welcome screen
+                // start new ritual
+                const newRitualButton = document.getElementById('new-ritual');
+                if (newRitualButton !== null) {
+                        newRitualButton.addEventListener('click', () => {
+                                this.start();
+
+                                loadingScreen.classList.remove('hidden');
+
+                                // fade out loading screen and remove its dom element
+                                const welcomeAnimation = welcomeScreen.animate({
+                                        opacity: 0
+                                }, {
+                                        duration: 1000,
+                                        fill: 'forwards',
+                                        easing: 'ease'
+                                });
+                                welcomeAnimation.addEventListener('finish', function() {
+                                        document.body.removeChild(welcomeScreen);
+                                });
+
+                                // animate sparkles
+                                const sparkles = loadingScreen.querySelectorAll('.sparkle');
+
+                                const startAnimation = (sparkle) => {
+                                        const minSize = 20;
+                                        const maxSize = 50;
+                                        const maxPosition = 500;
+                                        const duration = 1500;
+
+                                        const animation = sparkle.animate({
+                                                width: (Math.random() * maxSize + minSize) + "px",
+                                                left: "calc(50% - " + (Math.random() * maxPosition - (maxPosition / 2)) + "px)",
+                                                top: "calc(50% - " + (Math.random() * maxPosition - (maxPosition / 2)) + "px)",
+                                        }, {
+                                                duration: duration,
+                                                easing: 'ease-out',
+                                                delay: Math.random() * duration
+                                        });
+
+                                        animation.addEventListener('finish', function() {
+                                                startAnimation(sparkle)
+                                        });
+                                }
+
+                                let i = 0;
+                                const l = sparkles.length;
+                                while (i < l) {
+                                        startAnimation(sparkles[i]);
+
+                                        ++i;
+                                }
+
+                                // fade out loading screen after 5 seconds and remove it from the DOM
+                                window.setTimeout(function() {
+                                        const loadingAnimation = loadingScreen.animate({
+                                                opacity: 0
+                                        }, {
+                                                duration: 1000,
+                                                fill: 'forwards',
+                                                easing: 'ease'
+                                        });
+                                        loadingAnimation.addEventListener('finish', function() {
+                                                document.body.removeChild(loadingScreen);
+                                                // localStorage.setItem('skip_splash_screen', 1);
+                                        });
+                                }, 5000);
+                        });
+                }
+
+                // load ritual
+                const loadRitualButton = document.getElementById('load-ritual');
+                if (loadRitualButton !== null) {
+                        loadRitualButton.addEventListener('click', () => {
+                                this.loadProjectFromStorage();
+                                this.start();
+                                document.body.removeChild(welcomeScreen);
+                                document.body.removeChild(loadingScreen);
+                                //localStorage.setItem('skip_splash_screen', 1);
+                        });
+                }
+        }
+
+        // add events to all editor ui elements
+        prepareEditorUI() {
+                // sidebar
+                this.prepareSidebarUI();
+
+                // editor position
+                this.positionDisplay.addEventListener('click', function(e) {
+                        if (e.target.closest('.fa-arrows-to-dot') !== null) {
+                                this.ocular.worldPos = new Vector2();
+                                document.dispatchEvent(new Event('position_changed'));
+                        }
+                }.bind(this));
+
+                // editor zoom
+                this.zoomDisplay.addEventListener('click', function(e) {
+                        // reset zoom
+                        if (e.target.closest('.fa-expand') !== null) {
+                                this.canvasZoom = 1;
+                                document.dispatchEvent(new Event('zoom_changed'));
+                        }
+
+                        // toggle slider by clicking the percentage
+                        if (e.target.closest('.value') !== null) {
+                                this.zoomDisplay.querySelector('.slider').classList.toggle('hidden');
+                        }
+                }.bind(this));
+
+                // zoom by using the slider
+                const zoomSlider = this.zoomDisplay.querySelector('.slider input');
+                zoomSlider.addEventListener('input', function(e) {
+                        this.canvasZoom = e.target.value / 100;
+
+                        // clamp zoom
+                        this.canvasZoom = Math.clamp(this.canvasZoom, 0.25, 1.75);
+                        document.dispatchEvent(new Event('zoom_changed'));
+                }.bind(this));
+
+                // play button
+                this.playButton.addEventListener('click', function(e) {
+                        this.startPlayMode();
+                }.bind(this));
+
+                // talisman collection
+                this.talismanCollection.addEventListener('click', function(e) {
+                        const item = e.target.closest('.item');
+
+                        // toggle children
+                        const toggleChildren = e.target.closest('.toggle_children');
+                        if (toggleChildren !== null) {
+                                item.classList.toggle('open');
+                        }
+
+                        // set active
+                        const itemName = e.target.closest('.item_name .label');
+                        if (itemName !== null) {
+                                this.updateTalismanCollection(item);
+                        }
+
+                        // visibility
+                        const visibility = e.target.closest('.visibility');
+                        if (visibility !== null) {
+                                item.classList.toggle('invisible');
+                        }
+                }.bind(this));
+
+                // enchantments
+                this.enchantments.addEventListener('click', function(e) {
+                        const state = e.target.closest('.state');
+                        if (state !== null) {
+                                state.closest('.item').classList.toggle('active');
+                        } else {
+                                const itemTitle = e.target.closest('.title');
+
+                                if (itemTitle !== null) {
+                                        const item = itemTitle.closest('.item');
+
+                                        if (item.id !== "name") {
+                                                item.classList.toggle('open');
+                                        }
+                                }
+                        }
+                });
+        }
+
+        // adds click events to all sidebar buttons
+        prepareSidebarUI() {
+                const sidebar = document.getElementById('sidebar');
+
+                // file
+                const fileActionsButton = sidebar.querySelector('.button#file-actions');
+                fileActionsButton.addEventListener('click', function(e) {
+                        this.clearActionsDrawer();
+                        this.updateSidebar(e.target);
+                        this.createFileActions();
+
+                }.bind(this));
+
+                // editor
+                const editorActionsButton = sidebar.querySelector('.button#editor-actions');
+                editorActionsButton.addEventListener('click', function(e) {
+                        this.clearActionsDrawer();
+                        this.updateSidebar(e.target);
+                        this.createEditorActions();
+
+                }.bind(this));
+
+                // scene
+                const sceneActionsButton = sidebar.querySelector('.button#scene-actions');
+                sceneActionsButton.addEventListener('click', function(e) {
+                        this.clearActionsDrawer();
+                        this.updateSidebar(e.target);
+                        this.createSceneActions();
+
+                }.bind(this));
+
+                // fizzle
+                const fizzleActionsButton = sidebar.querySelector('.button#fizzle-actions');
+                fizzleActionsButton.addEventListener('click', function(e) {
+                        this.clearActionsDrawer();
+                        this.updateSidebar(e.target);
+                        this.createFizzleActions();
+
+                }.bind(this));
+
+                // renderer
+                const rendererActionsButton = sidebar.querySelector('.button#renderer-actions');
+                rendererActionsButton.addEventListener('click', function(e) {
+                        this.clearActionsDrawer();
+                        this.updateSidebar(e.target);
+                        this.createRendererActions();
+
+                }.bind(this));
+
+                // dark/light mode
+                sidebar.querySelector('.button#night-switch').addEventListener('click', () => {
+                        const theme = document.body.dataset.theme;
+                        if (theme == "dark") {
+                                document.body.dataset.theme = "light";
+                        } else if (theme == "light") {
+                                document.body.dataset.theme = "dark";
+                        }
+
+                        this.gridColor = getComputedStyle(document.body).getPropertyValue('--canvas-grid-color');
+                });
+
+                // share
+                // todo: add share options in popup - new popup is yet to be designed
+
+                // about
+                sidebar.querySelector('.button#about').addEventListener('click', () => {
+                        const modal = document.getElementById('about-modal');
+                        modal.classList.remove('hidden');
+                });
+        }
+
+        // populate actions-drawer with file actions
+        createFileActions() {
+                const actionsList = this.actionsDrawer.querySelector('.content .items');
+
+                // save file
+                // save the current project to localStorage
+                const saveFileItem = new HtmlElement('div', null, {class: 'item'});
+                saveFileItem.addEventListener('click', function() {
+                        this.saveProjectToStorage();
+                }.bind(this));
+
+                const saveFileIcon = new HtmlElement('i', null, {class: 'fa fa-floppy-disk'});
+                const saveFileLabel = new HtmlElement('div', "Save File", {class: 'label'});
+
+                saveFileItem.appendChild(saveFileIcon);
+                saveFileItem.appendChild(saveFileLabel);
+
+                actionsList.appendChild(saveFileItem);
+
+                // new file
+                // starts a new project (current project will be deleted)
+                const newFileItem = new HtmlElement('div', null, {class: 'item'});
+                newFileItem.addEventListener('click', function() {
+                        console.log("starting new file");
+                        // this.resetProject();
+                }.bind(this));
+
+                const newFileIcon = new HtmlElement('i', null, {class: 'fa fa-file'});
+                const newFileLabel = new HtmlElement('div', "New File", {class: 'label'});
+
+                newFileItem.appendChild(newFileIcon);
+                newFileItem.appendChild(newFileLabel);
+
+                actionsList.appendChild(newFileItem);
+
+
+                // upload file
+                // upload a project file to use
+                const uploadFileItem = new HtmlElement('label', null, {class: 'item', for: 'load-project-from-file'});
+
+                const upload = new HtmlElement('input', null, {
+                        class: 'hidden',
                         type: 'file',
                         accept: 'application/json',
                         id: 'load-project-from-file'
                 });
-                input.addEventListener('change', function(e) {
+                upload.addEventListener('change', function(e) {
                         const file = e.target.files[0];
 
                         if (file.type !== 'application/json') {
-                                console.warn("only .json files are accepted!");
+                                console.warn("Only JSON files are accepted!");
                                 return false;
                         }
 
@@ -347,122 +680,562 @@ export class Editor {
                         }
                 }.bind(this));
 
-                // create label for input element
-                const label = new HtmlElement('label', 'Load Project From File', {
-                        class: 'button_link',
-                        title: 'Upload a JSON file to import a project',
-                        for: input.id
-                });
+                const uploadFileIcon = new HtmlElement('i', null, {class: 'fa fa-upload'});
+                const uploadFileLabel = new HtmlElement('div', "Upload File", {class: 'label'});
 
-                // add font awesome icon
-                const icon = new HtmlElement('i', null, {class: 'fa fa-file-export'});
+                uploadFileItem.appendChild(upload);
+                uploadFileItem.appendChild(uploadFileIcon);
+                uploadFileItem.appendChild(uploadFileLabel);
 
-                label.prepend(icon);
+                actionsList.appendChild(uploadFileItem);
 
-                wrapper.appendChild(input);
-                wrapper.appendChild(label);
 
-                return wrapper;
-        }
-
-        // create editor HTML element for turning the current project into a .json file and downloading it
-        createDownloadProjectButton() {
-                const fileDownload = new HtmlElement('div', null, {class: 'download_file'});
-
-                // create fake link
-                const label = new HtmlElement('div', 'Save Project As File', {
-                        class: 'button_link',
-                        title: 'Export the project as a JSON file'
-                });
-                label.addEventListener('click', function() {
-                        // create invisible link element when clicked
-                        const link = new HtmlElement('a', null, {
-                                class: 'button_link',
+                // download file
+                // download the current project as json
+                const downloadFileItem = new HtmlElement('div', null, {class: 'item'});
+                downloadFileItem.addEventListener('click', function() {
+                        const download = new HtmlElement('a', null, {
                                 href: 'data:text/json;charset=utf-8,' + encodeURIComponent(this.project.convertToJson()),
                                 download: `${this.project.settings['name']}-${Date.now()} .json`
                         });
                         // click link automatically and remove it afterwards
-                        link.click();
-                        link.remove();
+                        download.click();
+                        download.remove();
                 }.bind(this));
 
-                // add font awesome icon
-                const icon = new HtmlElement('i', null, {class: 'fa fa-file-import'});
+                const downloadFileIcon = new HtmlElement('i', null, {class: 'fa fa-download'});
+                const downloadFileLabel = new HtmlElement('div', "Download File", {class: 'label'});
 
-                label.prepend(icon);
-                fileDownload.appendChild(label);
+                downloadFileItem.appendChild(downloadFileIcon);
+                downloadFileItem.appendChild(downloadFileLabel);
 
-                return fileDownload;
+                actionsList.appendChild(downloadFileItem);
         }
 
-        // create editor HTML element for saving the current project in the localStorage
-        createSaveStorageButton() {
-                const saveStorage = new HtmlElement('div', null, {class: 'save_storage'});
+        // populate actions-drawer with editor actions
+        createEditorActions() {
+                const actionsList = this.actionsDrawer.querySelector('.content .items');
 
-                // create link
-                const link = new HtmlElement('a', 'Save Project To Storage', {
-                        class: 'button_link',
-                        title: 'Save the project to the browser`s local storage'
+                // open editor settings
+                const editorSettingsItem = new HtmlElement('div', null, {class: 'item'});
+                editorSettingsItem.addEventListener('click', function() {
+                        console.log("open editor settings");
+                }.bind(this));
+
+                const editorSettingsIcon = new HtmlElement('i', null, {class: 'fa fa-sliders'});
+                const editorSettingsLabel = new HtmlElement('div', "Open Editor Settings", {class: 'label'});
+
+                editorSettingsItem.appendChild(editorSettingsIcon);
+                editorSettingsItem.appendChild(editorSettingsLabel);
+
+                actionsList.appendChild(editorSettingsItem);
+        }
+
+        // populate actions-drawer with scene actions
+        createSceneActions() {
+                const actionsList = this.actionsDrawer.querySelector('.content .items');
+
+                // open scene settings
+                const sceneSettingsItem = new HtmlElement('div', null, {class: 'item'});
+                sceneSettingsItem.addEventListener('click', function() {
+                        console.log("open scene settings");
+                }.bind(this));
+
+                const sceneSettingsIcon = new HtmlElement('i', null, {class: 'fa fa-sliders'});
+                const sceneSettingsLabel = new HtmlElement('div', "Open Scene Settings", {class: 'label'});
+
+                sceneSettingsItem.appendChild(sceneSettingsIcon);
+                sceneSettingsItem.appendChild(sceneSettingsLabel);
+
+                actionsList.appendChild(sceneSettingsItem);
+        }
+
+        // populate actions-drawer with fizzle actions
+        createFizzleActions() {
+                const actionsList = this.actionsDrawer.querySelector('.content .items');
+
+                // open fizzle settings
+                const fizzleSettingsItem = new HtmlElement('div', null, {class: 'item'});
+                fizzleSettingsItem.addEventListener('click', function() {
+                        console.log("open fizzle settings");
+                }.bind(this));
+
+                const fizzleSettingsIcon = new HtmlElement('i', null, {class: 'fa fa-sliders'});
+                const fizzleSettingsLabel = new HtmlElement('div', "Open Fizzle Settings", {class: 'label'});
+
+                fizzleSettingsItem.appendChild(fizzleSettingsIcon);
+                fizzleSettingsItem.appendChild(fizzleSettingsLabel);
+
+                actionsList.appendChild(fizzleSettingsItem);
+        }
+
+        // populate actions-drawer with renderer actions
+        createRendererActions() {
+                const actionsList = this.actionsDrawer.querySelector('.content .items');
+
+                // open renderer settings
+                const rendererSettingsItem = new HtmlElement('div', null, {class: 'item'});
+                rendererSettingsItem.addEventListener('click', function() {
+                        console.log("open renderer settings");
+                }.bind(this));
+
+                const rendererSettingsIcon = new HtmlElement('i', null, {class: 'fa fa-sliders'});
+                const rendererSettingsLabel = new HtmlElement('div', "Open Renderer Settings", {class: 'label'});
+
+                rendererSettingsItem.appendChild(rendererSettingsIcon);
+                rendererSettingsItem.appendChild(rendererSettingsLabel);
+
+                actionsList.appendChild(rendererSettingsItem);
+        }
+
+        // clear all items from actions-drawer
+        clearActionsDrawer() {
+                const itemsList = this.actionsDrawer.querySelector('.content .items');
+
+                while (itemsList.firstChild) {
+                        itemsList.removeChild(itemsList.firstChild);
+                }
+        }
+
+        // update sidebar and actions drawer state according to clicked button
+        updateSidebar(clickedElement) {
+                const clickedButton = clickedElement.closest('.button');
+                const activeButton = clickedButton.closest('#sidebar').querySelector('.button.active');
+
+                if (activeButton == clickedButton) {
+                        clickedButton.classList.remove('active');
+                        this.actionsDrawer.classList.remove('open');
+                } else {
+                        clickedButton.classList.add('active');
+                        this.actionsDrawer.classList.add('open');
+
+                        if (activeButton !== null) {
+                                activeButton.classList.remove('active');
+                        }
+                }
+        }
+
+        // update talisman collection and enchantments drawer state according to clicked item
+        updateTalismanCollection(clickedItem) {
+                const activeItem = this.talismanCollection.querySelector('.item.active');
+
+                if (activeItem == clickedItem) {
+                        clickedItem.classList.remove('active');
+                        this.enchantments.classList.remove('open');
+                } else {
+                        clickedItem.classList.add('active');
+                        this.enchantments.classList.add('open');
+
+                        if (activeItem !== null) {
+                                activeItem.classList.remove('active');
+                        }
+                }
+        }
+
+        // display list of talismans in active scene
+        renderTalismanCollection() {
+                let i = 0;
+                const l = this.currentScene.talismans.length;
+
+                while (i < l) {
+                        const talisman = this.currentScene.talismans[i];
+                        this.renderSingleTalisman(talisman, i);
+
+                        ++i;
+                }
+        }
+
+        // build a single talisman for the talisman-collection
+        renderSingleTalisman(talisman, index = null) {
+                const content = this.talismanCollection.querySelector('.content .items');
+
+                if (index == null) {
+                        index = this.currentScene.talismans.length - 1;
+                }
+
+                const talismanItem = new HtmlElement('div', null, {
+                        class: 'item ' + ((talisman.attributes['visible'].value) ? '' : 'invisible'),
+                        'data-index': index
                 });
-                link.addEventListener('click', function() {
-                        this.saveProjectToStorage();
 
-                        new Snackbar('Project saved to storage.', SNACKBAR_SUCCESS);
+                // toggle children (leave out for now)
+                /*
+                const toggleChildren = new HtmlElement('div', null, {class: 'toggle_children'});
+
+                const caretDown = new HtmlElement('i', null, {class: 'fa fa-caret-down'});
+                toggleChildren.appendChild(caretDown);
+
+                const caretRight = new HtmlElement('i', null, {class: 'fa fa-caret-right'});
+                toggleChildren.appendChild(caretRight);
+
+                talismanItem.appendChild(toggleChildren);
+                */
+
+                // item name
+                const itemName = new HtmlElement('div', null, {class: 'item_name'});
+
+                const itemIcon = new HtmlElement('i', null, {class: 'fa ' + talisman.icon});
+                itemName.appendChild(itemIcon);
+
+                const itemLabel = new HtmlElement('div', talisman.attributes['name'].value, {class: 'label'});
+                itemLabel.addEventListener('click', function() {
+                        if (talismanItem.classList.contains('active')) {
+                                this.activeTalisman = null;
+                                this.currentGizmo = null;
+                        } else {
+                                this.activeTalisman = talisman;
+                                this.currentGizmo = talisman.getEnchantment('Transform');
+                        }
+
+                        document.dispatchEvent(new Event('active_talisman_changed'));
                 }.bind(this));
-
-                // add font awesome icon
-                const icon = new HtmlElement('i', null, {class: 'fa fa-download'});
-
-                link.prepend(icon);
-                saveStorage.appendChild(link);
-
-                return saveStorage;
-        }
-
-        // create editor HTML element for loading a project from the localStorage
-        createLoadStorageButton() {
-                const loadStorage = new HtmlElement('div', null, {class: 'save_storage'});
-
-                // create link
-                const link = new HtmlElement('a', 'Load Project From Storage', {
-                        class: 'button_link',
-                        title: 'Load the project currently in the browser`s local storage'
+                document.addEventListener('talisman_name_changed', function() {
+                        itemLabel.innerHTML = talisman.attributes['name'].value;
                 });
-                link.addEventListener('click', function() {
-                        this.loadProjectFromStorage();
-                }.bind(this));
+                itemName.appendChild(itemLabel);
 
-                // add font awesome icon
-                const icon = new HtmlElement('i', null, {class: 'fa fa-upload'});
+                const itemVisibility = new HtmlElement('div', null, {class: 'visibility'});
+                itemVisibility.addEventListener('click', function() {
+                        if (talisman.attributes['visible'].value === false) {
+                                talisman.attributes['visible'].value = true;
+                        } else {
+                                talisman.attributes['visible'].value = false;
+                        }
+                });
 
-                link.prepend(icon);
-                loadStorage.appendChild(link);
+                const visible = new HtmlElement('i', null, {class: 'fa fa-eye'});
+                itemVisibility.appendChild(visible);
+                const invisible = new HtmlElement('i', null, {class: 'fa fa-eye-slash'});
+                itemVisibility.appendChild(invisible);
 
-                return loadStorage;
+                itemName.appendChild(itemVisibility);
+
+
+                talismanItem.appendChild(itemName);
+
+                // children (leave out for now)
+                /* 
+                const children = new HtmlElement('div', null, {class: 'children'});
+
+                talismanItem.appendChild(children);
+                */
+
+                content.appendChild(talismanItem);
         }
 
+        // build and display the enchantments for the currently active talisman
+        renderEnchantments() {
+                const content = this.enchantments.querySelector('.content');
+
+                // talisman name
+                const nameItem = new HtmlElement('div', null, {class: 'item ' + ((this.activeTalisman.attributes['enabled'].value) ? 'active' : ''), id: 'name'});
+
+                const nameTitle = new HtmlElement('div', null, {class: 'title'});
+
+                const nameIcon = new HtmlElement('i', null, {class: 'fa fa-signature'});
+                nameTitle.appendChild(nameIcon);
+
+                const nameValue = new HtmlElement('div', null, {class: 'value'});
+                nameValue.appendChild(this.activeTalisman.attributes['name'].createWidget());
+                nameTitle.appendChild(nameValue);
+
+                // enable / disable talisman
+                const nameState = new HtmlElement('div', null, {class: 'state'});
+                nameState.addEventListener('click', function() {
+                        this.activeTalisman.attributes['enabled'].value = !this.activeTalisman.attributes['enabled'].value;
+                }.bind(this));
+
+                const nameDisable = new HtmlElement('i', null, {class: 'fa fa-square'});
+                nameState.appendChild(nameDisable);
+                const nameEnable = new HtmlElement('i', null, {class: 'fa fa-square-check'});
+                nameState.appendChild(nameEnable);
+
+                nameTitle.appendChild(nameState);
+
+                nameItem.appendChild(nameTitle);
+                content.appendChild(nameItem);
+
+
+                // talisman enchantments
+                let i = 0;
+                const l = this.activeTalisman.enchantments.length;
+
+                while (i < l) {
+                        const enchantment = this.activeTalisman.enchantments[i];
+
+                        // have Transform enchantments open by default
+                        let open = false;
+                        let allowDisable = true;
+                        if (enchantment.type == "Transform") {
+                                open = true;
+                                allowDisable = false;
+                        }
+
+                        const item = this.renderSingleEnchantment(enchantment, i, open, allowDisable);
+
+                        content.appendChild(item);
+
+                        ++i;
+                }
+        }
+
+        // build a single enchantment for the enchantments container
+        renderSingleEnchantment(enchantment, index = null, open = false, allowDisable = true) {
+                const item = new HtmlElement('div', null, {
+                        class: 'item ' + ((enchantment.attributes['enabled'].value) ? 'active ' : '') + ((open) ? 'open' : ''),
+                        'data-index': index
+                });
+
+                // title
+                const title = new HtmlElement('div', null, {class: 'title'});
+                const icon = new HtmlElement('i', null, {class: 'fa ' + enchantment.icon});
+                title.appendChild(icon);
+
+                const label = new HtmlElement('div', enchantment.type, {class: 'label'});
+                title.appendChild(label);
+
+                // enable / disable enchantment
+                if (allowDisable === true) {
+                        const status = new HtmlElement('div', null, {class: 'state'});
+                        status.addEventListener('click', () => {
+                                enchantment.attributes['enabled'].value = !enchantment.attributes['enabled'].value;
+                        });
+
+                        const disable = new HtmlElement('i', null, {class: 'fa fa-square-check'});
+                        status.appendChild(disable);
+
+                        const enable = new HtmlElement('i', null, {class: 'fa fa-square'});
+                        status.appendChild(enable);
+
+                        title.appendChild(status);
+                }
+
+                item.appendChild(title);
+
+                // properties
+                const properties = new HtmlElement('div', null, {class: 'properties'});
+                for (let key in enchantment.attributes) {
+                        if (key !== 'enabled') {
+                                // skip 'enabled' attribute because we already added it in the title
+
+                                if (enchantment.attributes[key] instanceof AttributeText) {
+                                        const widget = enchantment.attributes[key].createWidget();
+
+                                        properties.appendChild(widget);
+                                }
+                        }
+                }
+
+                item.appendChild(properties);
+
+                return item;
+        }
+
+        // clear enchantments - called after changing active talisman
+        clearEnchantments() {
+                const content = this.enchantments.querySelector('.content');
+
+                while (content.firstChild) {
+                        content.removeChild(content.firstChild);
+                }
+        }
+
+        // show context menu at position x, y
+        showContextMenu(x, y) {
+                // un-hide context menu and move to clicked position
+                this.contextMenu.classList.remove('hidden');
+                this.contextMenu.style.left = `${x}px`;
+                this.contextMenu.style.top = `${y}px`;
+
+                // re-calculate position and adjust to keep bounds inside screen
+                const rightBorder = this.contextMenu.offsetLeft + this.contextMenu.clientWidth;
+                const rightOverlap = document.body.clientWidth - rightBorder;
+                if (rightOverlap < 0) {
+                        x += rightOverlap - 10;
+                }
+
+                const bottomBorder = this.contextMenu.offsetTop + this.contextMenu.clientHeight;
+                const bottomOverlap = document.body.clientHeight - bottomBorder;
+                if (bottomOverlap < 0){
+                        y += bottomOverlap - 10;
+                }
+
+                this.contextMenu.style.left = `${x}px`;
+                this.contextMenu.style.top = `${y}px`;
+        }
+
+        // hide context menu
+        hideContextMenu() {
+                this.contextMenu.classList.add('hidden');
+        }
+
+        // clear options from context menu
+        clearContextMenu() {
+                while (this.contextMenu.firstChild) {
+                        this.contextMenu.removeChild(this.contextMenu.firstChild);
+                }
+        }
+
+        // build context menu for talismans
+        renderTalismanContextMenu(talisman = null) {
+                if (talisman == null) {
+                        // create new talisman
+                        const createTalisman = new HtmlElement('div', "Create new Talisman", { class: 'option' });
+                        createTalisman.addEventListener('click', function() {
+                                const newTalisman = new Talisman();
+
+                                this.currentScene.addTalisman(newTalisman);
+                                this.renderSingleTalisman(newTalisman);
+
+                                this.hideContextMenu();
+                        }.bind(this));
+
+                        this.contextMenu.appendChild(createTalisman);
+
+                        // other options
+
+                } else {
+                        // destroy this talisman
+                        const destroyTalisman = new HtmlElement('div', "Destroy this Talisman", { class: 'option' });
+                        destroyTalisman.addEventListener('click', function() {
+                                console.log("destroying talisman...");
+                                this.hideContextMenu();
+                        }.bind(this));
+
+                        this.contextMenu.appendChild(destroyTalisman);
+
+                        // other options
+
+                }
+        }
+
+        // build context menu for editor view
+        renderEditorContextMenu() {
+                // todo: add context menu options
+        }
+
+        // build context menu for enchantments
+        renderEnchantmentContextMenu(enchantment = null) {
+                if (enchantment == null) {
+                        // add new enchantment menu
+                        const addEnchantment = new HtmlElement('div', null, { class: 'menu' });
+                        addEnchantment.addEventListener('click', function() {
+                                addEnchantment.classList.add('open');
+                        });
+
+                        const menuTitle = new HtmlElement('span', "Add new Enchantment");
+                        addEnchantment.appendChild(menuTitle);
+
+                        // enchantments menu tree
+                        const tree = new HtmlElement('div', null, {class: 'tree'});
+
+                        for (const key in this.availableEnchantments) {
+                                const branchItem = this.availableEnchantments[key];
+
+                                const branch = new HtmlElement('div', null, {class: 'branch'});
+
+                                // branch title
+                                const branchTitle = new HtmlElement('div', null, {class: 'title'});
+                                branchTitle.addEventListener('click', function() {
+                                        branch.classList.add('open');
+                                        tree.classList.add('open');
+                                });
+
+                                const titleText = new HtmlElement('span', key);
+                                const titleIcon = new HtmlElement('i', null, {class: 'fa fa-chevron-right'});
+
+                                branchTitle.appendChild(titleText);
+                                branchTitle.appendChild(titleIcon);
+
+                                branch.appendChild(branchTitle);
+
+                                // branch children
+                                const branchBack = new HtmlElement('div', null, {class: 'leaf back'});
+                                branchBack.addEventListener('click', function() {
+                                        branch.classList.remove('open');
+                                        tree.classList.remove('open');
+                                });
+
+                                const backIcon = new HtmlElement('i', null, {class: 'fa fa-chevron-left'});
+                                const backText = new HtmlElement('span', 'Back');
+
+                                branchBack.appendChild(backIcon);
+                                branchBack.appendChild(backText);
+
+                                branch.appendChild(branchBack);
+
+                                // add leaves
+                                let i = 0;
+                                const l = branchItem.length;
+
+                                while (i < l) {
+                                        const leafItem = branchItem[i];
+                                        const leafEnchantment = eval(`new ${leafItem.replace(' ', '')}()`);
+
+                                        const leaf = new HtmlElement('div', null, {class: 'leaf'});
+                                        leaf.addEventListener('click', function() {
+                                                this.activeTalisman.addEnchantment(leafEnchantment);
+
+                                                const content = this.enchantments.querySelector('.content');
+                                                const item = this.renderSingleEnchantment(leafEnchantment, this.activeTalisman.enchantments.length - 1, true);
+                                                content.appendChild(item);
+
+                                                // close tree and hide context menu
+                                                branch.classList.remove('open');
+                                                tree.classList.remove('open');
+                                                addEnchantment.classList.remove('open');
+
+                                                this.hideContextMenu();
+                                        }.bind(this));
+
+                                        // enchantment icon
+                                        const leafIcon = new HtmlElement('i', null, { class: 'fa ' + leafEnchantment.icon});
+                                        leaf.appendChild(leafIcon);
+
+                                        // enchantment name
+                                        const leafTitle = new HtmlElement('span', leafItem);
+                                        leaf.appendChild(leafTitle);
+
+                                        branch.appendChild(leaf);
+
+                                        ++i;
+                                }
+
+                                tree.appendChild(branch);
+                        }
+
+                        addEnchantment.appendChild(tree);
+
+                        this.contextMenu.appendChild(addEnchantment);
+
+                        // other option
+
+                } else {
+                        // remove this enchantment
+                        if (enchantment.type !== "Transform") {
+                                const removeEnchantment = new HtmlElement('div', "Remove this Enchantment", { class: 'option' });
+                                removeEnchantment.addEventListener('click', function() {
+                                        console.log("removing enchantment...");
+                                        this.hideContextMenu();
+                                }.bind(this));
+
+                                this.contextMenu.appendChild(removeEnchantment);
+                        }
+
+                        // reset values
+                        const resetEnchantment = new HtmlElement('div', "Reset Enchantment values", { class: 'option' });
+                        resetEnchantment.addEventListener('click', function() {
+                                enchantment.resetAttributes();
+
+                                this.hideContextMenu();
+                        }.bind(this));
+
+                        this.contextMenu.appendChild(resetEnchantment);
+                }
+        }
+
+        // == CUSTOM HTML BUTTON ELEMENTS ==   (deprecated - keeping it for now to move to new buttons later)
         // create editor HTML element for opening the project settings popup
-        createOpenEditorSettingsButton() {
-                const openSettings = new HtmlElement('div', null, {class: 'editor_settings'});
-
-                // create button
-                const button = new HtmlElement('div', 'Editor Settings', {
-                        class: 'button_link',
-                        title: 'Change the editor settings'
-                });
-                button.addEventListener('click', function() {
-                        new Popup('Editor Settings', this.createEditorSettingsForm(), 'editor_settings');
-                }.bind(this));
-
-                // add font awesome icon
-                const icon = new HtmlElement('i', null, {class: 'fa fa-sliders'});
-
-                button.prepend(icon);
-                openSettings.appendChild(button);
-
-                return openSettings;
-        }
-
         createEditorSettingsForm() {
                 const form = new HtmlElement('form', null, {id: 'editor-settings-form'});
 
@@ -474,28 +1247,6 @@ export class Editor {
                 }
 
                 return form;
-        }
-
-        // create editor HTML element for opening the project settings popup
-        createOpenProjectSettingsButton() {
-                const openSettings = new HtmlElement('div', null, {class: 'project_settings'});
-
-                // create button
-                const button = new HtmlElement('div', 'Project Settings', {
-                        class: 'button_link',
-                        title: 'Edit the project settings'
-                });
-                button.addEventListener('click', function() {
-                        new Popup('Project Settings', this.createProjectSettingsForm(), 'project_settings');
-                }.bind(this));
-
-                // add font awesome icon
-                const icon = new HtmlElement('i', null, {class: 'fa fa-sliders'});
-
-                button.prepend(icon);
-                openSettings.appendChild(button);
-
-                return openSettings;
         }
 
         // create HTML form with this project's settings
@@ -562,28 +1313,6 @@ export class Editor {
         }
 
         // create HTML form with this project's renderer settings
-        createOpenRendererSettingsButton() {
-                const openSettings = new HtmlElement('div', null, {class: 'renderer_settings'});
-
-                // create button
-                const button = new HtmlElement('div', 'Renderer Settings', {
-                        class: 'button_link',
-                        title: 'Edit the project`s renderer settings'
-                });
-                button.addEventListener('click', function() {
-                        new Popup('Renderer Settings', this.createRendererSettingsForm(), 'renderer_settings');
-                }.bind(this));
-
-                // add font awesome icon
-                const icon = new HtmlElement('i', null, {class: 'fa fa-image'});
-
-                button.prepend(icon);
-                openSettings.appendChild(button);
-
-                return openSettings;
-        }
-
-        // create HTML form with this project's renderer settings
         createRendererSettingsForm() {
                 const form = new HtmlElement('form', null, {id: 'renderer-settings-form'});
 
@@ -597,34 +1326,12 @@ export class Editor {
                 return form;
         }
 
-        // create HTML form with this project's physics settings
-        createOpenPhysicsSettingsButton() {
-                const openSettings = new HtmlElement('div', null, {class: 'physics_settings'});
-
-                // create button
-                const button = new HtmlElement('div', 'Physics Settings', {
-                        class: 'button_link',
-                        title: 'Edit the project`s physics settings'
-                });
-                button.addEventListener('click', function() {
-                        new Popup('Physics Settings', this.createPhysicsSettingsForm(), 'physics_settings');
-                }.bind(this));
-
-                // add font awesome icon
-                const icon = new HtmlElement('i', null, {class: 'fa fa-explosion'});
-
-                button.prepend(icon);
-                openSettings.appendChild(button);
-
-                return openSettings;
-        }
-
         createPhysicsSettingsForm() {
                 const form = new HtmlElement('form', null, {id: 'physics-settings-form'});
 
                 // create widgets for all attributes
-                for (let key in this.project.physicsEngine.attributes) {
-                        const widget = this.project.physicsEngine.attributes[key].createWidget();
+                for (let key in this.project.fizzle.attributes) {
+                        const widget = this.project.fizzle.attributes[key].createWidget();
 
                         form.appendChild(widget);
                 }
@@ -632,435 +1339,12 @@ export class Editor {
                 return form;
         }
 
-        // create editor HTML element the about popup
-        createAboutPopupContent() {
-                const wrapper = new HtmlElement('div', null, {});
-
-                const engineName = new HtmlElement('div', 'Voodoo Game-Engine', {class: 'engine_name mt_10 text_bold text_center'});
-                wrapper.appendChild(engineName);
-
-                const version = new HtmlElement('div', 'v1.0a', {class: 'version text_center'});
-                wrapper.appendChild(version);
-
-                const infoText = new HtmlElement('div', 'Voodoo is an open source JavaScript based in-browser game engine and is free to use.<br>Please report any that try to sell this engine for profit!<br><br>Feel free to experiment with the different components and the editor.<br>Thank you for using Voodoo!', {class: 'engine_info mx_20 text_center'});
-                wrapper.appendChild(infoText);
-
-                const creator = new HtmlElement('div', 'Created by Sven May', {class: 'creator'});
-                wrapper.appendChild(creator);
-
-                const supportButton = new HtmlElement('a', 'Support the creator', {class: 'fake_button button_link support py_5 px_10', href: '#'});
-                wrapper.appendChild(supportButton);
-
-                return wrapper;
-        }
-
-        createPlayButton() {
-                const wrapper = new HtmlElement('div', '', {id: 'play-button', title: 'Start Play-Mode', class: 'py_10 px_20'});
-                wrapper.addEventListener('click', function() {
-                        this.startPlayMode();
-                }.bind(this));
-
-                const icon = new HtmlElement('i', '', {class: 'fa fa-play'});
-                wrapper.appendChild(icon);
-
-                return wrapper;
-        }
-
-        // == PLAY MODE ==
+        // opens the current project in a new tab for play testing
         startPlayMode() {
-                new Snackbar('Starting Play-Mode...', SNACKBAR_NEUTRAL);
-
                 this.saveProjectToStorage();
 
                 const currentUrl = window.location.origin + window.location.pathname;
-                window.open(currentUrl.replace('edit_mode', 'play_mode'), '_blank').focus();
-        }
-
-        // == SCENES ==
-        // create editor HTML element for the scene list
-        createScenesListElement() {
-                let i = 0;
-                const l = this.project.sceneList.length;
-
-                while (i < l) {
-                        // loop all scenes in project and add scene card HTML
-                        this.createSceneCardElement(this.project.sceneList[i]);
-
-                        ++i;
-                }
-
-                // "add new scene" button
-                const button = new HtmlElement('div', '&#x2b Add New Scene', {
-                        class: 'fake_button mt_auto',
-                        title: 'Adds a new scene to the project'
-                });
-                button.addEventListener('click', function() {
-                        this.project.addScene(new Scene(this.project));
-                        this.reloadEditorElements();
-
-                        new Snackbar('New Scene successfully added', SNACKBAR_SUCCESS);
-                }.bind(this));
-
-                document.querySelector(this.project.settings.sceneListWrapper).appendChild(button);
-        }
-
-        // remove all editor HTML elements for the scenes list
-        removeScenesListElement() {
-                const sceneListNode = document.querySelector(this.project.settings.sceneListWrapper);
-
-                let i = 0;
-                const l = sceneListNode.children.length;
-
-                while (i < l) {
-                        sceneListNode.lastElementChild.remove();
-
-                        ++i;
-                }
-        }
-
-        // create editor HTML element for the scene
-        createSceneCardElement(scene) {
-                const wrapper = new HtmlElement('div', null, {class: 'scene'});
-
-                const name = scene.attributes['name'].createWidget();
-
-                wrapper.appendChild(name);
-
-                if (scene !== this.currentScene) {
-                        const button = new HtmlElement('div', 'Select', {class: 'fake_button'});
-                        button.addEventListener('click', function() {
-                                this.project.loadScene(this.project.getSceneIndex(scene));
-
-                                window.dispatchEvent(new Event('scene_list_changed'));
-                        }.bind(this));
-
-                        wrapper.appendChild(button);
-                }
-
-                const listNode = document.querySelector(this.project.settings.sceneListWrapper);
-                listNode.appendChild(wrapper);
-        }
-
-        // == GAMEOBJECTS ==
-        // create editor HTML for all gameObjects
-        createGameObjectsListElement() {
-                let i = 0;
-                let l = this.currentScene.gameObjects.length;
-
-                while (i < l) {
-                        // loop all game objects in the current scene
-                        this.createGameObjectCardElement(this.currentScene.gameObjects[i]);
-
-                        ++i;
-                }
-
-                // "add new gameObject" form
-                const select = new HtmlElement('select', 'Adds a new Game Object to the selected scene', {class: 'add_gameObject'});
-
-                const defaultOption = new HtmlElement('option', '&#x2b; Add new Game Object', {value: 0});
-
-                select.appendChild(defaultOption);
-
-                i = 0;
-                l = this.availableGameObjects.length;
-
-                while (i < l) {
-                        // loop all available game objects for the dropdown
-                        const option = new HtmlElement('option', this.availableGameObjects[i], {value: this.availableGameObjects[i]});
-
-                        select.appendChild(option);
-
-                        ++i;
-                }
-
-                select.addEventListener('change', function(e) {
-                        const selectedOption = e.target.children[e.target.selectedIndex].value;
-
-                        if (selectedOption !== 0) {
-                                let newObject = eval(`new ${selectedOption.replace(' ', '')}()`);
-
-                                this.currentScene.addGameObject(newObject);
-                        }
-
-                        this.reloadEditorElements();
-                }.bind(this));
-
-                document.querySelector(this.project.settings.gameObjectListWrapper).appendChild(select);
-        }
-
-        // create editor HTML element for the gameObject title
-        createGameObjectTitleElement(gameObject) {
-                const content = new HtmlElement('div', null, {class: 'content'});
-
-                for (let key in gameObject.attributes) {
-                        if (gameObject.attributes[key] instanceof AttributeText) {
-                                const widget = gameObject.attributes[key].createWidget();
-
-                                content.appendChild(widget);
-                        }
-                }
-
-                return content;
-        }
-
-        // remove all editor HTML elements in the game objects list
-        removeGameObjectsListElement() {
-                const gameObjectsNode = document.querySelector(this.project.settings.gameObjectListWrapper);
-
-                let i = 0;
-                const l = gameObjectsNode.children.length;
-
-                while (i < l) {
-                        gameObjectsNode.lastElementChild.remove();
-
-                        ++i;
-                }
-        }
-
-        // create editor HTML element per game object
-        createGameObjectCardElement(gameObject) {
-                const wrapper = new HtmlElement('div', null, {class: 'game_object'});
-
-                wrapper.addEventListener('click', function(e) {
-                        const thisElement = e.target.closest('.game_object');
-
-                        if (!thisElement.classList.contains('selected')) {
-                                const selected = thisElement.parentElement.querySelector('.selected');
-                                if ((selected !== null) &&
-                                    (selected !== thisElement))
-                                {
-                                        selected.classList.remove('selected');
-                                        this.removeComponentsListElement();
-                                }
-
-                                this.createComponentsListElement(gameObject);
-                                thisElement.classList.add('selected');
-                                this.currentGameObject = gameObject;
-                                this.currentGameObjectHTML = thisElement;
-                                this.currentGizmo = gameObject.transform;
-                        } else {
-                                thisElement.classList.remove('selected');
-                                this.removeComponentsListElement();
-                                this.currentGameObject = null;
-                                this.currentGameObjectHTML = null;
-                                this.currentGizmo = null;
-                        }
-                }.bind(this));
-
-                const title = new HtmlElement('div', gameObject.attributes['name'].value, {class: 'title'});
-
-                wrapper.appendChild(title);
-
-                const listNode = document.querySelector(this.project.settings.gameObjectListWrapper);
-                listNode.appendChild(wrapper);
-        }
-
-        // == COMPONENTS ==
-        // create editor HTML element containing all components
-        createComponentsListElement(gameObject) {
-                // create info card
-                const card = new HtmlElement('div', null, {class: 'card components_list'});
-                const title = new HtmlElement('div', null, {class: 'card_title'});
-                title.appendChild(this.createGameObjectTitleElement(gameObject));
-
-                const content = new HtmlElement('div', null, {class: 'card_content'});
-
-                // add component cards to card content
-                let i = 0;
-                const l = gameObject.components.length;
-
-                while (i < l) {
-                        const component = gameObject.components[i];
-                        let additionalContent = null;
-
-                        if (component instanceof Collider) {
-                                const showGizmoButton = new HtmlElement('div', 'Toggle Gizmo', {class: 'fake_button'});
-                                showGizmoButton.addEventListener('click', function() {
-                                        if (this.currentGizmo === component) {
-                                                this.currentGizmo = component.gameObject.transform;
-                                        } else {
-                                                this.currentGizmo = component;
-                                        }
-                                }.bind(this));
-
-                                additionalContent = showGizmoButton;
-                        }
-
-                        content.appendChild(component.createEditorCard(additionalContent));
-
-                        ++i;
-                }
-
-                // add new component select to card content
-                const select = this.createAddComponentMenu(gameObject);
-
-                content.appendChild(select);
-
-                card.appendChild(title);
-                card.appendChild(content);
-
-                const listNode = document.querySelector(this.project.settings.componentListWrapper);
-                listNode.appendChild(card);
-        }
-
-        // remove all editor HTML elements for the components
-        removeComponentsListElement() {
-                const componentsListNode = document.querySelector(this.project.settings.componentListWrapper);
-
-                let i = 0;
-                const l = componentsListNode.children.length;
-
-                while (i < l) {
-                        componentsListNode.lastElementChild.remove();
-
-                        ++i;
-                }
-        }
-
-        createAddComponentMenu(gameObject) {
-                const dropdown = new HtmlElement('div', null, {id: 'add-component-dropdown', class: 'dropdown_list'});
-                const button = new HtmlElement('button', '&#x2b; Add Component', {class: 'dropdown_button'});
-                button.addEventListener('mousedown', function() {
-                        const openCategory = dropdown.querySelector('.dropdown_menu_category.open');
-                        if (openCategory !== null) {
-                                openCategory.classList.remove('open');
-                        }
-
-                        dropdown.classList.toggle('open');
-                });
-
-                const menu = new HtmlElement('div', null, {class: 'dropdown_list_menu'});
-
-                // add categories
-                for (const key in this.availableComponents) {
-                        const category = this.availableComponents[key];
-                        const categoryHtml = new HtmlElement('div', null, {class: 'dropdown_menu_category'});
-
-                        const categoryTitle = new HtmlElement('div', null, {class: 'title'});
-                        categoryTitle.addEventListener('click', function() {
-                                categoryHtml.classList.add('open');
-                                menu.classList.add('category_open');
-                        });
-
-                        const titleText = new HtmlElement('span', key);
-                        const titleIcon = new HtmlElement('i', null, {class: 'fa fa-chevron-right mr_5 float_right'});
-
-                        categoryTitle.appendChild(titleText);
-                        categoryTitle.appendChild(titleIcon);
-
-                        categoryHtml.appendChild(categoryTitle);
-
-                        const categoryBack = new HtmlElement('div', null, {class: 'back'});
-                        categoryBack.addEventListener('click', function() {
-                                categoryHtml.classList.remove('open');
-                                menu.classList.remove('category_open');
-                        });
-
-                        const backIcon = new HtmlElement('i', null, {class: 'fa fa-chevron-left mr_5'});
-                        const backText = new HtmlElement('span', 'Go Back');
-
-                        categoryBack.appendChild(backIcon);
-                        categoryBack.appendChild(backText);
-
-                        categoryHtml.appendChild(categoryBack);
-
-                        // add category items
-                        let i = 0;
-                        const l = category.length;
-
-                        while (i < l) {
-                                const item = category[i];
-                                const itemHtml = new HtmlElement('div', item, {class: 'dropdown_menu_item'});
-                                itemHtml.addEventListener('click', function() {
-                                        const newComponent = eval(`new ${item.replace(' ', '')}()`);
-                                        gameObject.addComponent(newComponent);
-
-                                        // close dropdown and category
-                                        categoryHtml.classList.remove('open');
-                                        menu.classList.remove('category_open');
-                                        dropdown.classList.remove('open');
-
-                                        // add "toggle gizmo" button for certain components
-                                        let additionalContent = null;
-
-                                        if (newComponent instanceof Collider) {
-                                                const showGizmoButton = new HtmlElement('div', 'Toggle Gizmo', {class: 'fake_button'});
-                                                showGizmoButton.addEventListener('click', function() {
-                                                        if (this.currentGizmo === newComponent) {
-                                                                this.currentGizmo = newComponent.gameObject.transform;
-                                                        } else {
-                                                                this.currentGizmo = newComponent;
-                                                        }
-                                                }.bind(this));
-
-                                                additionalContent = showGizmoButton;
-                                        }
-
-                                        const componentCardElement = newComponent.createEditorCard(additionalContent);
-                                        const parent = document.querySelector('.components_list .card_content');
-                                        const nextSibling = document.getElementById('add-component-dropdown');
-
-                                        parent.insertBefore(componentCardElement, nextSibling);
-                                }.bind(this));
-
-                                categoryHtml.appendChild(itemHtml);
-
-                                ++i;
-                        }
-
-                        menu.appendChild(categoryHtml);
-                }
-
-                dropdown.appendChild(button);
-                dropdown.appendChild(menu);
-
-                return dropdown;
-        }
-
-        // create editor HTML for the current project
-        generateEditorElements() {
-                // load sceneList
-                this.createScenesListElement();
-
-                // load gameObjects
-                this.createGameObjectsListElement();
-        }
-
-        // remove all current editor HTML elements
-        clearEditorElements() {
-                // scenes
-                this.removeScenesListElement();
-
-                // game Objects
-                this.removeGameObjectsListElement();
-
-                // components
-                this.removeComponentsListElement();
-        }
-
-        // clear and create editor HTML
-        reloadEditorElements() {
-                this.clearEditorElements();
-                this.generateEditorElements();
-        }
-
-        // == HTML ELEMENTS ==
-        // dropdown functions
-        closeAllTabDropdowns(tabbar = null) {
-                let dropdowns = document.querySelectorAll('.tabbar .dropdown');
-
-                if (tabbar !== null) {
-                        dropdowns = tabbar.querySelectorAll('.dropdown');
-                }
-
-                let i = 0;
-                const l = dropdowns.length;
-
-                while (i < l) {
-                        dropdowns[i].classList.remove('open');
-
-                        ++i;
-                }
+                window.open(currentUrl.replace('editor', 'player'), '_blank').focus();
         }
 
         // == EVENTS ==
@@ -1069,9 +1353,6 @@ export class Editor {
                 const eventLookup = {
                         project_settings_changed: function(e) {
                                 this.onProjectSettingsChanged(e);
-                        }.bind(this),
-                        scene_list_changed: function(e) {
-                                this.onSceneListChanged(e);
                         }.bind(this),
                         mousedown: function(e) {
                                 this.onMousedown(e);
@@ -1085,11 +1366,20 @@ export class Editor {
                         click: function(e) {
                                 this.onClick(e);
                         }.bind(this),
+                        contextmenu: function(e) {
+                                this.onContextMenu(e);
+                        }.bind(this),
                         wheel: function(e) {
                                 this.onWheel(e);
                         }.bind(this),
-                        current_gameObject_name_changed: function(e) {
-                                this.onCurrentGameObjectNameChanged(e);
+                        position_changed: function(e) {
+                                this.onPositionChanged(e);
+                        }.bind(this),
+                        zoom_changed: function(e) {
+                                this.onZoomChanged(e);
+                        }.bind(this),
+                        active_talisman_changed: function(e) {
+                                this.onActiveTalismanChanged(e)
                         }.bind(this),
                         default: function(e) {
                                 console.warn(`Unexpected event: ${e.type}`);
@@ -1104,16 +1394,28 @@ export class Editor {
                 if (e.which == 1) {
                         // if a popup title has been clicked - move popup
                         if (e.target.closest('.popup_title') !== null) {
-                                this.movePopup = e.target.closest('.popup');
+                                this.mousemoveAction = e.target.closest('.popup');
+                        }
+
+                        // if something in the canvas is being clicked
+                        if (e.target.closest('#editor-view') !== null) {
+                                this.cursor.leftClick = true;
+                                this.cursor.leftClickDownPos = new Vector2(e.clientX, e.clientY);
+
+                                if (this.hovering !== null) {
+                                        this.mousemoveAction = this.hovering;
+                                }
                         }
                 } else if (e.which == 2) {
-                        // if editor canvas has been clicked - move camera
-                        if (e.target.closest(this.settings['canvasSelector'].value) !== null) {
+                        // if editor canvas has been clicked - move ocular
+                        if (e.target.closest('#editor-view') !== null) {
                                 this.cursor.wheelClick = true;
                                 this.cursor.wheelClickDownPos = new Vector2(e.clientX, e.clientY);
+
+                                this.mousemoveAction = this.canvas;
                         }
                 } else if (e.which == 3) {
-                        if (e.target.closest(this.settings['canvasSelector'].value) !== null) {
+                        if (e.target.closest('#editor-view') !== null) {
                                 this.cursor.rightClick = true;
                                 this.cursor.rightClickDownPos = new Vector2(e.clientX, e.clientY);
                         }
@@ -1125,8 +1427,6 @@ export class Editor {
                 if (e.which == 1) {
                         this.cursor.leftClick = false;
                         this.cursor.leftClickUpPos = new Vector2(e.clientX, e.clientY);
-
-                        this.movePopup = null;
                 } else if (e.which == 2) {
                         this.cursor.wheelClick = false;
                         this.cursor.wheelClickUpPos = new Vector2(e.clientX, e.clientY);
@@ -1134,87 +1434,141 @@ export class Editor {
                         this.cursor.rightClick = false;
                         this.cursor.rightClickUpPos = new Vector2(e.clientX, e.clientY);
                 }
+
+                this.mousemoveAction = null;
+        }
+
+        onContextMenu(e) {
+                e.preventDefault();
+
+                // context menu on talisman-collection
+                if (e.target.closest('#talisman-collection') !== null) {
+                        let talisman = null;
+                        // check if a talisman has been clicked
+                        const clickedTalisman = e.target.closest('.item');
+                        if (clickedTalisman !== null) {
+                                const index = clickedTalisman.dataset.index;
+
+                                if (index != 0) {
+                                        talisman = this.currentScene.talismans[index];
+                                }
+                        }
+
+                        this.clearContextMenu();
+                        this.renderTalismanContextMenu(talisman);
+
+                        this.showContextMenu(e.clientX, e.clientY);
+                }
+
+                // context menu on editor-view
+                if (e.target.closest('#editor-view') !== null) {
+                        this.clearContextMenu();
+                        this.renderEditorContextMenu();
+
+                        this.showContextMenu(e.clientX, e.clientY);
+                }
+
+                // context menu on enchantments
+                if (e.target.closest('#enchantments') !== null) {
+                        let enchantment = null;
+                        // check if an enchantment has been clicked
+                        const clickedEnchantment = e.target.closest('.item:not(#name)');
+                        if (clickedEnchantment !== null) {
+                                enchantment = this.activeTalisman.enchantments[clickedEnchantment.dataset.index];
+                        }
+
+                        this.clearContextMenu();
+                        this.renderEnchantmentContextMenu(enchantment);
+
+                        this.showContextMenu(e.clientX, e.clientY);
+                }
         }
 
         // event function that is called on 'mousemove' event on canvas
         onMousemove(e) {
-                if (e.target !== document) {
-                        if (e.target.closest(this.settings['canvasSelector'].value) !== null) {
-                                this.hovering = this.canvas;
-                        }
+                if (e.target === document) {
+                        return;
+                }
 
-                        // if no gizmo is being hovered and the wheel (middle button) is being held down, move the camera
-                        if ((this.cursor.wheelClick === true) &&
-                            (this.hovering === this.canvas))
-                        {
-                                let mouseMovement = new Vector2(e.movementX, e.movementY);
-                                this.camera.worldPos = Vector2.subtract(this.camera.worldPos, mouseMovement);
-                        }
+                if ((e.target.closest('#editor-view') !== null) && (typeof this.ocular !== "undefined")) {
+                        const x = e.clientX - this.canvas.offsetLeft + this.ocular.worldPos.x;
+                        const y = e.clientY - this.canvas.offsetTop + this.ocular.worldPos.y;
+                        this.cursor.position = new Vector2(x, y);
+                }
 
-                        // move popup if one is being dragged
-                        if (this.movePopup !== null) {
-                                this.movePopup.style.top = this.movePopup.offsetTop + e.movementY + 'px';
-                                this.movePopup.style.left = this.movePopup.offsetLeft + e.movementX + 'px';
-                        }
+                // move editor view
+                if (this.mousemoveAction === this.canvas) {
+                        let mouseMovement = new Vector2(e.movementX / this.canvasZoom, e.movementY / this.canvasZoom);
+                        this.ocular.worldPos = Vector2.subtract(this.ocular.worldPos, mouseMovement);
+
+                        document.dispatchEvent(new Event('position_changed'));
+
+                        return;
+                }
+
+                // move popup (or any other htmlElement)
+                if (this.mousemoveAction instanceof HTMLElement) {
+                        this.mousemoveAction.style.top = this.mousemoveAction.offsetTop + e.movementY + 'px';
+                        this.mousemoveAction.style.left = this.mousemoveAction.offsetLeft + e.movementX + 'px';
+
+                        return;
+                }
+
+                // gizmo is being held and moved -> change value
+                if (this.mousemoveAction instanceof Gizmo) {
+                        this.mousemoveAction.change(new Vector2(e.movementX / this.canvasZoom, e.movementY / this.canvasZoom));
+
+                        return;
                 }
         }
 
         // event function that is called on 'click' event on document
         onClick(e) {
-                // dropdown
-                const dropdownButton = e.target.closest('.dropdown_button');
-
-                if (dropdownButton !== null) {
-                        const closestDropdown = dropdownButton.closest('.dropdown');
-
-                        this.closeAllTabDropdowns(dropdownButton.closest('.tabbar'));
-
-                        if (closestDropdown !== null) {
-                                closestDropdown.classList.add('open');
-                        }
-                } else {
-                        this.closeAllTabDropdowns();
+                // close modal
+                const closeButton = e.target.closest('.modal .close');
+                if (closeButton !== null) {
+                        e.target.closest('.modal').classList.add('hidden');
                 }
 
-                // foldout
-                const foldoutTitle = e.target.closest('.foldout_title');
-
-                if (foldoutTitle !== null) {
-                        const closestFoldout = foldoutTitle.closest('.foldout');
-                        closestFoldout.classList.toggle('open');
+                // hide context menu
+                if (!this.contextMenu.classList.contains('hidden') && (e.target.closest('#context-menu') === null)) {
+                        this.hideContextMenu();
                 }
         }
 
         // event function that is called on 'wheel' event on canvas
         onWheel(e) {
-                // todo: fix the scaling !!! -> currently miscalculates zoom level and canvas needs to be stretched / shrunken to be fully visible
-                /*
-                if (e.wheelDelta > 0) {
-                        this.canvasZoom += 0.5;
-                } else {
-                        this.canvasZoom -= 0.5;
+                if (e.target.closest('canvas') !== null) {
+                        if (e.wheelDelta > 0) {
+                                this.canvasZoom += 0.025;
+                        } else {
+                                this.canvasZoom -= 0.025;
+                        }
+
+                        // clamp zoom
+                        this.canvasZoom = Math.clamp(this.canvasZoom, 0.25, 1.75);
+                        document.dispatchEvent(new Event('zoom_changed'));
                 }
-
-                // clamp zoom
-                this.canvasZoom = Math.clamp(this.canvasZoom, 0.5, 1.5);
-
-                this.camera.canvasContext.scale(this.canvasZoom, this.canvasZoom);
-                */
         }
 
-        onCurrentGameObjectNameChanged(e) {
-                const gameObjectTitle = this.currentGameObjectHTML.querySelector('.title');
-                gameObjectTitle.innerHTML = this.currentGameObject.attributes['name'].value;
+        onPositionChanged(e) {
+                const positionDisplayLabel = this.positionDisplay.querySelector('.value');
+                positionDisplayLabel.innerHTML = Math.floor(this.ocular.worldPos.x) + " • " + Math.floor(this.ocular.worldPos.y);
         }
 
-        // event function that is called on custom 'scene_ist_changed' event on the window
-        onScenelistchanged(e) {
-                this.reloadEditorElements();
+        onZoomChanged(e) {
+                const zoomDisplayLabel = this.zoomDisplay.querySelector('.value');
+                zoomDisplayLabel.innerHTML = Math.round(this.canvasZoom * 100) + "%";
+
+                const zoomDisplaySlider = this.zoomDisplay.querySelector('.slider input');
+                zoomDisplaySlider.value = this.canvasZoom * 100;
         }
 
-        // event function that is called on custom 'project_settings_changed' event on the window
-        onProjectsettingschanged(e) {
-                // for now update canvas color
-                this.canvas.style.backgroundColor = this.project.settings['canvasBackgroundColor'];
+        onActiveTalismanChanged(e) {
+                this.clearEnchantments();
+
+                if (this.activeTalisman !== null) {
+                        this.renderEnchantments();
+                }
         }
 }

@@ -18,9 +18,9 @@ export class Cursor {
         rightClickUpPos;
 
         constructor() {
-                this.position = new Vector2();
+                this.position = new Vector2(Number.MIN_VALUE, Number.MIN_VALUE);
                 this.hovering = null;
-                
+
                 this.leftClick = false;
                 this.leftClickDownPos = null;
                 this.leftClickUpPos = null;

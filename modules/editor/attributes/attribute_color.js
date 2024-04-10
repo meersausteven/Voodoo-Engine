@@ -35,26 +35,30 @@ export class AttributeColor extends AttributeText {
 
         // generates the HTML element for the editor
         createWidget() {
-                const wrapper = new HtmlElement('div', null, {class: 'attribute color'});
+                const property = new HtmlElement('div', null, {class: 'property'});
 
-                const label = new HtmlElement('label', this.name);
+                // label
+                const propertyLabel = new HtmlElement('div', this.name, {class: 'label'});
+                property.appendChild(propertyLabel);
 
-                wrapper.appendChild(label);
-                wrapper.appendChild(this.createWidgetInput());
+                // input
+                const propertyValue = new HtmlElement('div', null, {class: 'value'});
+                const label = new HtmlElement('label', null);
 
-                return wrapper;
-        }
-
-        // generates the HTML element for the input
-        createWidgetInput() {
                 const input = new HtmlElement('input', null, {
                         type: 'color',
-                        value: this.value
+                        value: this.value,
+                        name: this.name
                 });
                 input.addEventListener('change', function(e) {
                         this.eventCall(e);
                 }.bind(this));
 
-                return input;
+                label.appendChild(input);
+                propertyValue.appendChild(label);
+
+                property.appendChild(propertyValue);
+
+                return property;
         }
 }

@@ -34,34 +34,47 @@ export class AttributeBoolean extends AttributeText {
                 }
         }
 
-        // generates the HTML element for the editor
-        createWidget() {
-                const wrapper = new HtmlElement('div', null, {class: 'attribute boolean'});
+        // called after validation was successful to update the object value
+        change(newValue) {
+                this.value = newValue;
 
-                const label = new HtmlElement('label', this.name);
-
-                const uncheckedBox = new HtmlElement('i', null, {class: 'fa fa-square'});
-                const checkedBox = new HtmlElement('i', null, {class: 'fa fa-square-check'});
-
-                wrapper.appendChild(label);
-                wrapper.appendChild(this.createWidgetInput());
-                wrapper.appendChild(uncheckedBox);
-                wrapper.appendChild(checkedBox);
-
-                return wrapper;
+                document.querySelector(`#enchantments .content .item input[name="${this.name}"]`).checked = this.value;
         }
 
-        // generates the HTML element for the input
-        createWidgetInput() {
+        // generates the HTML element for the editor
+        createWidget() {
+                const property = new HtmlElement('div', null, {class: 'property'});
+
+                // label
+                const propertyLabel = new HtmlElement('div', this.name, {class: 'label'});
+                property.appendChild(propertyLabel);
+
+                // input
+                const propertyValue = new HtmlElement('div', null, {class: 'value'});
+                const label = new HtmlElement('label', null);
+
                 const input = new HtmlElement('input', null, {
                         type: 'checkbox',
-                        title: this.name
+                        title: this.name,
+                        name: this.name
                 });
                 input.checked = this.value;
                 input.addEventListener('change', function(e) {
                         this.eventCall(e);
                 }.bind(this));
 
-                return input;
+                label.appendChild(input);
+
+                const uncheckedIcon = new HtmlElement('i', null, {class: 'fa fa-square'});
+                label.appendChild(uncheckedIcon);
+
+                const checkedIcon = new HtmlElement('i', null, {class: 'fa fa-square-check'});
+                label.appendChild(checkedIcon);
+
+                propertyValue.appendChild(label);
+
+                property.appendChild(propertyValue);
+
+                return property;
         }
 }

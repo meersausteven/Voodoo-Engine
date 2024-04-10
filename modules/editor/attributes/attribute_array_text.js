@@ -120,7 +120,7 @@ export class AttributeArrayText extends AttributeText {
                 }.bind(this));
 
                 const removeIcon = new HtmlElement('i', null, {
-                        class: 'fa fa-delete-left',
+                        class: 'fa fa-trash',
                         title: 'Remove this item'
                 });
 

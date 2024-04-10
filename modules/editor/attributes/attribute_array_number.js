@@ -55,6 +55,23 @@ export class AttributeArrayNumber extends AttributeArrayText {
                 input.addEventListener('change', function(e) {
                         this.eventCall(e, index);
                 }.bind(this));
+                input.addEventListener('wheel', function(e) {
+                        e.preventDefault();
+
+                        // determine "direction" of scrolling
+                        const min = (this.range !== null) ? this.range.step * -1 : -1;
+                        const max = (this.range !== null) ? this.range.step : 1;
+                        const w = Math.clamp(e.deltaY, min, max);
+
+                        // change value and clamp if necessary
+                        this.value[index] += w * -1;
+                        if (this.range !== null) {
+                                this.value[index] = Math.clamp(this.value[index], this.range.min, this.range.max);
+                        }
+
+                        // update value in input
+                        e.target.value = this.value[index];
+                }.bind(this));
 
                 // for range fields add custom buttons and additional attributes
                 if (this.range !== null) {

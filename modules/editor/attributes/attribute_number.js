@@ -6,18 +6,6 @@ import { HtmlElement } from '../html_helpers/html_element.js';
 export class AttributeNumber extends AttributeText {
         type = 'Attribute Number';
 
-        /*
-         * @param string name: name of the attribute
-         * @param Number value: value of the attribute
-         * @param string event: event name that should be dispatched when the value changed
-         * @param Range range: range with min, max and step size
-         */
-        constructor(name, value, event = null, range = null) {
-                super(name, value, event);
-
-                this.range = range;
-        }
-
         // called to check whether the new value is of the correct type
         validate(newValue) {
                 return !isNaN(newValue);
@@ -34,33 +22,26 @@ export class AttributeNumber extends AttributeText {
                 }
 
                 if (this.validate(newValue)) {
-                        if (this.range !== null) {
-                                newValue = Math.clamp(newValue, this.range.min, this.range.max);
-                        }
-
                         this.change(Number(newValue));
                 }
         }
 
         // generates the HTML element for the editor
         createWidget() {
-                const wrapper = new HtmlElement('div', null, {class: 'attribute number'});
+                const property = new HtmlElement('div', null, {class: 'property'});
 
-                const label = new HtmlElement('label', this.name);
+                // label
+                const propertyLabel = new HtmlElement('div', this.name, {class: 'label'});
+                property.appendChild(propertyLabel);
 
-                wrapper.appendChild(label);
-                wrapper.appendChild(this.createWidgetInput());
-
-                return wrapper;
-        }
-
-        // generates the HTML element for the input
-        createWidgetInput() {
-                const inputWrapper = new HtmlElement('div', null, {class: 'input_wrapper'});
+                // input
+                const propertyValue = new HtmlElement('div', null, {class: 'value'});
+                const label = new HtmlElement('label', null);
 
                 const input = new HtmlElement('input', null, {
                         type: 'text',
-                        value: this.value
+                        value: this.value,
+                        name: this.name
                 });
                 input.addEventListener('keyup', function(e) {
                         this.eventCall(e);
@@ -68,36 +49,24 @@ export class AttributeNumber extends AttributeText {
                 input.addEventListener('change', function(e) {
                         this.eventCall(e);
                 }.bind(this));
+                input.addEventListener('wheel', function(e) {
+                        e.preventDefault();
 
-                // for range fields add custom buttons and additional attributes
-                if (this.range !== null) {
-                        input.setAttribute('type', 'number');
-                        input.setAttribute('min', this.range.min);
-                        input.setAttribute('max', this.range.max);
-                        input.setAttribute('step', this.range.step);
+                        // determine "direction" of scrolling
+                        const w = Math.clamp(e.deltaY, -1, 1);
 
-                        const stepUpButton = new HtmlElement('button', null, {class: 'step_up'});
-                        stepUpButton.addEventListener('click', function(e) {
-                                const input = e.target.nextElementSibling;
+                        // change value and clamp if necessary
+                        this.value += w * -1;
 
-                                input.stepUp();
-                                input.dispatchEvent(new Event('change'));
-                        });
-                        const stepDownButton = new HtmlElement('button', null, {class: 'step_down'});
-                        stepDownButton.addEventListener('click', function(e) {
-                                const input = e.target.previousElementSibling;
+                        // update value in input
+                        e.target.value = this.value;
+                }.bind(this));
 
-                                input.stepDown();
-                                input.dispatchEvent(new Event('change'));
-                        });
+                label.appendChild(input);
+                propertyValue.appendChild(label);
 
-                        inputWrapper.appendChild(stepUpButton);
-                        inputWrapper.appendChild(input);
-                        inputWrapper.appendChild(stepDownButton);
-                } else {
-                        inputWrapper.appendChild(input);
-                }
+                property.appendChild(propertyValue);
 
-                return inputWrapper;
+                return property;
         }
 }

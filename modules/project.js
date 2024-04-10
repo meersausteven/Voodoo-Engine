@@ -2,26 +2,26 @@
 import { Vector2 } from './collection/vector2.js';
 
 // import game objects
-import { GameObject } from './game_objects/game_object.js';
+import { Talisman } from './talismans/talisman.js';
 
-// import components
-import { Component } from './components/component.js';
-import { Animation } from './components/animation.js';
-import { Camera } from './components/camera.js';
-import { Rigidbody } from './components/rigidbody.js';
-import { Transform } from './components/transform.js';
+// import enchantments
+import { Enchantment } from './enchantments/enchantment.js';
+import { Animation } from './enchantments/animation.js';
+import { Ocular } from './enchantments/ocular.js';
+import { Rigidbody } from './enchantments/rigidbody.js';
+import { Transform } from './enchantments/transform.js';
 
-import { Renderer } from './components/renderers/renderer.js';
-import { BoxRenderer } from './components/renderers/box_renderer.js';
-import { CircleRenderer } from './components/renderers/circle_renderer.js';
-import { SpriteRenderer } from './components/renderers/sprite_renderer.js';
-import { TextRenderer } from './components/renderers/text_renderer.js';
-import { LineRenderer } from './components/renderers/line_renderer.js';
+import { Renderer } from './enchantments/renderers/renderer.js';
+import { BoxRenderer } from './enchantments/renderers/box_renderer.js';
+import { CircleRenderer } from './enchantments/renderers/circle_renderer.js';
+import { SpriteRenderer } from './enchantments/renderers/sprite_renderer.js';
+import { TextRenderer } from './enchantments/renderers/text_renderer.js';
+import { LineRenderer } from './enchantments/renderers/line_renderer.js';
 
-import { Collider } from './components/colliders/collider.js';
-import { BoxCollider } from './components/colliders/box_collider.js';
-import { CircleCollider } from './components/colliders/circle_collider.js';
-import { CapsuleCollider } from './components/colliders/capsule_collider.js';
+import { Collider } from './enchantments/colliders/collider.js';
+import { BoxCollider } from './enchantments/colliders/box_collider.js';
+import { CircleCollider } from './enchantments/colliders/circle_collider.js';
+import { CapsuleCollider } from './enchantments/colliders/capsule_collider.js';
 
 // import attributes
 import { AttributeBoolean } from './editor/attributes/attribute_boolean.js';
@@ -29,6 +29,7 @@ import { AttributeColor } from './editor/attributes/attribute_color.js';
 import { AttributeHiddenText } from './editor/attributes/attribute_hidden_text.js';
 import { AttributeImage } from './editor/attributes/attribute_image.js';
 import { AttributeNumber } from './editor/attributes/attribute_number.js';
+import { AttributeRange } from './editor/attributes/attribute_range.js';
 import { AttributeText } from './editor/attributes/attribute_text.js';
 import { AttributeVector2 } from './editor/attributes/attribute_vector2.js';
 import { AttributeSelect } from './editor/attributes/attribute_select.js';
@@ -38,7 +39,7 @@ import { AttributeArrayVector2 } from './editor/attributes/attribute_array_vecto
 
 // other classes
 import { RendererEngine } from './renderer_engine.js';
-import { PhysicsEngine } from './physics_engine.js';
+import { Fizzle } from './fizzle.js';
 import { Scene } from './scene.js';
 import { Time } from './time.js';
 
@@ -57,7 +58,7 @@ export class Project {
         rendererEngine;
 
         // physics
-        physicsEngine;
+        fizzle;
 
         // settings
         settings = {
@@ -73,10 +74,10 @@ export class Project {
                 canvasHideCursor: false,
                 // fixed update interval in ms
                 fixedUpdateInterval: 10,
-                // editor dom elements for game objects and their components
+                // editor dom elements for game objects and their enchantments
                 sceneListWrapper: '#scenes-container .container_content',
-                gameObjectListWrapper: '#game-objects-container .container_content',
-                componentListWrapper: '#components-container .container_content',
+                talismanListWrapper: '#game-objects-container .container_content',
+                enchantmentListWrapper: '#enchantments-container .container_content',
                 // file paths
                 filePathSprites: window.location.href + "/../assets/sprites/",
                 filePathAudio: window.location.href + "/../assets/audio/",
@@ -99,17 +100,17 @@ export class Project {
         constructor() {
                 // add new scene
                 if (this.sceneList.length == 0) {
-                        this.addScene(new Scene(this));
+                        this.addScene(new Scene(this, 'Main Scene'));
                 }
 
                 // add renderer
                 this.rendererEngine = new RendererEngine();
 
                 // add physics
-                this.physicsEngine = new PhysicsEngine();
+                this.fizzle = new Fizzle();
 
                 // prepare canvas
-                this.prepareCanvas();
+                // this.prepareCanvas();
         }
 
         // start the simulation
@@ -171,14 +172,23 @@ export class Project {
         processFixedUpdateFrame() {
                 if ((this.paused == false) && (this.activeScene !== null)) {
                         // always calculate the physics before anything else
-                        this.physicsEngine.calculateCollisions();
+                        this.fizzle.calculateCollisions();
 
                         this.activeScene.processFixedUpdateFrame();
                 }
         }
 
         prepareCanvas() {
-                this.canvas = document.querySelector(this.settings.canvasSelector);
+                const editorCanvas = document.getElementById('editor-view');
+                const playerCanvas = document.getElementById('player-view');
+
+                if (editorCanvas !== null) {
+                        this.canvas = editorCanvas;
+                }
+
+                if (playerCanvas !== null) {
+                        this.canvas = playerCanvas;
+                }
 
                 this.canvas.width = this.settings.canvasWidth;
                 this.canvas.height = this.settings.canvasHeight;
@@ -204,14 +214,20 @@ export class Project {
                 dispatchEvent(new Event('scene_list_changed'));
         }
 
-        loadScene(index) {
+        // loads a scene in the project
+        // @param Scene|number scene: scene instance or index of scene
+        loadScene(scene) {
                 // unload old scene
                 if (this.activeScene !== null) {
                         this.activeScene.isCurrentScene = false;
                 }
 
                 // load new scene
-                this.activeScene = this.sceneList[index];
+                if (scene instanceof Scene) {
+                        this.activeScene = scene;
+                } else {
+                        this.activeScene = this.sceneList[scene];
+                }
                 this.activeScene.isCurrentScene = true;
                 this.activeScene.start();
         }
@@ -242,7 +258,7 @@ export class Project {
 
                 project.rendererEngine = Object.setPrototypeOf(project.rendererEngine, RendererEngine.prototype);
 
-                this.physicsConversion(project.physicsEngine);
+                this.physicsConversion(project.fizzle);
 
                 let i = 0;
                 const l = project.sceneList.length;
@@ -254,11 +270,13 @@ export class Project {
                         ++i;
                 }
 
+                project.loadScene(project.settings['defaultScene']);
+
                 return project;
         }
 
         physicsConversion(physics) {
-                physics = Object.setPrototypeOf(physics, PhysicsEngine.prototype);
+                physics = Object.setPrototypeOf(physics, Fizzle.prototype);
 
                 // convert this physics' attributes
                 for (let key in physics.attributes) {
@@ -275,57 +293,57 @@ export class Project {
                 }
 
                 let i = 0;
-                const l = scene.gameObjects.length;
+                const l = scene.talismans.length;
 
                 while (i < l) {
-                        // convert this scene's gameObjects
-                        scene.gameObjects[i].scene = scene;
-                        this.gameObjectConversion(scene.gameObjects[i]);
+                        // convert this scene's talismans
+                        scene.talismans[i].scene = scene;
+                        this.talismanConversion(scene.talismans[i]);
 
                         ++i;
                 }
         }
 
-        gameObjectConversion(gameObject) {
-                gameObject = Object.setPrototypeOf(gameObject, GameObject.prototype);
+        talismanConversion(talisman) {
+                talisman = Object.setPrototypeOf(talisman, Talisman.prototype);
 
-                // convert this gameObject's attributes
-                for (let key in gameObject.attributes) {
-                        this.attributeConversion(gameObject.attributes[key]);
+                // convert this talisman's attributes
+                for (let key in talisman.attributes) {
+                        this.attributeConversion(talisman.attributes[key]);
                 }
 
                 let i = 0;
-                const l = gameObject.components.length;
+                const l = talisman.enchantments.length;
 
                 while (i < l) {
-                        // convert this gameObject's components
-                        gameObject.components[i].gameObject = gameObject;
-                        this.componentConversion(gameObject.components[i]);
+                        // convert this talisman's enchantments
+                        talisman.enchantments[i].talisman = talisman;
+                        this.enchantmentConversion(talisman.enchantments[i]);
 
                         ++i;
                 }
 
-                // get transform component
-                gameObject.transform = gameObject.getTransform();
+                // get transform enchantment
+                talisman.transform = talisman.getTransform();
         }
 
-        componentConversion(component) {
-                const instanceName = component.type.replace(/\s/g, '');
+        enchantmentConversion(enchantment) {
+                const instanceName = enchantment.type.replace(/\s/g, '');
                 const prototype = eval(`new ${instanceName}`);
 
-                component = Object.setPrototypeOf(component, Object.getPrototypeOf(prototype));
+                enchantment = Object.setPrototypeOf(enchantment, Object.getPrototypeOf(prototype));
 
-                if (component instanceof Collider) {
-                        component.gameObject.scene.project.physicsEngine.addCollider(component);
+                if (enchantment instanceof Collider) {
+                        enchantment.talisman.scene.project.fizzle.addCollider(enchantment);
                 }
 
-                if (component instanceof Rigidbody) {
-                        component.gameObject.scene.project.physicsEngine.addRigidbody(component);
+                if (enchantment instanceof Rigidbody) {
+                        enchantment.talisman.scene.project.fizzle.addRigidbody(enchantment);
                 }
 
-                // convert this component's attributes
-                for (let key in component.attributes) {
-                        this.attributeConversion(component.attributes[key]);
+                // convert this enchantment's attributes
+                for (let key in enchantment.attributes) {
+                        this.attributeConversion(enchantment.attributes[key]);
                 }
         }
 
@@ -374,10 +392,10 @@ export class Project {
                 scene.project = null;
 
                 let i = 0;
-                const l = scene.gameObjects.length;
+                const l = scene.talismans.length;
 
                 while (i < l) {
-                        this.gameObjectPostCloningCleanup(scene.gameObjects[i]);
+                        this.talismanPostCloningCleanup(scene.talismans[i]);
 
                         ++i;
                 }
@@ -385,31 +403,31 @@ export class Project {
                 return scene;
         }
 
-        // remove cyclic gameObject values
-        gameObjectPostCloningCleanup(gameObject) {
-                gameObject.scene = null;
+        // remove cyclic talisman values
+        talismanPostCloningCleanup(talisman) {
+                talisman.scene = null;
 
                 let i = 0;
-                const l = gameObject.components.length;
+                const l = talisman.enchantments.length;
 
                 while (i < l) {
-                        this.componentPostCloningCleanup(gameObject.components[i]);
+                        this.enchantmentPostCloningCleanup(talisman.enchantments[i]);
 
                         ++i;
                 }
 
-                return gameObject;
+                return talisman;
         }
 
-        // remove cyclic component values
-        componentPostCloningCleanup(component) {
-                component.gameObject = null;
+        // remove cyclic enchantment values
+        enchantmentPostCloningCleanup(enchantment) {
+                enchantment.talisman = null;
 
-                for (let key in component.attributes) {
-                        component.attributes[key].component = null;
+                for (let key in enchantment.attributes) {
+                        enchantment.attributes[key].enchantment = null;
                 }
 
-                return component;
+                return enchantment;
         }
 
         projectPreCloningCleanup(project) {
@@ -430,10 +448,10 @@ export class Project {
 
         scenePreCloningCleanup(scene) {
                 let i = 0;
-                const l = scene.gameObjects.length;
+                const l = scene.talismans.length;
 
                 while (i < l) {
-                        this.gameObjectPreCloningCleanup(scene.gameObjects[i]);
+                        this.talismanPreCloningCleanup(scene.talismans[i]);
 
                         ++i;
                 }
@@ -441,26 +459,30 @@ export class Project {
                 return scene;
         }
 
-        gameObjectPreCloningCleanup(gameObject) {
+        talismanPreCloningCleanup(talisman) {
                 let i = 0;
-                const l = gameObject.components.length;
+                const l = talisman.enchantments.length;
 
                 while (i < l) {
-                        this.componentPreCloningCleanup(gameObject.components[i]);
+                        this.enchantmentPreCloningCleanup(talisman.enchantments[i]);
 
                         ++i;
                 }
 
-                return gameObject;
+                return talisman;
         }
 
-        componentPreCloningCleanup(component) {
-                if (component.type === "Camera") {
-                        component.canvas = null;
-                        component.canvasContext = null;
+        enchantmentPreCloningCleanup(enchantment) {
+                if (enchantment.type === "Ocular") {
+                        enchantment.canvas = null;
+                        enchantment.canvasContext = null;
                 }
 
-                return component;
+                if (typeof enchantment.gizmos !== 'undefined') {
+                        enchantment.gizmos = [];
+                }
+
+                return enchantment;
         }
 
         /* INPUT HANDLING */

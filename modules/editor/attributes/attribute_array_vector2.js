@@ -129,7 +129,7 @@ export class AttributeArrayVector2 extends AttributeArrayText {
                 }.bind(this));
 
                 const removeIcon = new HtmlElement('i', null, {
-                        class: 'fa fa-delete-left',
+                        class: 'fa fa-trash',
                         title: 'Remove this item'
                 });
 
@@ -154,6 +154,16 @@ export class AttributeArrayVector2 extends AttributeArrayText {
                 }.bind(this));
                 input.addEventListener('change', function(e) {
                         this.eventCall(e, index);
+                }.bind(this));
+                input.addEventListener('wheel', function(e) {
+                        e.preventDefault();
+
+                        // determine "direction" of scrolling
+                        const w = Math.clamp(e.deltaY, -1, 1);
+
+                        // change value
+                        this.value[index][value] += w * -1;
+                        e.target.value = this.value[index][value];
                 }.bind(this));
 
                 inputWrapper.appendChild(label);

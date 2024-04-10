@@ -1,5 +1,5 @@
 import { Vector2 } from './collection/vector2.js';
-import { CircleCollider } from './components/colliders/circle_collider.js';
+import { CircleCollider } from './enchantments/colliders/circle_collider.js';
 
 export class Collision {
         collider1;
@@ -21,8 +21,8 @@ export class Collision {
                 this.collider2 = collider2;
                 this.overlap = overlap;
 
-                this.rigidbody1 = this.collider1.gameObject.getComponent("Rigidbody");
-                this.rigidbody2 = this.collider2.gameObject.getComponent("Rigidbody");
+                this.rigidbody1 = this.collider1.talisman.getEnchantment("Rigidbody");
+                this.rigidbody2 = this.collider2.talisman.getEnchantment("Rigidbody");
         }
 
         /*
@@ -53,12 +53,12 @@ export class Collision {
                         const multiplier = (this.rigidbody1 && this.rigidbody2) ? 0.5 : 1;
 
                         if (this.rigidbody1 !== false) {
-                                this.rigidbody1.gameObject.transform.attributes['position'].value = Vector2.subtract(this.rigidbody1.gameObject.transform.attributes['position'].value, Vector2.multiply(this.overlap, multiplier));
+                                this.rigidbody1.talisman.transform.attributes['position'].value = Vector2.subtract(this.rigidbody1.talisman.transform.attributes['position'].value, Vector2.multiply(this.overlap, multiplier));
                                 this.rigidbody1.velocity = Vector2.subtract(this.rigidbody1.velocity, Vector2.multiply(this.overlap.normalized(), multiplier));
                         }
 
                         if (this.rigidbody2 !== false) {
-                                this.rigidbody2.gameObject.transform.attributes['position'].value = Vector2.subtract(this.rigidbody2.gameObject.transform.attributes['position'].value, Vector2.multiply(this.overlap, -multiplier));
+                                this.rigidbody2.talisman.transform.attributes['position'].value = Vector2.subtract(this.rigidbody2.talisman.transform.attributes['position'].value, Vector2.multiply(this.overlap, -multiplier));
                                 this.rigidbody2.velocity = Vector2.subtract(this.rigidbody2.velocity, Vector2.multiply(this.overlap.normalized(), -multiplier));
                         }
                 }

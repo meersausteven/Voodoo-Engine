@@ -15,39 +15,25 @@ export class AttributeHiddenText extends AttributeText {
                 super(name, value, event);
         }
 
-        // todo: check if this can be made simpler
         createWidget() {
-                const wrapper = new HtmlElement('div', null, {class: 'attribute hidden_text'});
+                const text = new HtmlElement('div', this.value, {class: 'text'});
 
-                const title = new HtmlElement('div', this.value, {class: 'text'});
-
-                const editIcon = new HtmlElement('i', null, {
-                        class: 'edit_text fa fa-pen-nib',
-                        title: 'Edit'
-                });
-                editIcon.addEventListener('click', function(e) {
-                        const textElement = e.target.parentElement.querySelector('.text');
-                        if (textElement === null) {
-                                return;
-                        }
-
-                        const currentValue = textElement.innerHTML;
-
+                text.addEventListener('dblclick', function(e) {
                         // create new text input field
-                        const input = new HtmlElement('input', null, {
+                        const tempInput = new HtmlElement('input', null, {
                                 type: 'text',
-                                title: `Press 'Enter' to confirm changes`,
-                                value: currentValue
+                                title: "Press 'Enter' to confirm changes",
+                                value: this.value
                         });
-                        input.addEventListener('keyup', function(e) {
+                        tempInput.addEventListener('keyup', function(e) {
                                 this.eventCall(e);
                         }.bind(this));
-                        input.addEventListener('change', function(e) {
+                        tempInput.addEventListener('change', function(e) {
                                 this.eventCall(e);
                         }.bind(this));
 
-                        // replace this input field with a simple text node when pressing enter
-                        input.addEventListener('keydown', function(e) {
+                        // replace input element with normal text node when pressing 'enter'
+                        tempInput.addEventListener('keydown', function(e) {
                                 if (e.key === 'Enter') {
                                         let newValue = e.target.value;
 
@@ -57,25 +43,41 @@ export class AttributeHiddenText extends AttributeText {
                                                 newValue = this.startValue;
                                         }
 
-                                        title.innerHTML = newValue;
+                                        text.innerHTML = newValue;
                                         if (this.validate(newValue)) {
                                                 this.change(newValue);
                                         }
 
                                         this.eventCall(e);
 
-                                        e.target.parentElement.replaceChild(title, e.target);
+                                        e.target.parentElement.replaceChild(text, e.target);
                                 }
                         }.bind(this));
+                        // replace input element with normal text node when unfocusing the input
+                        tempInput.addEventListener('focusout', function(e) {
+                                let newValue = e.target.value;
 
-                        // replace this element with the new input element
-                        e.target.parentElement.replaceChild(input, textElement);
-                        input.focus();
+                                if ((e.target.value === '') ||
+                                    (e.target.value.replace(/\s/g, '') === ''))
+                                {
+                                        newValue = this.startValue;
+                                }
+
+                                text.innerHTML = newValue;
+                                if (this.validate(newValue)) {
+                                        this.change(newValue);
+                                }
+
+                                this.eventCall(e);
+
+                                e.target.parentElement.replaceChild(text, e.target);
+                        }.bind(this));
+
+                        // replace normal text with new input element
+                        e.target.parentElement.replaceChild(tempInput, text);
+                        tempInput.focus();
                 }.bind(this));
 
-                wrapper.appendChild(title);
-                wrapper.appendChild(editIcon);
-
-                return wrapper;
+                return text;
         }
 }
