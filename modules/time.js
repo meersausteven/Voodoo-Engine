@@ -7,6 +7,7 @@ export class Time {
                 this.delta = null;
                 this.scale = 1;
                 this.frameCount = 0;
+                this.framesPerSecond = null;
         }
 
         /*

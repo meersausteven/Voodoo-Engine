@@ -1,5 +1,6 @@
 
-/* todo: MOVE THIS SOMEWHERE ELSE; ONLY NEEDED INSIDE A PROJECT AS AN ASSET
+/*
+todo: REFACTOR THIS AND CREATE AS OWN SCRIPT ENCHANTMENT
 // simple movement in 8 directions (wasd / arrows)
 function simple8DirMovement(obj) {
         let directionX = 0;
@@ -100,11 +101,8 @@ Math.valueBetween = function(value, start, end) {
 // clamps a given value between a min and a max value
 // returns the clamped value
 Math.clamp = function(value, min, max) {
-        if (value < min) {
-                value = min;
-        } else if (value > max) {
-                value = max;
-        }
+        value = Math.min(max, value);
+        value = Math.max(value, min);
 
         return value;
 };
@@ -112,39 +110,52 @@ Math.clamp = function(value, min, max) {
 // add degreesToRadians function to Math object
 // takes in an angle in degrees and returns that angle as radians
 Math.degreesToRadians = function(degrees) {
-        let radians = degrees * (this.PI / 180);
+        const radians = degrees * (this.PI / 180);
 
         return radians
 };
-
-// add gravitational constant to Math object
-Math.G = 6.67430 * Math.pow(10, -11);
 
 /* calculate the dot product between two points
  * @param Vector2 a: first point
  * @param Vector2 b: second point
  */
 Math.dot = function(a, b) {
-        let dot;
-
-        dot = (a.x * b.x) + (a.y * b.y);
+        const dot = (a.x * b.x) + (a.y * b.y);
 
         return dot;
 };
 
 /*
  * interpolate between two numbers
- * @param number a: minimum
- * @param number b: maximum
- * @param number t: interpolation value
+ * @param number a
+ * @param number b
+ * @param number t: interpolation value (clamped between 0 and 1)
  */
 Math.lerp = function(a, b, t) {
-        let lerp;
-
-        lerp = a + ((b - a) * t);
+        const lerp = a + ((b - a) * Math.clamp(t, 0, 1));
 
         return lerp
 };
+
+/*
+ * interpolate between three numbers
+ * @param number a
+ * @param number b
+ * @param number c
+ * @param number t: interpolation value (clamped between 0 and 1)
+ */
+Math.bezierLerp = function(a, b, c, t) {
+        const intermediateA = Math.lerp(a, b, t);
+        const intermediateB = Math.lerp(b, c, t);
+
+        const bezierLerp = Math.lerp(intermediateA, intermediateB, t);
+
+        return bezierLerp;
+}
+
+// add gravitational constant to Math object
+Math.G = 6.67430 * Math.pow(10, -11);
+
 
 /*
  * create an array with random static noise values between 0 and 1
@@ -154,12 +165,12 @@ Math.lerp = function(a, b, t) {
  * @param number height: height of the noise texture 
  */
 Math.staticNoise = function(width, height) {
-        let noise = [];
-        
+        const noise = [];
+
         let i = 0;
-        let l = width * height;
+        const l = width * height;
         while (i < l) {
-                noise[i] = this.random();
+                noise.push(this.random());
 
                 ++i;
         }
@@ -178,6 +189,14 @@ Math.perlinNoise = function(width, height) {
         // todo: add perlin noise function
 
 };
+
+/*
+ * create a semi-random large integer with a very low probability of being a duplicate (5 in 500.000)
+ * used to create semi.unique ids
+ */
+Math.randomID = function() {
+        return Math.abs(Math.floor(Date.now() * Math.random() * 69) << (420 * 1337 * Date.now() * 123456789 * Math.random()));
+}
 
 // add remove function to array prototype
 // removes item from array with given value

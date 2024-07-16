@@ -15,7 +15,7 @@ export class Vector2 {
         constructor(x = 0, y = 0) {
                 this.x = x;
                 this.y = y;
-                this.magnitude = this.calculateMagnitude();
+                this.calculateMagnitude();
         }
 
         // calculate and set this vector's magnitude
@@ -61,7 +61,9 @@ export class Vector2 {
                         value = new Vector2(value, value);
                 }
 
-                return new Vector2(this.x + value.x, this.y + value.y);
+                this.x = this.x + value.x;
+                this.y = this.y + value.y;
+                this.calculateMagnitude();
         }
 
         /*
@@ -74,7 +76,9 @@ export class Vector2 {
                         value = new Vector2(value, value);
                 }
 
-                return new Vector2(this.x - value.x, this.y - value.y);
+                this.x = this.x - value.x;
+                this.y = this.y - value.y;
+                this.calculateMagnitude();
         }
 
         /*
@@ -87,7 +91,9 @@ export class Vector2 {
                         value = new Vector2(value, value);
                 }
 
-                return new Vector2(this.x * value.x, this.y * value.y);
+                this.x = this.x * value.x;
+                this.y = this.y * value.y;
+                this.calculateMagnitude();
         }
 
         /*
@@ -100,7 +106,9 @@ export class Vector2 {
                         value = new Vector2(value, value);
                 }
 
-                return new Vector2(this.x / value.x, this.y / value.y);
+                this.x = this.x / value.x;
+                this.y = this.y / value.y;
+                this.calculateMagnitude();
         }
 
         /*
@@ -110,15 +118,16 @@ export class Vector2 {
          */
         rotate(degrees) {
                 const radians = -degrees * (Math.PI / 180);
+                const tempX = this.x;
+                const tempY = this.y;
 
-                return new Vector2(
-                        this.x * Math.cos(radians) - this.y * Math.sin(radians),
-                        this.x * Math.sin(radians) + this.y * Math.cos(radians)
-                );
+                this.x = tempX * Math.cos(radians) - tempY * Math.sin(radians);
+                this.y = tempX * Math.sin(radians) + tempY * Math.cos(radians);
+                // technically shouldn't change anything in the length - but just in case some floating points are different
+                this.calculateMagnitude();
         }
 
         // static functions
-
         /*
          * add a vector or a number to a vector
          * @param Vector2 v: the vector
@@ -207,5 +216,33 @@ export class Vector2 {
                 const dot = (v1.x * v2.x + v1.y * v2.y) / (v1.x * v1.x + v1.y * v1.y);
 
                 return dot;
+        }
+
+        /*
+         * interpolate between two points
+         * @param Vector2 v1: first point
+         * @param Vector2 v2: second point
+         * @param number t: interpolation value (clamped between 0 and 1)
+         */
+        static lerp(v1, v2, t) {
+                const lerp = Vector2.add(v1, Vector2.multiply(Vector2.subtract(v2, v1), Math.clamp(t, 0, 1)));
+
+                return lerp
+        };
+
+        /*
+         * interpolate between three points using a bezier curve
+         * @param Vector2 v1: first point
+         * @param Vector2 v2: second point
+         * @param Vector2 v3: third point
+         * @param number t: interpolation value (clamped between 0 and 1)
+         */
+        static bezierLerp(v1, v2, v3, t) {
+                const intermediateA = Vector2.lerp(v1, v2, t);
+                const intermediateB = Vector2.lerp(v2, v3, t);
+
+                const bezierLerp = Vector2.lerp(intermediateA, intermediateB, t);
+
+                return bezierLerp;
         }
 }

@@ -47,12 +47,6 @@ import { AttributeArrayText } from './editor/attributes/attribute_array_text.js'
 
 // import html_helpers
 import { HtmlElement } from './editor/html_helpers/html_element.js';
-import { Popup } from './editor/html_helpers/popup.js';
-import { Snackbar } from './editor/html_helpers/snackbar.js';
-import { SNACKBAR_NEUTRAL, SNACKBAR_WARNING, SNACKBAR_DANGER, SNACKBAR_SUCCESS } from './editor/html_helpers/snackbar.js';
-import { Tabbar } from './editor/html_helpers/tabbar.js';
-import { TABBAR_POSITION_START, TABBAR_POSITION_CENTER, TABBAR_POSITION_END} from './editor/html_helpers/tabbar.js';
-import { TabbarTab } from './editor/html_helpers/tabbar_tab.js';
 
 export class Editor {
         // project
@@ -218,13 +212,13 @@ export class Editor {
                         while (i < l) {
                                 const gizmo = this.currentGizmo.gizmos[i];
 
-                                // todo: add case for zoomed canvas
+                                // calculate bounds regarding canvas zoom
                                 const zoomedBounds = {};
                                 zoomedBounds.bounds = new Bounds(
-                                        Math.floor(gizmo.bounds.top / this.canvasZoom + this.canvas.height / 2),
-                                        Math.floor(gizmo.bounds.right / this.canvasZoom + this.canvas.width / 2),
-                                        Math.floor(gizmo.bounds.bottom / this.canvasZoom + this.canvas.height / 2),
-                                        Math.floor(gizmo.bounds.left / this.canvasZoom + this.canvas.width / 2)
+                                        Math.floor(gizmo.bounds.top / (1 / this.canvasZoom) + this.canvas.height / 2),
+                                        Math.floor(gizmo.bounds.right / (1 / this.canvasZoom) + this.canvas.width / 2),
+                                        Math.floor(gizmo.bounds.bottom / (1 / this.canvasZoom) + this.canvas.height / 2),
+                                        Math.floor(gizmo.bounds.left / (1 / this.canvasZoom) + this.canvas.width / 2)
                                 );
                                 if (Fizzle.checkPointInBox(zoomedBounds, this.cursor.position)) {
                                         this.hovering = gizmo;
@@ -291,7 +285,7 @@ export class Editor {
                         this.canvasContext.strokeStyle = this.gridColor;
 
                         // vertical lines
-                        const gridOffsetX = -((this.ocular.worldPos.x - this.canvas.width / 2) % (this.settings['gridSize'].value.x * this.canvasZoom));
+                        const gridOffsetX = -((this.ocular.worldPos.x * this.canvasZoom - this.canvas.width / 2) % (this.settings['gridSize'].value.x * this.canvasZoom));
                         let x = gridOffsetX;
                         const w = this.canvas.width;
                         while (x < w) {
@@ -306,7 +300,7 @@ export class Editor {
                         }
 
                         // horizontal lines
-                        const gridOffsetY = -((this.ocular.worldPos.y - this.canvas.height / 2) % (this.settings['gridSize'].value.y * this.canvasZoom));
+                        const gridOffsetY = -((this.ocular.worldPos.y * this.canvasZoom - this.canvas.height / 2) % (this.settings['gridSize'].value.y * this.canvasZoom));
                         let y = gridOffsetY;
                         const h = this.canvas.height;
                         while (y < h) {
@@ -339,9 +333,7 @@ export class Editor {
         loadProjectFromStorage() {
                 const json = localStorage.getItem('project');
 
-                if ((json !== null) &&
-                    (typeof json !== 'undefined'))
-                {
+                if ((json !== null) && (typeof json !== 'undefined')) {
                         this.project = this.project.convertToProject(json);
                         // new Snackbar('Project successfully loaded from storage.', SNACKBAR_SUCCESS);
                 } else {
@@ -719,7 +711,8 @@ export class Editor {
                 // open editor settings
                 const editorSettingsItem = new HtmlElement('div', null, {class: 'item'});
                 editorSettingsItem.addEventListener('click', function() {
-                        console.log("open editor settings");
+                        console.log("opening editor settings...");
+                        
                 }.bind(this));
 
                 const editorSettingsIcon = new HtmlElement('i', null, {class: 'fa fa-sliders'});
@@ -729,6 +722,22 @@ export class Editor {
                 editorSettingsItem.appendChild(editorSettingsLabel);
 
                 actionsList.appendChild(editorSettingsItem);
+
+                // language settings
+                /*
+                const languageSettingsItem = new HtmlElement('div', null, {class: 'item'});
+                languageSettingsItem.addEventListener('click', function() {
+                        console.log("opening language settings...");
+                }.bind(this));
+
+                const languageSettingsIcon = new HtmlElement('i', null, {class: 'fa-solid fa-globe'});
+                const languageSettingsLabel = new HtmlElement('div', "Open Language Settings", {class: 'label'});
+
+                languageSettingsItem.appendChild(languageSettingsIcon);
+                languageSettingsItem.appendChild(languageSettingsLabel);
+
+                actionsList.appendChild(languageSettingsItem);
+                */
         }
 
         // populate actions-drawer with scene actions
@@ -801,14 +810,22 @@ export class Editor {
         updateSidebar(clickedElement) {
                 const clickedButton = clickedElement.closest('.button');
                 const activeButton = clickedButton.closest('#sidebar').querySelector('.button.active');
+                const actionsDrawerTitle = this.actionsDrawer.querySelector('.header');
 
                 if (activeButton == clickedButton) {
+                        // close drawer
                         clickedButton.classList.remove('active');
                         this.actionsDrawer.classList.remove('open');
+                        actionsDrawerTitle.innerHTML = "";
                 } else {
+                        // open drawer
                         clickedButton.classList.add('active');
                         this.actionsDrawer.classList.add('open');
 
+                        // update drawer category title
+                        actionsDrawerTitle.innerHTML = clickedButton.dataset.category;
+
+                        // change active category
                         if (activeButton !== null) {
                                 activeButton.classList.remove('active');
                         }
@@ -937,6 +954,7 @@ export class Editor {
 
                 const nameValue = new HtmlElement('div', null, {class: 'value'});
                 nameValue.appendChild(this.activeTalisman.attributes['name'].createWidget());
+                nameValue.title = "Double-click to change name";
                 nameTitle.appendChild(nameValue);
 
                 // enable / disable talisman
@@ -988,6 +1006,7 @@ export class Editor {
 
                 // title
                 const title = new HtmlElement('div', null, {class: 'title'});
+                title.title = "Left-click to open/close this enchantment";
                 const icon = new HtmlElement('i', null, {class: 'fa ' + enchantment.icon});
                 title.appendChild(icon);
 
@@ -997,6 +1016,7 @@ export class Editor {
                 // enable / disable enchantment
                 if (allowDisable === true) {
                         const status = new HtmlElement('div', null, {class: 'state'});
+                        status.title = "Left-click to enable/disable this enchantment";
                         status.addEventListener('click', () => {
                                 enchantment.attributes['enabled'].value = !enchantment.attributes['enabled'].value;
                         });
@@ -1213,7 +1233,7 @@ export class Editor {
                 } else {
                         // remove this enchantment
                         if (enchantment.type !== "Transform") {
-                                const removeEnchantment = new HtmlElement('div', "Remove this Enchantment", { class: 'option' });
+                                const removeEnchantment = new HtmlElement('div', "Remove this enchantment", { class: 'option' });
                                 removeEnchantment.addEventListener('click', function() {
                                         console.log("removing enchantment...");
                                         this.hideContextMenu();
@@ -1223,7 +1243,7 @@ export class Editor {
                         }
 
                         // reset values
-                        const resetEnchantment = new HtmlElement('div', "Reset Enchantment values", { class: 'option' });
+                        const resetEnchantment = new HtmlElement('div', "Reset values to default", { class: 'option' });
                         resetEnchantment.addEventListener('click', function() {
                                 enchantment.resetAttributes();
 
@@ -1499,7 +1519,7 @@ export class Editor {
                 // move editor view
                 if (this.mousemoveAction === this.canvas) {
                         let mouseMovement = new Vector2(e.movementX / this.canvasZoom, e.movementY / this.canvasZoom);
-                        this.ocular.worldPos = Vector2.subtract(this.ocular.worldPos, mouseMovement);
+                        this.ocular.worldPos.subtract(mouseMovement);
 
                         document.dispatchEvent(new Event('position_changed'));
 

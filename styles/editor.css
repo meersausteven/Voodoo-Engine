@@ -89,6 +89,8 @@
         --talismans-item-children-border-color: rgba(255, 255, 255, 0.75);
         --talismans-selected-item-color: var(--white);
         --talismans-selected-item-border-color: var(--white);
+        --talismans-scrollbar-color: var(--blue);
+        --talismans-scrollbar-bg: var(--deep-blue);
 
         --context-menu-bg: var(--purple);
         --context-menu-border-color: var(--pearl);
@@ -109,6 +111,8 @@
         --enchantments-property-input-bg: var(--black);
         --enchantments-property-input-border-color: var(--white);
         --enchantments-property-slider-knob-color: var(--blue);
+        --enchantments-scrollbar-color: var(--blue);
+        --enchantments-scrollbar-bg: var(--deep-blue);
 }
 
 [data-theme="light"] {
@@ -136,6 +140,8 @@
         --talismans-item-children-border-color: rgba(0, 0, 0, 0.5);
         --talismans-selected-item-color: var(--black);
         --talismans-selected-item-border-color: var(--black);
+        --talismans-scrollbar-color: var(--purple);
+        --talismans-scrollbar-bg: var(--haze);
 
         --context-menu-bg: var(--pearl);
         --context-menu-border-color: var(--black);
@@ -156,6 +162,8 @@
         --enchantments-property-input-bg: var(--white);
         --enchantments-property-input-border-color: var(--black);
         --enchantments-property-slider-knob-color: var(--purple);
+        --enchantments-scrollbar-color: var(--purple);
+        --enchantments-scrollbar-bg: var(--haze);
 }
 
 * {
@@ -373,9 +381,9 @@ body {
 
 #actions-drawer .header {
         flex: 0 0 70px;
-        border-bottom: 2px solid var(--actions-drawer-color);
+        align-content: center;
         font-family: var(--font-family-serif);
-        font-size: 24px;
+        font-size: 42px;
         line-height: 56px;
         color: var(--actions-drawer-color);
 }
@@ -510,6 +518,8 @@ body {
 #talisman-collection .content {
         padding: 10px;
         overflow-y: auto;
+        scrollbar-width: thin;
+        scrollbar-color: var(--talismans-scrollbar-color) var(--talismans-scrollbar-bg);
 }
 
 #talisman-collection .content .items {
@@ -810,6 +820,8 @@ body {
         padding: 10px;
         overflow-x: hidden;
         overflow-y: auto;
+        scrollbar-width: thin;
+        scrollbar-color: var(--enchantments-scrollbar-color) var(--enchantments-scrollbar-bg);
 }
 
 #enchantments .content .item {
@@ -964,23 +976,34 @@ body {
 }
 
 #enchantments .content .item .properties .property .value input[type="checkbox"] {
-        flex: 0 0 18px;
-        height: 18px;
-        opacity: 0;
-        cursor: pointer;
-}
-
-#enchantments .content .item .properties .property .value input[type="checkbox"] ~ .fa,
-#enchantments .content .item .properties .property .value input[type="checkbox"] ~ svg {
-        height: 18px;
-        width: auto;
-        position: absolute;
-        cursor: pointer;
-}
-
-#enchantments .content .item .properties .property .value input[type="checkbox"]:checked ~ .fa-square,
-#enchantments .content .item .properties .property .value input[type="checkbox"]:not(:checked) ~ .fa-check-square {
         display: none;
+}
+
+#enchantments .content .item .properties .property .value input[type="checkbox"] + .toggle {
+        width: 40px;
+        height: 20px;
+        background-color: var(--enchantments-property-input-bg);
+        border: 1px solid var(--enchantments-property-input-border-color);
+        border-radius: 10px;
+        position: relative;
+        cursor: pointer;
+}
+
+#enchantments .content .item .properties .property .value input[type="checkbox"] + .toggle::before {
+        content: '';
+        width: 14px;
+        height: 14px;
+        background-color: var(--enchantments-property-slider-knob-color);
+        border-radius: 50%;
+        position: absolute;
+        left: 2px;
+        top: 50%;
+        transform: translateY(-50%);
+        transition: 0.25s;
+}
+
+#enchantments .content .item .properties .property .value input[type="checkbox"]:checked + .toggle::before {
+        left: 22px;
 }
 
 #enchantments .content .item .properties .property .value select {
@@ -1206,4 +1229,25 @@ body {
         100% {
                 transform: translate(-50%, -50%) scale(1);
         }
+}
+
+/* general classes */
+.text_right {
+        text-align: right !important;
+}
+
+[data-theme="dark"] .lm_only {
+        display: none !important;
+}
+
+[data-theme="light"] .dm_only {
+        display: none !important;
+}
+
+[data-theme="light"] .lm_only {
+        display: inherit !important;
+}
+
+[data-theme="dark"] .dm_only {
+        display: inherit !important;
 }

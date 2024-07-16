@@ -49,7 +49,7 @@ export class Gizmo {
          */
         change(mouseMovement) {
                 const changeValue = Vector2.multiply(this.vectorBias, mouseMovement);
-                const newValue = this.attribute.value.add(changeValue);
+                const newValue = Vector2.add(this.attribute.value, changeValue);
 
                 this.attribute.change(newValue.x, newValue.y);
         }

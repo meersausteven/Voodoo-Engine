@@ -65,11 +65,8 @@ export class AttributeBoolean extends AttributeText {
 
                 label.appendChild(input);
 
-                const uncheckedIcon = new HtmlElement('i', null, {class: 'fa fa-square'});
-                label.appendChild(uncheckedIcon);
-
-                const checkedIcon = new HtmlElement('i', null, {class: 'fa fa-square-check'});
-                label.appendChild(checkedIcon);
+                const toggleSwitch = new HtmlElement('div', null, {class: 'toggle'});
+                label.appendChild(toggleSwitch);
 
                 propertyValue.appendChild(label);
 

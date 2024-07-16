@@ -24,12 +24,15 @@
                         </a>
                 </div>
                 <div id="loading-screen" class="overlay hidden">
+                        <!-- ripples for animation -->
                         <div class="ripple"></div>
                         <div class="ripple"></div>
                         <div class="ripple"></div>
                         <div class="ripple"></div>
                         <div class="ripple"></div>
+                        <!-- logo -->
                         <img src="./images/logo_small/voodoo_color_small.svg" alt="Small Logo" />
+                        <!-- sparkles for animation -->
                         <img class="sparkle" src="./images/particles/sparkle_coral.png" />
                         <img class="sparkle" src="./images/particles/sparkle_cyan.png" />
                         <img class="sparkle" src="./images/particles/sparkle_grape.png" />
@@ -43,19 +46,19 @@
                         <div class="logo">
                                 <img src="./images/logo_small/voodoo_color_small.svg" alt="Logo" />
                         </div>
-                        <div id="file-actions" class="button">
+                        <div id="file-actions" class="button" data-category="File">
                                 <i class="fa fa-folder-open"></i>
                         </div>
-                        <div id="editor-actions" class="button">
+                        <div id="editor-actions" class="button" data-category="Editor">
                                 <i class="fa fa-newspaper"></i>
                         </div>
-                        <div id="scene-actions" class="button">
+                        <div id="scene-actions" class="button" data-category="Scenes">
                                 <i class="fa fa-clapperboard"></i>
                         </div>
-                        <div id="fizzle-actions" class="button">
+                        <div id="fizzle-actions" class="button" data-category="Fizzle">
                                 <i class="fa fa-explosion"></i>
                         </div>
-                        <div id="renderer-actions" class="button">
+                        <div id="renderer-actions" class="button" data-category="Renderer">
                                 <i class="fa fa-images"></i>
                         </div>
                         <div id="night-switch" class="button bottom">
@@ -72,20 +75,17 @@
                 </div>
                 <div id="actions-drawer">
                         <div class="header">
-                                File
+                                <!-- title will be put here -->
                         </div>
                         <div class="content">
                                 <div class="items">
-                                        <!-- Action buttons will be put here -->
+                                        <!-- available actions will be put here -->
                                 </div>
                         </div>
                 </div>
                 <div id="actions-drawer-backdrop"></div>
                 <div id="context-menu" class="hidden">
-                        <div class="option">Create new talisman</div>
-                        <div class="option">Option 2</div>
-                        <div class="option">Option 3</div>
-                        <div class="option">etc.</div>
+                        <!-- context menu options will be generated here -->
                 </div>
                 <div id="talisman-collection">
                         <div class="header">
@@ -93,62 +93,7 @@
                         </div>
                         <div class="content">
                                 <div class="items">
-                                        <!--
-                                        <div class="item open">
-                                                <div class="toggle_children">
-                                                        <i class="fa fa-caret-down"></i>
-                                                        <i class="fa fa-caret-right"></i>
-                                                </div>
-                                                <div class="item_name">
-                                                        <i class="fa fa-cube"></i>
-                                                        <div class="label">
-                                                                New Talisman
-                                                        </div>
-                                                        <div class="visibility">
-                                                                <i class="fa fa-eye"></i>
-                                                                <i class="fa fa-eye-slash"></i>
-                                                        </div>
-                                                </div>
-                                                <div class="children">
-                                                        <div class="item">
-                                                                <div class="item_name">
-                                                                        <i class="fa fa-cube"></i>
-                                                                        <div class="label">
-                                                                                New Talisman
-                                                                        </div>
-                                                                        <div class="visibility">
-                                                                                <i class="fa fa-eye"></i>
-                                                                                <i class="fa fa-eye-slash"></i>
-                                                                        </div>
-                                                                </div>
-                                                        </div>
-                                                        <div class="item">
-                                                                <div class="item_name">
-                                                                        <i class="fa fa-cube"></i>
-                                                                        <div class="label">
-                                                                                New Talisman
-                                                                        </div>
-                                                                        <div class="visibility">
-                                                                                <i class="fa fa-eye"></i>
-                                                                                <i class="fa fa-eye-slash"></i>
-                                                                        </div>
-                                                                </div>
-                                                        </div>
-                                                </div>
-                                        </div>
-                                        <div class="item">
-                                                <div class="item_name">
-                                                        <i class="fa fa-cube"></i>
-                                                        <div class="label">
-                                                                New Talisman
-                                                        </div>
-                                                        <div class="visibility">
-                                                                <i class="fa fa-eye"></i>
-                                                                <i class="fa fa-eye-slash"></i>
-                                                        </div>
-                                                </div>
-                                        </div>
-                                        -->
+                                        <!-- talismans will be generated here -->
                                 </div>
                         </div>
                         <div id="editor-position">
@@ -179,136 +124,7 @@
                                 Enchantments
                         </div>
                         <div class="content">
-                                <!--
-                                <div id="name" class="item active">
-                                        <div class="title">
-                                                <i class="fa fa-signature"></i>
-                                                <div class="value">
-                                                        New Talisman
-                                                </div>
-                                                <div class="state">
-                                                        <i class="fa fa-square"></i>
-                                                        <i class="fa fa-square-check"></i>
-                                                </div>
-                                        </div>
-                                </div>
-                                <div id="transform" class="item open">
-                                        <div class="title">
-                                                <i class="fa fa-location-crosshairs"></i>
-                                                <div class="label">
-                                                        Transform
-                                                </div>
-                                        </div>
-                                        <div class="properties">
-                                                <div id="position" class="property">
-                                                        <div class="label">
-                                                                Position
-                                                        </div>
-                                                        <div class="value">
-                                                                <div class="x">
-                                                                        <label>
-                                                                                X
-                                                                                <input type="text" value="0" />
-                                                                        </label>
-                                                                </div>
-                                                                <div class="y">
-                                                                        <label>
-                                                                                Y
-                                                                                <input type="text" value="0" />
-                                                                        </label>
-                                                                </div>
-                                                        </div>
-                                                </div>
-                                                <div id="rotation" class="property">
-                                                        <div class="label">
-                                                                Rotation
-                                                        </div>
-                                                        <div class="value">
-                                                                <label>
-                                                                        0°
-                                                                        <input type="range" min="-180" max="180" step="1" value="0" list="rotation-detents" />
-                                                                        <datalist id="rotation-detents">
-                                                                                <option value="0"></option>
-                                                                        </datalist>
-                                                                </label>
-                                                        </div>
-                                                </div>
-                                                <div id="scale" class="property">
-                                                        <div class="label">
-                                                                Scale
-                                                        </div>
-                                                        <div class="value">
-                                                                <div class="x">
-                                                                        <label>
-                                                                                X
-                                                                                <input type="text" value="0" />
-                                                                        </label>
-                                                                </div>
-                                                                <div class="y">
-                                                                        <label>
-                                                                                Y
-                                                                                <input type="text" value="0" />
-                                                                        </label>
-                                                                </div>
-                                                        </div>
-                                                </div>
-                                                <div id="color" class="property">
-                                                        <div class="label">
-                                                                Color
-                                                        </div>
-                                                        <div class="value">
-                                                                <input type="color" value="#37fc88" />
-                                                        </div>
-                                                </div>
-                                                <div id="select" class="property">
-                                                        <div class="label">
-                                                                Select
-                                                        </div>
-                                                        <div class="value">
-                                                                <select>
-                                                                        <option value="1">Option 1</option>
-                                                                        <option selected value="2">Option 2</option>
-                                                                        <option value="3">Option 3</option>
-                                                                        <option value="4">Option 4</option>
-                                                                </select>
-                                                        </div>
-                                                </div>
-                                        </div>
-                                </div>
-                                <div id="ocular" class="item open active">
-                                        <div class="title">
-                                                <i class="fa fa-eye"></i>
-                                                <div class="label">
-                                                        Ocular
-                                                </div>
-                                                <div class="state">
-                                                        <i class="fa fa-square-check"></i>
-                                                        <i class="fa fa-square"></i>
-                                                </div>
-                                        </div>
-                                        <div class="properties">
-                                                <div id="position" class="property">
-                                                        <div class="label">
-                                                                Viewport Size
-                                                        </div>
-                                                        <div class="value">
-                                                                <div class="width">
-                                                                        <label>
-                                                                                Width
-                                                                                <input type="text" value="1280" />
-                                                                        </label>
-                                                                </div>
-                                                                <div class="height">
-                                                                        <label>
-                                                                                Height
-                                                                                <input type="text" value="720" />
-                                                                        </label>
-                                                                </div>
-                                                        </div>
-                                                </div>
-                                        </div>
-                                </div>
-                                -->
+                                <!-- enchantments will be generated here -->
                         </div>
                 </div>
                 <div id="about-modal" class="modal hidden">
@@ -319,14 +135,17 @@
                                 </div>
                         </div>
                         <div class="content">
-                                <img src="./images/logo/voodoo_white.svg" />
+                                <img class="dm_only" src="./images/logo/voodoo_white.svg" />
+                                <img class="lm_only" src="./images/logo/voodoo_black.svg" />
                                 <div>v1.0.0</div>
-                                <div>Voodoo is an open source JavaScript based in-browser game engine and is free to use.<br>
-                                        Please report any that try to sell this engine for profit!<br><br>
-                                        Feel free to experiment with the different enchantments and the editor.<br>
+                                <br/><br/>
+                                <div>Voodoo is an open source JavaScript based in-browser game engine and is free to use.<br />
+                                        Please report any that try to sell this engine for profit!<br /><br />
+                                        Feel free to experiment with the different enchantments and the editor.<br />
                                         Thank you for using Voodoo!
                                 </div>
-                                <div>Created by Sven May</div>
+                                <br />
+                                <div class="text_right"><i>Created by <b>@meersausteven</b></i></div>
                         </img>
                 </div>
                 <script src="lib.js"></script>
