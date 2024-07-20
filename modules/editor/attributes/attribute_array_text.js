@@ -10,7 +10,7 @@ export class AttributeArrayText extends AttributeText {
         /*
          * constructor
          * @param string name: name of the attribute
-         * @param array value: array of values
+         * @param string[] value: array of values
          * @param string event: event name that should be dispatched when the value changed
          */
         constructor(name, value = [], event = null) {

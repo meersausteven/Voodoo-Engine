@@ -24,18 +24,32 @@ export class TextRenderer extends Renderer {
         constructor(text = 'Lorem Ipsum', textSize = 20, textColor = '#ffffff', offset = new Vector2()) {
                 super(offset);
 
-                this.attributes['text'] = new AttributeText('Text', text);
-                this.attributes['textSize'] = new AttributeNumber('Text Size', textSize, null);
-                this.attributes['textFont'] = new AttributeSelect('Font-Family', 'Arial', this.getFamilies());
-                this.attributes['textColor'] = new AttributeColor('Text Color', textColor);
-                this.attributes['textAlign'] = new AttributeSelect('Text Alignment', 'start', ['left', 'right', 'center', 'start', 'end']);
-                this.attributes['textBaseline'] = new AttributeSelect('Text Baseline', 'alphabetic', ['top', 'hanging', 'middle', 'alphabetic', 'ideographic', 'bottom']);
-                this.attributes['textDirection'] = new AttributeSelect('Text Direction', 'inherit', ['ltr', 'rtl', 'inherit']);
-                this.attributes['kerning'] = new AttributeSelect('Kerning', 'auto', ['auto', 'default', 'none']);
-                // todo: add once supported in Firefox
-                // this.attributes['letterSpacing'] = new AttributeNumber('Letter Spacing', '0', null);
-                // this.attributes['stretch'] = new AttributeSelect('Stretch', 'normal', ['ultra-condensed', 'extra-condensed', 'condensed', 'semi-condensed', 'normal', 'semi-expanded', 'expanded', 'extra-expanded', 'ultra-expanded']);
+                this.text = text;
+                this.textSize = textSize;
+                this.textFont = 'Arial';
+                this.textColor = textColor;
+                this.textAlign = 'start';
+                this.textBaseline = 'alphabetic';
+                this.textDirection = 'inherit';
+                this.kerning = 'auto';
+                this.letterSpacing = 0;
+                this.stretch = 'normal';
                 this.metrics = null;
+
+                this.createAttributes();
+        }
+
+        createAttributes() {
+                this.editorAttributes['text'] = new AttributeText('Text', this.text, this.set.bind(this, 'text'));
+                this.editorAttributes['textSize'] = new AttributeNumber('Text Size', this.textSize, this.set.bind(this, 'textSize'));
+                this.editorAttributes['textFont'] = new AttributeSelect('Font-Family', this.textFont, this.getFamilies(), this.set.bind(this, 'textFont'));
+                this.editorAttributes['textColor'] = new AttributeColor('Text Color', this.textColor, this.set.bind(this, 'textColor'));
+                this.editorAttributes['textAlign'] = new AttributeSelect('Text Alignment', this.textAlign, ['left', 'right', 'center', 'start', 'end'], this.set.bind(this, 'textAlign'));
+                this.editorAttributes['textBaseline'] = new AttributeSelect('Text Baseline', this.textBaseline, ['top', 'hanging', 'middle', 'alphabetic', 'ideographic', 'bottom'], this.set.bind(this, 'textBaseline'));
+                this.editorAttributes['textDirection'] = new AttributeSelect('Text Direction', this.textDirection, ['ltr', 'rtl', 'inherit'], this.set.bind(this, 'textDirection'));
+                this.editorAttributes['kerning'] = new AttributeSelect('Kerning', this.kerning, ['auto', 'default', 'none'], this.set.bind(this, 'kerning'));
+                this.editorAttributes['letterSpacing'] = new AttributeNumber('Letter Spacing', this.letterSpacing, this.set.bind(this, 'letterSpacing'));
+                this.editorAttributes['stretch'] = new AttributeSelect('Stretch', this.stretch, ['ultra-condensed', 'extra-condensed', 'condensed', 'semi-condensed', 'normal', 'semi-expanded', 'expanded', 'extra-expanded', 'ultra-expanded'], this.set.bind(this, 'stretch'));
         }
 
         /*
@@ -46,26 +60,27 @@ export class TextRenderer extends Renderer {
                 this.renderDefault(ocular);
 
                 // text variables
-                ocular.canvasContext.font = `${this.attributes['textSize'].value}px ${this.attributes['textFont'].value}`;
-                ocular.canvasContext.textAlign = this.attributes['textAlign'].value;
-                ocular.canvasContext.textBaseline = this.attributes['textBaseline'].value;
-                ocular.canvasContext.textDirection = this.attributes['textDirection'].value;
-                ocular.canvasContext.fontKerning = this.attributes['kerning'].value;
-                // todo: add once supported in Firefox
-                // ocular.canvasContext.letterSpacing = `${this.attributes['letterSpacing'].value}px`;
-                // ocular.canvasContext.fontStretch = this.attributes['stretch'].value;
+                ocular.canvasContext.font = `${this.textSize}px ${this.textFont}`;
+                ocular.canvasContext.textAlign = this.textAlign;
+                ocular.canvasContext.textBaseline = this.textBaseline;
+                ocular.canvasContext.textDirection = this.textDirection;
+                ocular.canvasContext.fontKerning = this.kerning;
+                ocular.canvasContext.letterSpacing = `${this.letterSpacing}px`;
+                ocular.canvasContext.fontStretch = this.stretch;
 
                 // fill text
-                ocular.canvasContext.fillStyle = this.attributes['textColor'].value;
-                ocular.canvasContext.fillText(this.attributes['text'].value, 0, 0);
+                ocular.canvasContext.fillStyle = this.textColor;
+                ocular.canvasContext.fillText(this.text, 0, 0);
                 // calculate text metrics and save them to the attribute
-                this.metrics = ocular.canvasContext.measureText(this.attributes['text'].value);
+                this.metrics = ocular.canvasContext.measureText(this.text);
 
                 ocular.canvasContext.restore();
         }
 
         // list of font families
         getFamilies() {
+                // todo: add fancy Voodoo fonts
+                // + adding own fonts some day
                 return [
                         'Andale Mono',
                         'Apple Chancery',

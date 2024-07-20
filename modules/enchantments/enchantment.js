@@ -8,10 +8,10 @@ export class Enchantment {
         type = "Enchantment";
         icon = "fa-solid fa-wand-sparkles";
         talisman = null;
-        attributes = {};
+        editorAttributes = {};
 
         constructor() {
-                this.attributes['enabled'] = new AttributeBoolean('Enabled', true);
+                this.enabled = true;
         }
 
         // called when initializing
@@ -38,12 +38,29 @@ export class Enchantment {
                 return;
         }
 
+        createAttributes() {
+                return;
+        }
+
         // return all attributes to its start values
         resetAttributes() {
-                for (let key in this.attributes) {
-                        if (key !== "enabled") {
-                                this.attributes[key].reset();
-                        }
+                for (let key in this.editorAttributes) {
+                        this.editorAttributes[key].reset();
                 }
+        }
+
+        // update editor gizmo data
+        updateGizmoData() {
+                return;
+        }
+
+        // set the value of an attribute
+        set(attribute, value) {
+                this[attribute] = value;
+        }
+
+        // get the value of an attribute
+        get(attribute) {
+                return this[attribute];
         }
 }

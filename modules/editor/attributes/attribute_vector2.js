@@ -13,8 +13,8 @@ export class AttributeVector2 extends AttributeText {
          * @param Number value: value of the attribute
          * @param string event: event name that should be dispatched when the value changed
          */
-        constructor(name, value, xLabel = "X", yLabel = "Y", event = null) {
-                super(name, value, event);
+        constructor(name, value, callback, xLabel = "X", yLabel = "Y", event = null) {
+                super(name, value, callback, event);
 
                 this.xLabel = xLabel;
                 this.yLabel = yLabel;
@@ -71,6 +71,7 @@ export class AttributeVector2 extends AttributeText {
                         newValue = new Vector2(newValueX, this.value.y);
                 }
 
+                this.callback(newValue);
                 this.value = newValue;
 
                 document.querySelector(`#enchantments .content .item .x input[name="${this.name}"]`).value = this.value.x;

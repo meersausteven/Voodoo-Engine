@@ -16,6 +16,9 @@ import { HtmlElement } from './../editor/html_helpers/html_element.js';
 export class Transform extends Enchantment {
         type = "Transform";
         icon = "fa-location-crosshairs";
+        gizmos = [];
+        parent = null;
+        children = [];
 
         /*
          * constructor
@@ -26,12 +29,21 @@ export class Transform extends Enchantment {
         constructor(position = new Vector2(), rotation = 0, scale = new Vector2(1, 1)) {
                 super();
 
-                this.attributes['position'] = new AttributeVector2('Position', position);
-                this.attributes['rotation'] = new AttributeRange('Rotation', rotation, new Range(-180, 180), '°');
-                this.attributes['scale'] = new AttributeVector2('Scale', scale);
-                this.gizmos = [];
+                this.position = position;
+                this.rotation = rotation;
+                this.scale = scale;
 
-                this.updateGizmoData();
+                if (Object.keys(this.editorAttributes).legnth > 0) {
+                        this.updateGizmoData();
+                }
+
+                this.createAttributes();
+        }
+
+        createAttributes() {
+                this.editorAttributes['position'] = new AttributeVector2('Position', this.position, this.set.bind(this, 'position'));
+                this.editorAttributes['rotation'] = new AttributeRange('rotation', this.rotation, new Range(-180, 180), this.set.bind(this, 'rotation'), '°');
+                this.editorAttributes['scale'] = new AttributeVector2('Scale', this.scale, this.set.bind(this, 'scale'));
         }
 
         // update editor gizmo data
@@ -39,12 +51,12 @@ export class Transform extends Enchantment {
                 this.gizmos = [
                         new Gizmo("upArrow",
                                 new Bounds(
-                                        this.attributes['position'].value.y - 100,
-                                        this.attributes['position'].value.x + 9,
-                                        this.attributes['position'].value.y - 9,
-                                        this.attributes['position'].value.x - 9
+                                        this.position.y - 100,
+                                        this.position.x + 9,
+                                        this.position.y - 9,
+                                        this.position.x - 9
                                 ),
-                                this.attributes['position'],
+                                this.editorAttributes['position'],
                                 new Vector2(-9, -100),
                                 window.location.href + '/../assets/sprites/editor/widgets/transform_up_arrow.png',
                                 18,
@@ -53,12 +65,12 @@ export class Transform extends Enchantment {
                         ),
                         new Gizmo("rightArrow",
                                 new Bounds(
-                                        this.attributes['position'].value.y + -9,
-                                        this.attributes['position'].value.x + 100,
-                                        this.attributes['position'].value.y + 9,
-                                        this.attributes['position'].value.x + 9
+                                        this.position.y + -9,
+                                        this.position.x + 100,
+                                        this.position.y + 9,
+                                        this.position.x + 9
                                 ),
-                                this.attributes['position'],
+                                this.editorAttributes['position'],
                                 new Vector2(0, -9),
                                 window.location.href + '/../assets/sprites/editor/widgets/transform_right_arrow.png',
                                 100,
@@ -67,12 +79,12 @@ export class Transform extends Enchantment {
                         ),
                         new Gizmo("centerBox",
                                 new Bounds(
-                                        this.attributes['position'].value.y + -9,
-                                        this.attributes['position'].value.x + 9,
-                                        this.attributes['position'].value.y + 9,
-                                        this.attributes['position'].value.x + -9
+                                        this.position.y + -9,
+                                        this.position.x + 9,
+                                        this.position.y + 9,
+                                        this.position.x + -9
                                 ),
-                                this.attributes['position'],
+                                this.editorAttributes['position'],
                                 new Vector2(-9, -9),
                                 window.location.href + '/../assets/sprites/editor/widgets/transform_center.png',
                                 18,
@@ -85,8 +97,8 @@ export class Transform extends Enchantment {
         renderGizmo(ocular) {
                 ocular.canvasContext.save();
 
-                ocular.canvasContext.translate(this.attributes['position'].value.x - ocular.worldPos.x, this.attributes['position'].value.y - ocular.worldPos.y);
-                ocular.canvasContext.rotate(Math.degreesToRadians(this.attributes['rotation'].value));
+                ocular.canvasContext.translate(this.position.x - ocular.worldPos.x, this.position.y - ocular.worldPos.y);
+                ocular.canvasContext.rotate(Math.degreesToRadians(this.rotation));
 
                 let i = 0;
                 const l = this.gizmos.length;

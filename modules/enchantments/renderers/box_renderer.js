@@ -23,11 +23,21 @@ export class BoxRenderer extends Renderer {
         constructor(width = 50, height = 50, fillColor = '#ffffff', borderWidth = 0, borderColor = '#000000', offset = new Vector2()) {
                 super(offset);
 
-                this.attributes['width'] = new AttributeNumber('Width', width, null, new Range());
-                this.attributes['height'] = new AttributeNumber('Height', height, null, new Range());
-                this.attributes['fillColor'] = new AttributeColor('Fill Color', fillColor);
-                this.attributes['borderWidth'] = new AttributeNumber('Border Width', borderWidth, null, new Range());
-                this.attributes['borderColor'] = new AttributeColor('Border Color', borderColor);
+                this.width = width;
+                this.height = height;
+                this.fillColor = fillColor;
+                this.borderWidth = borderWidth;
+                this.borderColor = borderColor;
+
+                this.createAttributes();
+        }
+
+        createAttributes() {
+                this.editorAttributes['width'] = new AttributeNumber('Width', this.width, this.set.bind(this, 'width'));
+                this.editorAttributes['height'] = new AttributeNumber('Height', this.height, this.set.bind(this, 'height'));
+                this.editorAttributes['fillColor'] = new AttributeColor('Fill Color', this.fillColor, this.set.bind(this, 'fillColor'));
+                this.editorAttributes['borderWidth'] = new AttributeNumber('Border Width', this.borderWidth, this.set.bind(this, 'borderWidth'));
+                this.editorAttributes['borderColor'] = new AttributeColor('Border Color', this.borderColor, this.set.bind(this, 'borderColor'));
         }
 
         /*
@@ -38,15 +48,15 @@ export class BoxRenderer extends Renderer {
                 this.renderDefault(ocular);
 
                 // border
-                if (this.attributes['borderWidth'].value > 0) {
-                        ocular.canvasContext.lineWidth = this.attributes['borderWidth'].value;
-                        ocular.canvasContext.strokeStyle = this.attributes['borderColor'].value;
-                        ocular.canvasContext.strokeRect(-this.attributes['width'].value / 2, -this.attributes['height'].value / 2, this.attributes['width'].value, this.attributes['height'].value);
+                if (this.borderWidth > 0) {
+                        ocular.canvasContext.lineWidth = this.borderWidth;
+                        ocular.canvasContext.strokeStyle = this.borderColor;
+                        ocular.canvasContext.strokeRect(-this.width / 2, -this.height / 2, this.width, this.height);
                 }
 
                 // fill
-                ocular.canvasContext.fillStyle = this.attributes['fillColor'].value;
-                ocular.canvasContext.fillRect(-this.attributes['width'].value / 2, -this.attributes['height'].value / 2, this.attributes['width'].value, this.attributes['height'].value);
+                ocular.canvasContext.fillStyle = this.fillColor;
+                ocular.canvasContext.fillRect(-this.width / 2, -this.height / 2, this.width, this.height);
 
                 ocular.canvasContext.restore();
         }

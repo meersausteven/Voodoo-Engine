@@ -10,9 +10,10 @@ export class AttributeText {
          * @param string value: value of the attribute
          * @param string event: event name that should be dispatched when the value changed
          */
-        constructor(name, value, event = null) {
+        constructor(name, value, callback, event = null) {
                 this.name = name;
                 this.value = value;
+                this.callback = callback;
                 this.event = event;
                 this.startValue = value;
         }
@@ -42,6 +43,7 @@ export class AttributeText {
 
         // called after validation was successful to update the object value
         change(newValue) {
+                this.callback(newValue);
                 this.value = newValue;
 
                 document.querySelector(`#enchantments .content .item input[name="${this.name}"]`).value = this.value;

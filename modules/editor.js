@@ -127,9 +127,9 @@ export class Editor {
                 // prepare canvas
                 this.canvas = document.getElementById('editor-view');
                 this.gridColor = getComputedStyle(document.body).getPropertyValue('--canvas-grid-color');
-                // create new project todo: add check if save is found in storage - otherwise load new project
+                // create new project
+                // todo: load project from file when uploaded on welcome screen - otherwise create new
                 this.project = new Project();
-                this.project.loadScene(this.project.settings['defaultScene']);
 
                 // add a basic renderer
                 this.renderer = new RendererEngine();
@@ -148,7 +148,6 @@ export class Editor {
                 document.addEventListener('click', this);
                 document.addEventListener('contextmenu', this);
                 document.addEventListener('wheel', this);
-                document.addEventListener('current_gameObject_name_changed', this);
                 document.addEventListener('zoom_changed', this);
                 document.addEventListener('position_changed', this);
                 document.addEventListener('active_talisman_changed', this);
@@ -167,8 +166,7 @@ export class Editor {
 
                 // create new ocular and move it to the center (X:0, Y:0 at the center)
                 this.ocular = new Ocular(this.canvas.width, this.canvas.height);
-                // this.ocular.worldPos = new Vector2(-this.ocular.canvas.width / 2, -this.ocular.canvas.height / 2);
-                this.ocular.worldPos = new Vector2(0, 0);
+                this.ocular.worldPos = Vector2.zero;
 
                 this.animationFrame = window.requestAnimationFrame(this.processFrame.bind(this));
         }
@@ -176,9 +174,7 @@ export class Editor {
         // process all necessary steps for the current frame
         // e.g. calculations, rendering, etc.
         processFrame() {
-                if ((this.currentScene !== null) &&
-                    (typeof this.currentScene !== 'undefined'))
-                {
+                if ((this.currentScene !== null) && (typeof this.currentScene !== 'undefined')) {
                         this.canvas.width = this.canvas.clientWidth;
                         this.canvas.height = this.canvas.clientHeight;
 
@@ -234,20 +230,19 @@ export class Editor {
 
         // process frame for current scene
         processCurrentSceneFrame() {
-                let i = 0;
-                const l = this.currentScene.talismans.length;
+                for (const id in this.currentScene.talismans) {
+                        const talisman = this.currentScene.talismans[id];
 
-                while (i < l) {
-                        this.processTalismanFrame(this.currentScene.talismans[i]);
-
-                        ++i;
+                        if (talisman instanceof Talisman) {
+                                this.processTalismanFrame(talisman);
+                        }
                 }
         }
 
         // process frame for the passed talisman
         processTalismanFrame(talisman) {
                 // skip all disabled talismans
-                if (talisman.attributes['enabled'].value === true) {
+                if (talisman.enabled === true) {
                         // loop through all enchantments in the current talisman
                         let i = 0;
                         const l = talisman.enchantments.length;
@@ -263,7 +258,7 @@ export class Editor {
         // process frame for the passed enchantment
         processEnchantmentFrame(enchantment) {
                 // skip all enchantments that are disabled
-                if (enchantment.attributes['enabled'].value === true) {
+                if (enchantment.enabled === true) {
                         // Renderer enchantments
                         if (enchantment instanceof Renderer) {
                                 // we need to update the renderer enchantments to get the correct world position
@@ -335,9 +330,6 @@ export class Editor {
 
                 if ((json !== null) && (typeof json !== 'undefined')) {
                         this.project = this.project.convertToProject(json);
-                        // new Snackbar('Project successfully loaded from storage.', SNACKBAR_SUCCESS);
-                } else {
-                        // new Snackbar('No Project in storage. Try saving one first.', SNACKBAR_WARNING);
                 }
         }
 
@@ -443,7 +435,7 @@ export class Editor {
                 const loadRitualButton = document.getElementById('load-ritual');
                 if (loadRitualButton !== null) {
                         loadRitualButton.addEventListener('click', () => {
-                                this.loadProjectFromStorage();
+                                // this.loadProjectFromStorage();
                                 this.start();
                                 document.body.removeChild(welcomeScreen);
                                 document.body.removeChild(loadingScreen);
@@ -851,28 +843,22 @@ export class Editor {
 
         // display list of talismans in active scene
         renderTalismanCollection() {
-                let i = 0;
-                const l = this.currentScene.talismans.length;
+                for (const id in this.currentScene.talismans) {
+                        const talisman = this.currentScene.talismans[id];
 
-                while (i < l) {
-                        const talisman = this.currentScene.talismans[i];
-                        this.renderSingleTalisman(talisman, i);
-
-                        ++i;
+                        if (talisman instanceof Talisman) {
+                                this.renderSingleTalisman(talisman);
+                        }
                 }
         }
 
         // build a single talisman for the talisman-collection
-        renderSingleTalisman(talisman, index = null) {
+        renderSingleTalisman(talisman) {
                 const content = this.talismanCollection.querySelector('.content .items');
 
-                if (index == null) {
-                        index = this.currentScene.talismans.length - 1;
-                }
-
                 const talismanItem = new HtmlElement('div', null, {
-                        class: 'item ' + ((talisman.attributes['visible'].value) ? '' : 'invisible'),
-                        'data-index': index
+                        class: 'item ' + ((talisman.visible) ? '' : 'invisible'),
+                        'data-uid': talisman.id
                 });
 
                 // toggle children (leave out for now)
@@ -894,7 +880,7 @@ export class Editor {
                 const itemIcon = new HtmlElement('i', null, {class: 'fa ' + talisman.icon});
                 itemName.appendChild(itemIcon);
 
-                const itemLabel = new HtmlElement('div', talisman.attributes['name'].value, {class: 'label'});
+                const itemLabel = new HtmlElement('div', talisman.editorAttributes['name'].value, {class: 'label'});
                 itemLabel.addEventListener('click', function() {
                         if (talismanItem.classList.contains('active')) {
                                 this.activeTalisman = null;
@@ -907,16 +893,16 @@ export class Editor {
                         document.dispatchEvent(new Event('active_talisman_changed'));
                 }.bind(this));
                 document.addEventListener('talisman_name_changed', function() {
-                        itemLabel.innerHTML = talisman.attributes['name'].value;
+                        itemLabel.innerHTML = talisman.editorAttributes['name'].value;
                 });
                 itemName.appendChild(itemLabel);
 
                 const itemVisibility = new HtmlElement('div', null, {class: 'visibility'});
                 itemVisibility.addEventListener('click', function() {
-                        if (talisman.attributes['visible'].value === false) {
-                                talisman.attributes['visible'].value = true;
+                        if (talisman.editorAttributes['visible'].value === false) {
+                                talisman.editorAttributes['visible'].value = true;
                         } else {
-                                talisman.attributes['visible'].value = false;
+                                talisman.editorAttributes['visible'].value = false;
                         }
                 });
 
@@ -945,7 +931,7 @@ export class Editor {
                 const content = this.enchantments.querySelector('.content');
 
                 // talisman name
-                const nameItem = new HtmlElement('div', null, {class: 'item ' + ((this.activeTalisman.attributes['enabled'].value) ? 'active' : ''), id: 'name'});
+                const nameItem = new HtmlElement('div', null, {class: 'item ' + ((this.activeTalisman.enabled) ? 'active' : ''), id: 'name'});
 
                 const nameTitle = new HtmlElement('div', null, {class: 'title'});
 
@@ -953,14 +939,14 @@ export class Editor {
                 nameTitle.appendChild(nameIcon);
 
                 const nameValue = new HtmlElement('div', null, {class: 'value'});
-                nameValue.appendChild(this.activeTalisman.attributes['name'].createWidget());
+                nameValue.appendChild(this.activeTalisman.editorAttributes['name'].createWidget());
                 nameValue.title = "Double-click to change name";
                 nameTitle.appendChild(nameValue);
 
                 // enable / disable talisman
                 const nameState = new HtmlElement('div', null, {class: 'state'});
                 nameState.addEventListener('click', function() {
-                        this.activeTalisman.attributes['enabled'].value = !this.activeTalisman.attributes['enabled'].value;
+                        this.activeTalisman.enabled = !this.activeTalisman.enabled;
                 }.bind(this));
 
                 const nameDisable = new HtmlElement('i', null, {class: 'fa fa-square'});
@@ -1000,7 +986,7 @@ export class Editor {
         // build a single enchantment for the enchantments container
         renderSingleEnchantment(enchantment, index = null, open = false, allowDisable = true) {
                 const item = new HtmlElement('div', null, {
-                        class: 'item ' + ((enchantment.attributes['enabled'].value) ? 'active ' : '') + ((open) ? 'open' : ''),
+                        class: 'item ' + ((enchantment.enabled) ? 'active ' : '') + ((open) ? 'open' : ''),
                         'data-index': index
                 });
 
@@ -1018,7 +1004,7 @@ export class Editor {
                         const status = new HtmlElement('div', null, {class: 'state'});
                         status.title = "Left-click to enable/disable this enchantment";
                         status.addEventListener('click', () => {
-                                enchantment.attributes['enabled'].value = !enchantment.attributes['enabled'].value;
+                                enchantment.enabled = !enchantment.enabled;
                         });
 
                         const disable = new HtmlElement('i', null, {class: 'fa fa-square-check'});
@@ -1034,12 +1020,12 @@ export class Editor {
 
                 // properties
                 const properties = new HtmlElement('div', null, {class: 'properties'});
-                for (let key in enchantment.attributes) {
+                for (let key in enchantment.editorAttributes) {
                         if (key !== 'enabled') {
                                 // skip 'enabled' attribute because we already added it in the title
 
-                                if (enchantment.attributes[key] instanceof AttributeText) {
-                                        const widget = enchantment.attributes[key].createWidget();
+                                if (enchantment.editorAttributes[key] instanceof AttributeText) {
+                                        const widget = enchantment.editorAttributes[key].createWidget();
 
                                         properties.appendChild(widget);
                                 }
@@ -1350,8 +1336,8 @@ export class Editor {
                 const form = new HtmlElement('form', null, {id: 'physics-settings-form'});
 
                 // create widgets for all attributes
-                for (let key in this.project.fizzle.attributes) {
-                        const widget = this.project.fizzle.attributes[key].createWidget();
+                for (let key in this.project.fizzle.editorAttributes) {
+                        const widget = this.project.fizzle.editorAttributes[key].createWidget();
 
                         form.appendChild(widget);
                 }

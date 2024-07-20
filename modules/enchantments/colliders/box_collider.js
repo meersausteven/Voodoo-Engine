@@ -21,16 +21,23 @@ export class BoxCollider extends Collider {
         constructor(width = 50, height = 50, isTrigger = false, offset = new Vector2()) {
                 super(isTrigger, offset);
 
-                this.attributes['width'] = new AttributeNumber('Width', width, null, new Range());
-                this.attributes['height'] = new AttributeNumber('Height', height, null, new Range());
+                this.width = width;
+                this.height = height;
+
+                this.createAttributes();
+        }
+
+        createAttributes() {
+                this.editorAttributes['width'] = new AttributeNumber('Width', this.width, this.set.bind(this, 'width'));
+                this.editorAttributes['height'] = new AttributeNumber('Height', this.height, this.set.bind(this, 'height'));
         }
 
         updateBounds() {
                 this.bounds = new Bounds(
-                        this.worldPos.y - (this.attributes['height'].value / 2),
-                        this.worldPos.x + (this.attributes['width'].value / 2),
-                        this.worldPos.y + (this.attributes['height'].value / 2),
-                        this.worldPos.x - (this.attributes['width'].value / 2)
+                        this.worldPos.y - (this.height / 2),
+                        this.worldPos.x + (this.width / 2),
+                        this.worldPos.y + (this.height / 2),
+                        this.worldPos.x - (this.width / 2)
                 );
         }
 
@@ -41,7 +48,7 @@ export class BoxCollider extends Collider {
                 ocular.canvasContext.lineWidth = 3;
                 ocular.canvasContext.strokeStyle = '#cc1133';
                 ocular.canvasContext.setLineDash([3,6]);
-                ocular.canvasContext.strokeRect(-this.attributes['width'].value / 2, -this.attributes['height'].value / 2, this.attributes['width'].value, this.attributes['height'].value);
+                ocular.canvasContext.strokeRect(-this.width / 2, -this.height / 2, this.width, this.height);
 
                 ocular.canvasContext.restore();
         }

@@ -19,18 +19,25 @@ export class Collider extends Enchantment {
         constructor(isTrigger = false, offset = new Vector2()) {
                 super();
 
-                this.attributes['isTrigger'] = new AttributeBoolean('Is Trigger', isTrigger);
-                // this.attributes['inverted'] = new AttributeBoolean('Inverted', false);
-                this.attributes['offset'] = new AttributeVector2('Offset', offset);
-
+                this.isTrigger = isTrigger;
+                this.offset = offset;
+                //this.inverted = false;
                 this.worldPos = new Vector2();
                 this.bounds = new Bounds(0, 0, 0, 0);
+
+                this.createAttributes();
+        }
+
+        createAttributes() {
+                this.editorAttributes['isTrigger'] = new AttributeBoolean('Is Trigger', this.isTrigger, this.set.bind(this, 'isTrigger'));
+                this.editorAttributes['offset'] = new AttributeVector2('Offset', this.offset, this.set.bind(this, 'offset'));
+                // this.editorAttributes['inverted'] = new AttributeBoolean('Inverted', false, this.set.bind(this, 'inverted'));
         }
 
         updateWorldPos() {
                 this.worldPos = new Vector2(
-                        this.talisman.transform.attributes['position'].value.x + this.attributes['offset'].value.x,
-                        this.talisman.transform.attributes['position'].value.y + this.attributes['offset'].value.y
+                        this.talisman.transform.position.x + this.offset.x,
+                        this.talisman.transform.position.y + this.offset.y
                 );
         }
 

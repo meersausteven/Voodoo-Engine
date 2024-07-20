@@ -11,27 +11,30 @@ import { Enchantment } from './enchantment.js';
 export class Rigidbody extends Enchantment {
         type = "Rigidbody";
         icon = "fa-person-falling";
-        velocity = new Vector2();
 
         constructor() {
                 super();
 
-                this.attributes['initialVelocity'] = new AttributeVector2('Initial Velocity', new Vector2());
-                this.attributes['obeyGravity'] = new AttributeBoolean('Obey Gravity', true);
-                this.attributes['canCollide'] = new AttributeBoolean('Can Collide', true);
-                this.attributes['mass'] = new AttributeNumber('Mass', 1, null, new Range(-Number.MAX_VALUE));
-                this.attributes['gravityMultiplier'] = new AttributeNumber('Gravity Multiplier', 1, null, new Range(-Number.MAX_VALUE));
-                this.attributes['frictionMultiplier'] = new AttributeNumber('Friction Multiplier', 1, null, new Range(-Number.MAX_VALUE));
+                this.velocity = new Vector2();
+                this.initialVelocity = new Vector2();
+                this.obeyGravity = true;
+                this.canCollide = true;
+                this.mass = 1;
+                this.gravityMultiplier = 1;
+                this.frictionMultiplier = 1;
+
+                this.createAttributes();
         }
 
         start() {
-                this.velocity = Vector2.add(this.velocity, this.attributes['initialVelocity'].value);
+                this.velocity = Vector2.add(this.velocity, this.initialVelocity);
         }
 
         update() {
-                if (this.attributes['obeyGravity'].value === true) {
+                if (this.obeyGravity === true) {
+                        // todo: move feature to Fizzle
                         // calculate force this Rigidbody is pulled towards other Rigidbodies with their given mass
-                        if (this.talisman.scene.project.fizzle.attributes['massGravity'].value === true) {
+                        if (this.talisman.scene.project.fizzle.massGravity === true) {
                                 let i = 0;
                                 const l = this.talisman.scene.talismans.length;
 
@@ -48,11 +51,11 @@ export class Rigidbody extends Enchantment {
                                         if (otherObject.getEnchantment('Rigidbody') !== false) {
                                                 const otherBody = otherObject.getEnchantment('Rigidbody');
 
-                                                const toOtherObject = Vector2.subtract(otherObject.transform.attributes['position'].value, this.talisman.transform.attributes['position'].value);
+                                                const toOtherObject = Vector2.subtract(otherObject.transform.position, this.talisman.transform.position);
                                                 const distance = toOtherObject.magnitude;
 
-                                                const force = Math.G * Math.pow(10, 11) * ((this.attributes['mass'].value * otherBody.attributes['mass'].value) / (distance * distance));
-                                                const acceleration = force / this.attributes['mass'].value;
+                                                const force = Math.G * Math.pow(10, 11) * ((this.mass * otherBody.mass) / (distance * distance));
+                                                const acceleration = force / this.mass;
 
                                                 const vectorTowardsOtherObject = Vector2.multiply(toOtherObject.lengthen(acceleration), window.time.delta);
 
@@ -65,12 +68,12 @@ export class Rigidbody extends Enchantment {
                                 // mass is set to not create gravity - use default gravity vector
 
                                 // add the gravity (multiplied by the time since the last frame) to this Rigidbody's velocity
-                                const physicsGravity = this.talisman.scene.project.fizzle.attributes['gravity'].value;
+                                const physicsGravity = this.talisman.scene.project.fizzle.gravity;
                                 this.velocity = Vector2.add(this.velocity, Vector2.multiply(physicsGravity, window.time.delta));
 
                                 // decrease velocity according to friction
-                                let physicsFriction = this.talisman.scene.project.fizzle.attributes['airResistance'].value;
-                                physicsFriction = Vector2.multiply(physicsFriction, this.attributes['frictionMultiplier'].value);
+                                let physicsFriction = this.talisman.scene.project.fizzle.airResistance;
+                                physicsFriction = Vector2.multiply(physicsFriction, this.frictionMultiplier);
 
                                 this.velocity = Vector2.divide(this.velocity, physicsFriction);
                         }
@@ -82,7 +85,16 @@ export class Rigidbody extends Enchantment {
                 }
 
                 // move the talisman according to its velocity
-                this.talisman.transform.attributes['position'].value = Vector2.add(this.talisman.transform.attributes['position'].value, this.velocity);
+                this.talisman.transform.position = Vector2.add(this.talisman.transform.position, this.velocity);
+        }
+
+        createAttributes() {
+                this.editorAttributes['initialVelocity'] = new AttributeVector2('Initial Velocity', this.initialVelocity, this.set.bind(this, 'initialVelocity'));
+                this.editorAttributes['obeyGravity'] = new AttributeBoolean('Obey Gravity', this.obeyGravity, this.set.bind(this, 'obeyGravity'));
+                this.editorAttributes['canCollide'] = new AttributeBoolean('Can Collide', this.canCollide, this.set.bind(this, 'canCollide'));
+                this.editorAttributes['mass'] = new AttributeNumber('Mass', this.mass, this.set.bind(this, 'mass'));
+                this.editorAttributes['gravityMultiplier'] = new AttributeNumber('Gravity Multiplier', this.gravityMultiplier, this.set.bind(this, 'gravityMultiplier'));
+                this.editorAttributes['frictionMultiplier'] = new AttributeNumber('Friction Multiplier', this.frictionMultiplier, this.set.bind(this, 'frictionMultiplier'));
         }
 
         /*
@@ -92,6 +104,6 @@ export class Rigidbody extends Enchantment {
         * @param Vector2 offset: offset relative to this talisman's position
         */
         addForce(force, direction = Vector2.up) {
-                this.velocity += Vector2.multiply(direction, force / this.attributes['mass'].value);
+                this.velocity += Vector2.multiply(direction, force / this.mass);
         }
 }

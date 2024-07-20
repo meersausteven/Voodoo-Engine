@@ -12,8 +12,8 @@ export class AttributeSelect extends AttributeText {
          * @param string[] options: array of options
          * @param string event: event name that should be dispatched when the value changed
          */
-        constructor(name, value, options = [], event = null) {
-                super(name, value, event);
+        constructor(name, value, options = [], callback, event = null) {
+                super(name, value, callback, event);
 
                 this.options = options;
         }
@@ -34,6 +34,7 @@ export class AttributeSelect extends AttributeText {
 
         // called after validation was successful to update the object value
         change(newValue) {
+                this.callback(newValue);
                 this.value = newValue;
 
                 document.querySelector(`#enchantments .content .item select[name="${this.name}"] option[value="${this.value}"]`).selected = true;

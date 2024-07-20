@@ -21,7 +21,8 @@ import { AttributeBoolean } from '../editor/attributes/attribute_boolean.js';
 export class Talisman {
         type = "Talisman";
         icon = "fa-cube";
-        attributes = {};
+        id = Math.randomID();
+        editorAttributes = {};
         enchantments = [];
         transform = null;
 
@@ -32,9 +33,11 @@ export class Talisman {
 
                 this.transform = transform;
 
-                this.attributes['name'] = new AttributeHiddenText('Name', 'New Talisman', 'talisman_name_changed');
-                this.attributes['enabled'] = new AttributeBoolean('Enabled', true);
-                this.attributes['visible'] = new AttributeBoolean('Visible', true);
+                this.name = 'New Talisman';
+                this.enabled = true;
+                this.visible = true;
+
+                this.createAttributes();
         }
 
         // start is called when the scene is started
@@ -55,7 +58,7 @@ export class Talisman {
                 const l = this.enchantments.length;
 
                 while (i < l) {
-                        if (this.enchantments[i].attributes['enabled'].value === true) {
+                        if (this.enchantments[i].enabled === true) {
                                 this.enchantments[i].update();
                         }
 
@@ -69,7 +72,7 @@ export class Talisman {
                 const l = this.enchantments.length;
 
                 while (i < l) {
-                        if (this.enchantments[i].attributes['enabled'].value === true) {
+                        if (this.enchantments[i].enabled === true) {
                                 this.enchantments[i].fixedUpdate();
                         }
 
@@ -83,12 +86,18 @@ export class Talisman {
                 const l = this.enchantments.length;
 
                 while (i < l) {
-                        if (this.enchantments[i].attributes['enabled'].value === true) {
+                        if (this.enchantments[i].enabled === true) {
                                 this.enchantments[i].lateUpdate();
                         }
 
                         ++i;
                 }
+        }
+
+        createAttributes() {
+                this.editorAttributes['name'] = new AttributeHiddenText('Name', 'New Talisman', this.set.bind(this, 'name'), 'talisman_name_changed');
+                this.editorAttributes['enabled'] = new AttributeBoolean('Enabled', true, this.set.bind(this, 'enabled'));
+                this.editorAttributes['visible'] = new AttributeBoolean('Visible', true, this.set.bind(this, 'visible'));
         }
 
         /*
@@ -154,5 +163,15 @@ export class Talisman {
          */
         getTransform() {
                 return this.getEnchantment('Transform');
+        }
+
+        // set the value of an attribute
+        set(attribute, value) {
+                this[attribute] = value;
+        }
+
+        // get the value of an attribute
+        get(attribute) {
+                return this[attribute];
         }
 }

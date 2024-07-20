@@ -23,36 +23,18 @@ export class Ocular extends Enchantment {
         constructor(width, height) {
                 super();
 
-                this.attributes['viewportSize'] = new AttributeVector2('Viewport Size', new Vector2(width, height), "Width", "Height", null, new Range());
+                this.viewportSize = new Vector2(width, height);
 
                 this.worldPos = new Vector2();
 
                 this.prepareCanvas();
+                this.createAttributes();
         }
 
         start() {
                 if (this.canvas === null) {
                         this.prepareCanvas();
                 }
-
-                /*
-                this.debugCanvas = document.createElement('canvas');
-                this.debugCanvas.style.position = 'absolute';
-                this.debugCanvas.style.left = '20px';
-                this.debugCanvas.style.bottom = '20px';
-                this.debugCanvas.style.backgroundColor = 'black';
-                this.debugCanvas.style.border = '2px solid #ccc';
-                document.body.appendChild(this.debugCanvas);
-                this.debugCanvas.width = this.attributes['viewportSize'].value.x / 10;
-                this.debugCanvas.height = this.attributes['viewportSize'].value.y / 10;
-                this.debugContext = this.debugCanvas.getContext("2d");
-                this.debugContext.scale(1 / 10, 1 / 10);
-                */
-        }
-
-        // clear canvas
-        clear() {
-                this.canvasContext.clearRect(0, 0, this.attributes['viewportSize'].value.x, this.attributes['viewportSize'].value.y);
         }
 
         update() {
@@ -60,8 +42,8 @@ export class Ocular extends Enchantment {
 
                 if (this.talisman !== null) {
                         this.worldPos = new Vector2(
-                                this.talisman.transform.attributes['position'].value.x,
-                                this.talisman.transform.attributes['position'].value.y
+                                this.talisman.transform.position.x,
+                                this.talisman.transform.position.y
                         );
 
                         this.talisman.scene.project.rendererEngine.renderToCameraView(this);
@@ -74,11 +56,21 @@ export class Ocular extends Enchantment {
                 */
         }
 
+        createAttributes() {
+                this.editorAttributes['viewportSize'] = new AttributeVector2('Viewport Size', new Vector2(this.width, this.height), this.set.bind(this, 'viewportSize'), "Width", "Height", null, new Range());
+        }
+
+        // clear canvas
+        clear() {
+                this.canvasContext.clearRect(0, 0, this.viewportSize.x, this.viewportSize.y);
+        }
+
+        // prepare canvas
         prepareCanvas() {
                 this.canvas = document.createElement('canvas');
 
-                this.canvas.width = this.attributes['viewportSize'].value.x;
-                this.canvas.height = this.attributes['viewportSize'].value.y;
+                this.canvas.width = this.viewportSize.x;
+                this.canvas.height = this.viewportSize.y;
 
                 this.canvasContext = this.canvas.getContext("2d");
         }

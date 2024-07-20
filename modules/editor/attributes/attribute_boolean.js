@@ -10,8 +10,8 @@ export class AttributeBoolean extends AttributeText {
         // @param string name: name of this attribute
         // @param bool value: value of this attribute
         // @param string event: event name that should be dispatched when the value changed
-        constructor(name, value, event = null) {
-                super(name, value, event);
+        constructor(name, value, callback, event = null) {
+                super(name, value, callback, event);
         }
 
         // called to check whether the new value is of the correct type
@@ -36,6 +36,7 @@ export class AttributeBoolean extends AttributeText {
 
         // called after validation was successful to update the object value
         change(newValue) {
+                this.callback(newValue);
                 this.value = newValue;
 
                 document.querySelector(`#enchantments .content .item input[name="${this.name}"]`).checked = this.value;

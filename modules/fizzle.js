@@ -7,14 +7,13 @@ import { Collision } from './collision.js';
 import { CircleCollider } from './enchantments/colliders/circle_collider.js';
 
 export class Fizzle {
-        attributes = {};
         colliders = [];
         rigidbodies = [];
 
         constructor() {
-                this.attributes['gravity'] = new AttributeVector2('Gravity', new Vector2(0, 29.43));
-                this.attributes['airResistance'] = new AttributeVector2('Air Resistance', new Vector2(1.02, 1.02));
-                this.attributes['massGravity'] = new AttributeBoolean('Mass creates gravity', false);
+                this.gravity = new Vector2(0, 29.43);
+                this.airResistance = new Vector2(1.02, 1.02);
+                this.massGravity = false;
         }
 
         addCollider(collider) {
@@ -68,7 +67,7 @@ export class Fizzle {
          */
         static checkPointInCircle(circle, point) {
                 const distance = Vector2.subtract(point, circle.worldPos);
-                if (distance.magnitude <= circle.attributes['radius'].value) {
+                if (distance.magnitude <= circle.radius) {
                         return true;
                 }
 
@@ -139,7 +138,7 @@ export class Fizzle {
          */
         checkCirclesOverlap(circle1, circle2) {
                 const circlesVector = Vector2.subtract(circle1.worldPos, circle2.worldPos);
-                const distance = circlesVector.magnitude - (circle1.attributes['radius'].value + circle2.attributes['radius'].value);
+                const distance = circlesVector.magnitude - (circle1.radius + circle2.radius);
 
                 if (distance <= 0) {
                         const collision = new Collision(circle1, circle2, circlesVector.setLength(Math.abs(distance)));
@@ -168,7 +167,7 @@ export class Fizzle {
 
                 // check if the smallest distance is smaller than the circle's radius
                 const absMin = Math.min([xMin, yMin]);
-                if (absMin <= circle.attributes['radius'].value) {
+                if (absMin <= circle.radius) {
                         const collision = new Collision(box, circle, new Vector2(xMin, yMin));
 
                         return collision;
@@ -228,5 +227,15 @@ export class Fizzle {
 
                         ++i;
                 }
+        }
+
+        // set the value of an attribute
+        set(attribute, value) {
+                this[attribute] = value;
+        }
+
+        // get the value of an attribute
+        get(attribute) {
+                return this[attribute];
         }
 }

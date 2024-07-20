@@ -68,20 +68,6 @@ function simple8DirMovement(obj) {
 }
 */
 
-// todo: move this to the renderer
-// used for array.sort()
-// works only with game objects
-function sortByYPos(a, b) {
-        if (a.pos.y > b.pos.y) {
-                return 1;
-        }
-
-        if (a.pos.y < b.pos.y) {
-                return -1;
-        }
-
-        return 0;
-}
 
 /* MATH EXPANSION */
 

@@ -24,25 +24,33 @@ export class CapsuleCollider extends Collider {
         constructor(radius = 25, distance = 50, direction = "vertical", isTrigger = false, offset = new Vector2()) {
                 super(isTrigger, offset);
 
-                this.attributes['radius'] = new AttributeNumber('Radius', radius, null, new Range());
-                this.attributes['distance'] = new AttributeNumber('Distance', distance, null, new Range());
-                this.attributes['direction'] = new AttributeSelect('Direction', direction, ["vertical", "horizontal"]);
+                this.radius = radius;
+                this.distance = distance;
+                this.direction = direction;
+
+                this.createAttributes();
+        }
+
+        createAttributes() {
+                this.editorAttributes['radius'] = new AttributeNumber('Radius', this.radius, this.set.bind(this, 'radius'));
+                this.editorAttributes['distance'] = new AttributeNumber('Distance', this.distance, this.set.bind(this, 'distance'));
+                this.editorAttributes['direction'] = new AttributeSelect('Direction', this.direction, ["vertical", "horizontal"], this.set.bind(this, 'direction'));
         }
 
         updateBounds() {
-                if (this.attributes['direction'].value === "vertical") {
+                if (this.direction === "vertical") {
                         this.bounds = new Bounds(
-                                this.worldPos.y - this.distance / 2 - this.attributes['radius'].value,
-                                this.worldPos.x + this.attributes['radius'].value,
-                                this.worldPos.y + this.distance / 2 + this.attributes['radius'].value,
-                                this.worldPos.x - this.attributes['radius'].value
+                                this.worldPos.y - this.distance / 2 - this.radius,
+                                this.worldPos.x + this.radius,
+                                this.worldPos.y + this.distance / 2 + this.radius,
+                                this.worldPos.x - this.radius
                         );
                 } else {
                         this.bounds = new Bounds(
-                                this.worldPos.y - this.attributes['radius'].value,
-                                this.worldPos.x + this.distance / 2 + this.attributes['radius'].value,
-                                this.worldPos.y + this.attributes['radius'].value,
-                                this.worldPos.x - this.distance / 2 - this.attributes['radius'].value
+                                this.worldPos.y - this.radius,
+                                this.worldPos.x + this.distance / 2 + this.radius,
+                                this.worldPos.y + this.radius,
+                                this.worldPos.x - this.distance / 2 - this.radius
                         );
                 }
         }
@@ -53,22 +61,22 @@ export class CapsuleCollider extends Collider {
 
                 ocular.canvasContext.beginPath();
 
-                if (this.attributes['direction'].value === "vertical") {
-                        ocular.canvasContext.moveTo(-this.attributes['radius'].value, -this.attributes['distance'].value / 2);
+                if (this.direction === "vertical") {
+                        ocular.canvasContext.moveTo(-this.radius, -this.distance / 2);
                         // top half circle
-                        ocular.canvasContext.arc(0, -this.attributes['distance'].value / 2, this.attributes['radius'].value, Math.PI, 2 * Math.PI);
-                        ocular.canvasContext.lineTo(this.attributes['radius'].value, this.attributes['distance'].value / 2);
+                        ocular.canvasContext.arc(0, -this.distance / 2, this.radius, Math.PI, 2 * Math.PI);
+                        ocular.canvasContext.lineTo(this.radius, this.distance / 2);
                         // bottom half circle
-                        ocular.canvasContext.arc(0, this.attributes['distance'].value / 2, this.attributes['radius'].value, 0, Math.PI);
-                        ocular.canvasContext.lineTo(-this.attributes['radius'].value, -this.attributes['distance'].value / 2);
+                        ocular.canvasContext.arc(0, this.distance / 2, this.radius, 0, Math.PI);
+                        ocular.canvasContext.lineTo(-this.radius, -this.distance / 2);
                 } else {
-                        ocular.canvasContext.moveTo(-this.attributes['distance'].value / 2, -this.attributes['radius'].value);
+                        ocular.canvasContext.moveTo(-this.distance / 2, -this.radius);
                         // right half circle
-                        ocular.canvasContext.lineTo(this.attributes['distance'].value / 2, -this.attributes['radius'].value);
-                        ocular.canvasContext.arc(this.attributes['distance'].value / 2, 0, this.attributes['radius'].value, -0.5 * Math.PI, 0.5 * Math.PI);
+                        ocular.canvasContext.lineTo(this.distance / 2, -this.radius);
+                        ocular.canvasContext.arc(this.distance / 2, 0, this.radius, -0.5 * Math.PI, 0.5 * Math.PI);
                         // left half circle
-                        ocular.canvasContext.lineTo(-this.attributes['distance'].value / 2, this.attributes['radius'].value);
-                        ocular.canvasContext.arc(-this.attributes['distance'].value / 2, 0, this.attributes['radius'].value, 0.5 * Math.PI, 1.5 * Math.PI);
+                        ocular.canvasContext.lineTo(-this.distance / 2, this.radius);
+                        ocular.canvasContext.arc(-this.distance / 2, 0, this.radius, 0.5 * Math.PI, 1.5 * Math.PI);
                 }
 
                 ocular.canvasContext.lineWidth = 3;

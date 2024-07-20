@@ -11,8 +11,14 @@ export class AttributeHiddenText extends AttributeText {
          * @param string value: value of the attribute
          * @param string event: event name that should be dispatched when the value changed
          */
-        constructor(name, value, event = null) {
-                super(name, value, event);
+        constructor(name, value, callback, event = null) {
+                super(name, value, callback, event);
+        }
+
+        // called after validation was successful to update the object value
+        change(newValue) {
+                this.callback(newValue);
+                this.value = newValue;
         }
 
         createWidget() {

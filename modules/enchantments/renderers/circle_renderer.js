@@ -20,13 +20,21 @@ export class CircleRenderer extends Renderer {
          * @param Vector2 offset: offset relative to this talisman's position
          */
         constructor(fillColor = '#ffffff', borderWidth = 0, borderColor = '#000000', radius = 25, offset = new Vector2()) {
-
                 super(offset);
 
-                this.attributes['radius'] = new AttributeNumber('Radius', radius, null, new Range());
-                this.attributes['fillColor'] = new AttributeColor('Fill Color', fillColor);
-                this.attributes['borderWidth'] = new AttributeNumber('Border Width', borderWidth, null, new Range());
-                this.attributes['borderColor'] = new AttributeColor('Border Color', borderColor);
+                this.radius = radius;
+                this.fillColor = fillColor;
+                this.borderWidth = borderWidth;
+                this.borderColor = borderColor;
+
+                this.createAttributes();
+        }
+
+        createAttributes() {
+                this.editorAttributes['radius'] = new AttributeNumber('Radius', this.radius, this.set.bind(this, 'radius'));
+                this.editorAttributes['fillColor'] = new AttributeColor('Fill Color', this.fillColor, this.set.bind(this, 'fillColor'));
+                this.editorAttributes['borderWidth'] = new AttributeNumber('Border Width', this.borderWidth, this.set.bind(this, 'borderWidth'));
+                this.editorAttributes['borderColor'] = new AttributeColor('Border Color', this.borderColor, this.set.bind(this, 'borderColor'));
         }
 
         /*
@@ -38,18 +46,18 @@ export class CircleRenderer extends Renderer {
 
                 // circle
                 ocular.canvasContext.beginPath();
-                ocular.canvasContext.arc(0, 0, this.attributes['radius'].value, 0, 2 * Math.PI);
+                ocular.canvasContext.arc(0, 0, this.radius, 0, 2 * Math.PI);
 
                 // border
-                if (this.attributes['borderWidth'].value > 0) {
-                        ocular.canvasContext.lineWidth = this.attributes['borderWidth'].value;
-                        ocular.canvasContext.strokeStyle = this.attributes['borderColor'].value;
+                if (this.borderWidth > 0) {
+                        ocular.canvasContext.lineWidth = this.borderWidth;
+                        ocular.canvasContext.strokeStyle = this.borderColor;
 
                         ocular.canvasContext.stroke();
                 }
 
                 // fill
-                ocular.canvasContext.fillStyle = this.attributes['fillColor'].value;
+                ocular.canvasContext.fillStyle = this.fillColor;
                 ocular.canvasContext.fill();
 
                 ocular.canvasContext.restore();

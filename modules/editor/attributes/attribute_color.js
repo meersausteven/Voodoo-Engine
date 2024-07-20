@@ -11,8 +11,8 @@ export class AttributeColor extends AttributeText {
          * @param string value: value of the attribute
          * @param string event: event name that should be dispatched when the value changed
          */
-        constructor(name, value, event) {
-                super(name, value, event);
+        constructor(name, value, callback, event) {
+                super(name, value, callback, event);
         }
 
         // called to check whether the new value is of the correct type

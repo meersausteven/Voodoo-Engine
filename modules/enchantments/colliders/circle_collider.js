@@ -20,15 +20,21 @@ export class CircleCollider extends Collider {
         constructor(radius = 25, isTrigger = false, offset = new Vector2()) {
                 super(isTrigger, offset);
 
-                this.attributes['radius'] = new AttributeNumber('Radius', radius, null, new Range());
+                this.radius = radius;
+
+                this.createAttributes();
+        }
+
+        createAttributes() {
+                this.editorAttributes['radius'] = new AttributeNumber('Radius', this.radius, this.set.bind(this, 'radius'));
         }
 
         updateBounds() {
                 this.bounds = new Bounds(
-                        this.worldPos.y - this.attributes['radius'].value,
-                        this.worldPos.x + this.attributes['radius'].value,
-                        this.worldPos.y + this.attributes['radius'].value,
-                        this.worldPos.x - this.attributes['radius'].value
+                        this.worldPos.y - this.radius,
+                        this.worldPos.x + this.radius,
+                        this.worldPos.y + this.radius,
+                        this.worldPos.x - this.radius
                 );
         }
 
@@ -37,7 +43,7 @@ export class CircleCollider extends Collider {
                 ocular.canvasContext.translate(this.worldPos.x - ocular.worldPos.x, this.worldPos.y - ocular.worldPos.y);
 
                 ocular.canvasContext.beginPath();
-                ocular.canvasContext.arc(0, 0, this.attributes['radius'].value, 0, 2 * Math.PI);
+                ocular.canvasContext.arc(0, 0, this.radius, 0, 2 * Math.PI);
 
                 ocular.canvasContext.lineWidth = 3;
                 ocular.canvasContext.strokeStyle = '#cc1133';

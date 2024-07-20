@@ -21,8 +21,6 @@ export class Vector2 {
         // calculate and set this vector's magnitude
         calculateMagnitude() {
                 this.magnitude = Math.sqrt((this.x * this.x) + (this.y * this.y));
-
-                return this.magnitude;
         }
 
         // return this vector with a length of 1

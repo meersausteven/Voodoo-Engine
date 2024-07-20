@@ -19,16 +19,23 @@ export class Renderer extends Enchantment {
                 super();
 
                 this.worldPos = new Vector2();
-                this.attributes['offset'] = new AttributeVector2('Offset', offset);
-                this.attributes['alpha'] = new AttributeRange('Alpha', 1, new Range(0.00, 1.00, 0.01), '', 2);
+                this.offset = offset;
+                this.alpha = 1;
+
+                this.createAttributes();
         }
 
         update() {
-                this.worldPos = Vector2.add(this.talisman.transform.attributes['position'].value, this.attributes['offset'].value);
+                this.worldPos = Vector2.add(this.talisman.transform.position, this.offset);
 
                 if (this.talisman !== null) {
                         this.passToRenderer();
                 }
+        }
+
+        createAttributes() {
+                this.editorAttributes['offset'] = new AttributeVector2('Offset', this.offset, this.set.bind(this, 'offset'));
+                this.editorAttributes['alpha'] = new AttributeRange('Alpha', this.alpha, new Range(0.00, 1.00, 0.01), this.set.bind(this, 'alpha'), '', 2);
         }
 
         render(ocular) {
@@ -40,10 +47,10 @@ export class Renderer extends Enchantment {
 
                 // transform
                 ocular.canvasContext.translate(this.worldPos.x - ocular.worldPos.x, this.worldPos.y - ocular.worldPos.y);
-                ocular.canvasContext.rotate(Math.degreesToRadians(this.talisman.transform.attributes['rotation'].value));
+                ocular.canvasContext.rotate(Math.degreesToRadians(this.talisman.transform.rotation));
 
                 // alpha
-                ocular.canvasContext.globalAlpha = this.attributes['alpha'].value;
+                ocular.canvasContext.globalAlpha = this.alpha;
         }
 
         passToRenderer() {

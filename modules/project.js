@@ -198,10 +198,7 @@ export class Project {
         }
 
         addScene(scene) {
-                if (scene.project === null) {
-                        scene.project = this;
-                }
-
+                scene.project = this;
                 this.sceneList.push(scene);
 
                 return true;
@@ -210,8 +207,6 @@ export class Project {
         removeScene(scene) {
                 const index = this.sceneList.indexOf(scene);
                 this.sceneList.splice(index, 1);
-
-                dispatchEvent(new Event('scene_list_changed'));
         }
 
         // loads a scene in the project
@@ -258,11 +253,10 @@ export class Project {
 
                 project.rendererEngine = Object.setPrototypeOf(project.rendererEngine, RendererEngine.prototype);
 
-                this.physicsConversion(project.fizzle);
+                this.fizzleConversion(project.fizzle);
 
                 let i = 0;
                 const l = project.sceneList.length;
-
                 while (i < l) {
                         project.sceneList[i].project = project;
                         this.sceneConversion(project.sceneList[i]);
@@ -275,46 +269,32 @@ export class Project {
                 return project;
         }
 
-        physicsConversion(physics) {
-                physics = Object.setPrototypeOf(physics, Fizzle.prototype);
+        fizzleConversion(fizzle) {
+                fizzle = Object.setPrototypeOf(fizzle, Fizzle.prototype);
 
-                // convert this physics' attributes
-                for (let key in physics.attributes) {
-                        this.attributeConversion(physics.attributes[key]);
-                }
+                return fizzle;
         }
 
         sceneConversion(scene) {
                 scene = Object.setPrototypeOf(scene, Scene.prototype);
 
-                // convert this scene's attributes
-                for (let key in scene.attributes) {
-                        this.attributeConversion(scene.attributes[key]);
-                }
+                // convert this scene's talismans
+                for (const id in scene.talismans) {
+                        const talisman = scene.talismans[id];
 
-                let i = 0;
-                const l = scene.talismans.length;
-
-                while (i < l) {
                         // convert this scene's talismans
-                        scene.talismans[i].scene = scene;
-                        this.talismanConversion(scene.talismans[i]);
-
-                        ++i;
+                        talisman.scene = scene;
+                        this.talismanConversion(talisman);
                 }
+
+                scene.getMainOcular();
         }
 
         talismanConversion(talisman) {
                 talisman = Object.setPrototypeOf(talisman, Talisman.prototype);
 
-                // convert this talisman's attributes
-                for (let key in talisman.attributes) {
-                        this.attributeConversion(talisman.attributes[key]);
-                }
-
                 let i = 0;
                 const l = talisman.enchantments.length;
-
                 while (i < l) {
                         // convert this talisman's enchantments
                         talisman.enchantments[i].talisman = talisman;
@@ -340,23 +320,6 @@ export class Project {
                 if (enchantment instanceof Rigidbody) {
                         enchantment.talisman.scene.project.fizzle.addRigidbody(enchantment);
                 }
-
-                // convert this enchantment's attributes
-                for (let key in enchantment.attributes) {
-                        this.attributeConversion(enchantment.attributes[key]);
-                }
-        }
-
-        attributeConversion(attribute) {
-                const instanceName = attribute.type.replace(/\s/g, '');
-                const prototype = eval(`new ${instanceName}`);
-
-                attribute = Object.setPrototypeOf(attribute, Object.getPrototypeOf(prototype));
-
-                if (instanceName === 'AttributeVector2') {
-                        attribute.value = Object.setPrototypeOf(attribute.value, Vector2.prototype);
-                        attribute.startValue = Object.setPrototypeOf(attribute.startValue, Vector2.prototype);
-                }
         }
 
         /* JSON EXPORT */
@@ -365,78 +328,20 @@ export class Project {
                 this.projectPreCloningCleanup(this);
 
                 const dummyProject = structuredClone(this);
-                this.projectPostCloningCleanup(dummyProject);
                 const json = JSON.stringify(dummyProject);
+
+                this.projectPostCloningCleanup(this);
 
                 return json;
         }
 
-        // remove cyclic project values
-        projectPostCloningCleanup(project) {
-                project.canvas = null;
-
-                let i = 0;
-                const l = project.sceneList.length;
-
-                while (i < l) {
-                        this.scenePostCloningCleanup(project.sceneList[i]);
-
-                        ++i;
-                }
-
-                return project;
-        }
-
-        // remove cyclic scene values
-        scenePostCloningCleanup(scene) {
-                scene.project = null;
-
-                let i = 0;
-                const l = scene.talismans.length;
-
-                while (i < l) {
-                        this.talismanPostCloningCleanup(scene.talismans[i]);
-
-                        ++i;
-                }
-
-                return scene;
-        }
-
-        // remove cyclic talisman values
-        talismanPostCloningCleanup(talisman) {
-                talisman.scene = null;
-
-                let i = 0;
-                const l = talisman.enchantments.length;
-
-                while (i < l) {
-                        this.enchantmentPostCloningCleanup(talisman.enchantments[i]);
-
-                        ++i;
-                }
-
-                return talisman;
-        }
-
-        // remove cyclic enchantment values
-        enchantmentPostCloningCleanup(enchantment) {
-                enchantment.talisman = null;
-
-                for (let key in enchantment.attributes) {
-                        enchantment.attributes[key].enchantment = null;
-                }
-
-                return enchantment;
-        }
-
+        // prepare project structure for json conversion
         projectPreCloningCleanup(project) {
                 project.canvas = null;
                 project.canvasContext = null;
 
                 let i = 0;
                 const l = project.sceneList.length;
-
                 while (i < l) {
                         this.scenePreCloningCleanup(project.sceneList[i]);
 
@@ -446,43 +351,96 @@ export class Project {
                 return project;
         }
 
+        // prepare scene structure for json conversion
         scenePreCloningCleanup(scene) {
-                let i = 0;
-                const l = scene.talismans.length;
+                scene.project = null;
 
-                while (i < l) {
-                        this.talismanPreCloningCleanup(scene.talismans[i]);
+                for (const id in scene.talismans) {
+                        const talisman = scene.talismans[id];
 
-                        ++i;
+                        if (talisman instanceof Talisman) {
+                                this.talismanPreCloningCleanup(talisman);
+                        }
                 }
-
-                return scene;
         }
 
+        // prepare talisman structure for json conversion
         talismanPreCloningCleanup(talisman) {
+                talisman.scene = null;
+                talisman.editorAttributes = {};
+
                 let i = 0;
                 const l = talisman.enchantments.length;
-
                 while (i < l) {
                         this.enchantmentPreCloningCleanup(talisman.enchantments[i]);
 
                         ++i;
                 }
-
-                return talisman;
         }
 
+        // prepare enchantment structure for json conversion
         enchantmentPreCloningCleanup(enchantment) {
                 if (enchantment.type === "Ocular") {
                         enchantment.canvas = null;
                         enchantment.canvasContext = null;
                 }
 
-                if (typeof enchantment.gizmos !== 'undefined') {
-                        enchantment.gizmos = [];
+                enchantment.talisman = null;
+                enchantment.gizmos = [];
+                enchantment.editorAttributes = {};
+        }
+
+        // restore project structure after cloning
+        projectPostCloningCleanup(project) {
+                project.prepareCanvas();
+
+                let i = 0;
+                const l = project.sceneList.length;
+                while (i < l) {
+                        project.sceneList[i].project = project;
+
+                        this.scenePostCloningCleanup(project.sceneList[i]);
+
+                        ++i;
+                }
+        }
+
+        // restore scene structure after cloning
+        scenePostCloningCleanup(scene) {
+                for (const id in scene.talismans) {
+                        const talisman = scene.talismans[id];
+
+                        if (talisman instanceof Talisman) {
+                                talisman.scene = scene;
+
+                                this.talismanPostCloningCleanup(talisman);
+                        }
+                }
+        }
+
+        // restore talisman structure after cloning
+        talismanPostCloningCleanup(talisman) {
+                talisman.createAttributes();
+
+                let i = 0;
+                const l = talisman.enchantments.length;
+                while (i < l) {
+                        talisman.enchantments[i].talisman = talisman;
+
+                        this.enchantmentPostCloningCleanup(talisman.enchantments[i]);
+
+                        ++i;
+                }
+        }
+
+        // restore enchantment structure after cloning
+        enchantmentPostCloningCleanup(enchantment) {
+                if (enchantment.type === "Ocular") {
+                        enchantment.prepareCanvas();
                 }
 
-                return enchantment;
+                enchantment.createAttributes();
+                enchantment.updateGizmoData();
         }
 
         /* INPUT HANDLING */

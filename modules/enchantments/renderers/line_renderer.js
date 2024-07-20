@@ -29,18 +29,31 @@ export class LineRenderer extends Renderer {
         constructor(points = null, width = 5, color = '#ffffff', loop = false, offset = new Vector2()) {
                 super(offset);
 
-                if (points === null) {
+                this.points = points;
+                if (this.points === null) {
                         this.points = this.defaultPoints;
                 }
 
-                this.attributes['points'] = new AttributeArrayVector2('Points', this.points);
-                this.attributes['width'] = new AttributeNumber('Width', width, null, new Range());
-                this.attributes['color'] = new AttributeColor('Color', color);
-                this.attributes['loop'] = new AttributeBoolean('Loop', loop);
-                this.attributes['smoothing'] = new AttributeBoolean('Smoothing', false);
-                this.attributes['dash'] = new AttributeArrayNumber('Dash', [1, 0], null, new Range());
-                this.attributes['cap'] = new AttributeSelect('Cap', 'butt', ['butt', 'round', 'square']);
-                this.attributes['join'] = new AttributeSelect('Join', 'miter', ['round', 'bevel', 'miter']);
+                this.width = width;
+                this.color = color;
+                this.loop = loop;
+                this.smoothing = false;
+                this.dash = [1, 0];
+                this.cap = 'butt';
+                this.join = 'miter';
+
+                this.createAttributes();
+        }
+
+        createAttributes() {
+                this.editorAttributes['points'] = new AttributeArrayVector2('Points', this.points);
+                this.editorAttributes['width'] = new AttributeNumber('Width', this.width, null, new Range());
+                this.editorAttributes['color'] = new AttributeColor('Color', this.color, this.set.bind(this, 'color'));
+                this.editorAttributes['loop'] = new AttributeBoolean('Loop', this.loop, this.set.bind(this, 'loop'));
+                this.editorAttributes['smoothing'] = new AttributeBoolean('Smoothing', this.smoothing, this.set.bind(this, 'smoothing'));
+                this.editorAttributes['dash'] = new AttributeArrayNumber('Dash', this.dash, null, new Range());
+                this.editorAttributes['cap'] = new AttributeSelect('Cap', this.cap, ['butt', 'round', 'square'], this.set.bind(this, 'cap'));
+                this.editorAttributes['join'] = new AttributeSelect('Join', this.join, ['round', 'bevel', 'miter'], this.set.bind(this, 'join'));
         }
 
         /*
@@ -48,42 +61,42 @@ export class LineRenderer extends Renderer {
          * @param Ocular ocular
          */
         render(ocular) {
-                if (this.attributes['points'].value.length > 0) {
+                if (this.points.length > 0) {
                         this.renderDefault(ocular);
 
                         // set line settings
-                        ocular.canvasContext.lineWidth = this.attributes['width'].value;
-                        ocular.canvasContext.strokeStyle = this.attributes['color'].value;
-                        ocular.canvasContext.lineCap = this.attributes['cap'].value;
-                        ocular.canvasContext.lineJoin = this.attributes['join'].value;
-                        ocular.canvasContext.setLineDash(this.attributes['dash'].value);
+                        ocular.canvasContext.lineWidth = this.width;
+                        ocular.canvasContext.strokeStyle = this.color;
+                        ocular.canvasContext.lineCap = this.cap;
+                        ocular.canvasContext.lineJoin = this.join;
+                        ocular.canvasContext.setLineDash(this.dash);
 
                         ocular.canvasContext.beginPath();
 
                         // draw line
-                        ocular.canvasContext.moveTo(this.attributes['points'].value[0].x, this.attributes['points'].value[0].y);
+                        ocular.canvasContext.moveTo(this.points[0].x, this.points[0].y);
 
                         let i = 1;
-                        const l = this.attributes['points'].value.length;
+                        const l = this.points.length;
                         while (i < l) {
-                                if (this.attributes['smoothing'].value === true) {
-                                        const currPoint = this.attributes['points'].value[i];
-                                        const nextPoint = this.attributes['points'].value[i + 1];
+                                if (this.smoothing === true) {
+                                        const currPoint = this.points[i];
+                                        const nextPoint = this.points[i + 1];
                                         if (typeof nextPoint !== "undefined") {
                                                 ocular.canvasContext.arcTo(currPoint.x, currPoint.y, nextPoint.x, nextPoint.y, 10);
                                         } else {
                                                 ocular.canvasContext.lineTo(currPoint.x, currPoint.y);
                                         }
                                 } else {
-                                        ocular.canvasContext.lineTo(this.attributes['points'].value[i].x, this.attributes['points'].value[i].y);
+                                        ocular.canvasContext.lineTo(this.points[i].x, this.points[i].y);
                                 }
 
                                 ++i;
                         }
 
                         // draw a line from the last point back to the first point
-                        if (this.attributes['loop'].value === true) {
-                                ocular.canvasContext.lineTo(this.attributes['points'].value[0].x, this.attributes['points'].value[0].y);
+                        if (this.loop === true) {
+                                ocular.canvasContext.lineTo(this.points[0].x, this.points[0].y);
                         }
 
                         ocular.canvasContext.stroke();

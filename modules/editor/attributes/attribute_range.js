@@ -12,8 +12,8 @@ export class AttributeRange extends AttributeText {
          * @param Range range: range with min, max and step size
          * @param string event: event name that should be dispatched when the value changed
          */
-        constructor(name, value, range, valueSuffix = '', decimals = null, event = null) {
-                super(name, value, event);
+        constructor(name, value, range, callback, valueSuffix = '', decimals = null, event = null) {
+                super(name, value, callback, event);
 
                 this.range = range;
                 this.valueSuffix = valueSuffix;

@@ -72,8 +72,8 @@ export class RendererEngine {
                                 continue;
                         }
 
-                        if ((this.renderers[i].talisman.attributes['enabled'].value === true) && 
-                            (this.renderers[i].attributes['enabled'].value === true)
+                        if ((this.renderers[i].talisman.enabled === true) && 
+                            (this.renderers[i].enabled === true)
                         ) {
                                 ocular.canvasContext.save();
                                 ocular.canvasContext.translate(ocular.talisman.scene.project.settings['canvasWidth'] / 2, ocular.talisman.scene.project.settings['canvasHeight'] / 2)
