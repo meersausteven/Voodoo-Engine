@@ -57,7 +57,7 @@ export class Ocular extends Enchantment {
         }
 
         createAttributes() {
-                this.editorAttributes['viewportSize'] = new AttributeVector2('Viewport Size', new Vector2(this.width, this.height), this.set.bind(this, 'viewportSize'), "Width", "Height", null, new Range());
+                this.editorAttributes['viewportSize'] = new AttributeVector2('Viewport Size', this.viewportSize, this.set.bind(this, 'viewportSize'), "Width", "Height", null, new Range());
         }
 
         // clear canvas

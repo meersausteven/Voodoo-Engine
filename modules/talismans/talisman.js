@@ -95,9 +95,9 @@ export class Talisman {
         }
 
         createAttributes() {
-                this.editorAttributes['name'] = new AttributeHiddenText('Name', 'New Talisman', this.set.bind(this, 'name'), 'talisman_name_changed');
-                this.editorAttributes['enabled'] = new AttributeBoolean('Enabled', true, this.set.bind(this, 'enabled'));
-                this.editorAttributes['visible'] = new AttributeBoolean('Visible', true, this.set.bind(this, 'visible'));
+                this.editorAttributes['name'] = new AttributeHiddenText('Name', this.name, this.set.bind(this, 'name'), 'talisman_name_changed');
+                this.editorAttributes['enabled'] = new AttributeBoolean('Enabled', this.enabled, this.set.bind(this, 'enabled'));
+                this.editorAttributes['visible'] = new AttributeBoolean('Visible', this.visible, this.set.bind(this, 'visible'));
         }
 
         /*
