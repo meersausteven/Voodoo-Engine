@@ -1,4 +1,4 @@
-# Voodoo 2D Game-Engine in JavaScript | © Sven May
+# Voodoo 2D Game-Engine in JavaScript
 
 This engine is heavily inspired by different popular game engines like Unity3D and Unreal Engine.
 This is not supposed to be a copy of these game engines, but rather to learn how such operate and need to work in order to properly function.
